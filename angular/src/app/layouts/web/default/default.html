@@ -1,0 +1,45 @@
+<div id="wrapper" class="flex flex-col h-full">
+  <header id="header">
+    <p-toolbar>
+      <ng-template #start>
+        <div class="flex items-center gap-2">
+          <i class="pi pi-home" style="font-size: 3rem"></i>
+          @for (route of navigation(); track route) {
+            <span class="nav-item">
+              <a
+                class="nav-item"
+                routerLink="{{ route.route }}"
+                #rla="routerLinkActive"
+                routerLinkActive="active"
+              >
+                {{ route.name }}
+              </a>
+            </span>
+          }
+        </div>
+      </ng-template>
+      <ng-template #end> {{ navigation()[0].name }}{{ navigation()[0].route }} </ng-template>
+    </p-toolbar>
+  </header>
+  <main id="content" class="flex flex-col flex-1 p-4">
+    <router-outlet (activate)="onActivate($event)" />
+  </main>
+  <footer id="footer">
+    <p-toolbar>
+      <ng-template #start>
+        Footer
+        <!-- <div class="flex items-center gap-2">
+                    <i class="pi pi-home" style="font-size: 3rem;"></i>
+                    @for (route of navigation(); track route) {
+                    <p-button label="{{route.name}}" routerLink="{{route.route}}" routerLinkActive="active"></p-button>
+                    }
+
+                </div> -->
+      </ng-template>
+      <ng-template #end>
+        Footer
+        <!-- {{navigation()[0].name}}{{navigation()[0].route}} -->
+      </ng-template>
+    </p-toolbar>
+  </footer>
+</div>

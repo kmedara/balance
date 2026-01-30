@@ -1,0 +1,19 @@
+/* You can add global styles to this file, and also import other style files */
+@use './tailwind.css';
+@use "primeicons/primeicons.css";
+
+.active {
+        border-bottom: .3rem solid var(--p-primary-active-color);
+}
+
+.nav-item {
+    font-weight: 200;
+    line-height:1.5rem;
+    color: var(--p-primary-color);
+    cursor: pointer;
+    font-size: 1rem;
+    display: inline-flex;
+    padding: 0px .2rem;
+    gap: 2px;
+
+}
