@@ -6,6 +6,7 @@
   - [Running end-to-end tests](#running-end-to-end-tests)
   - [Additional Resources](#additional-resources)
   - [Docker](#docker)
+
 # Balance
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.7.
@@ -43,6 +44,10 @@ ng build
 ```
 
 This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+
+### Docker
+
+https://docs.docker.com/guides/angular/containerize/#step-2-configure-the-dockerfile
 
 ## Running unit tests
 
