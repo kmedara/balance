@@ -1,3 +1,5 @@
+import { FormControl } from '@angular/forms';
+
 export type FixedLengthArray<T, L extends number, A extends T[] = []> = A['length'] extends L
   ? A
   : FixedLengthArray<T, L, [...A, T]>;
@@ -26,4 +28,10 @@ export type Budget = {
     | 'Quarterly'
     | 'Semi-Annually'
     | 'Annually';
+};
+
+export type BudgetCategory = Budget['category'];
+export type BudgetFrequency = Budget['frequency'];
+export type BudgetForm = {
+  [Property in keyof Budget]: FormControl<Budget[Property] | null>;
 };

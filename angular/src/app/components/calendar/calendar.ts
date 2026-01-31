@@ -114,7 +114,6 @@ export class Calendar {
   }
 
   today() {
-    // this.currentDate = new Date();
     this.generateCalendar(this.currentDate);
   }
 }
