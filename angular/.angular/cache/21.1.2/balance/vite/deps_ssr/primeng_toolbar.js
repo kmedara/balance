@@ -2,18 +2,20 @@ import { createRequire } from 'module';const require = createRequire(import.meta
 import {
   BaseComponent,
   PARENT_INSTANCE
-} from "./chunk-JVI4AJSN.js";
-import {
-  Bind,
-  BindModule
-} from "./chunk-SDOJQDJG.js";
+} from "./chunk-TPHY32ID.js";
 import {
   BaseStyle
-} from "./chunk-AR443PNM.js";
+} from "./chunk-LSG3VSV6.js";
 import {
   PrimeTemplate,
   SharedModule
-} from "./chunk-6ID6GOZH.js";
+} from "./chunk-TCRIT5DL.js";
+import {
+  Bind,
+  BindModule
+} from "./chunk-NHSVFOLK.js";
+import "./chunk-OISFYD5W.js";
+import "./chunk-TKANYPZW.js";
 import {
   CommonModule,
   NgIf,
@@ -57,8 +59,6 @@ import {
   ɵɵdefineInjector
 } from "./chunk-DD45DLIS.js";
 import "./chunk-O5J3CNTX.js";
-import "./chunk-OISFYD5W.js";
-import "./chunk-TKANYPZW.js";
 import "./chunk-6DU2HRTW.js";
 
 // node_modules/@primeuix/styles/dist/toolbar/index.mjs

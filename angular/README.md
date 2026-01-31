@@ -1,3 +1,11 @@
+- [Balance](#balance)
+  - [Development server](#development-server)
+  - [Code scaffolding](#code-scaffolding)
+  - [Building](#building)
+  - [Running unit tests](#running-unit-tests)
+  - [Running end-to-end tests](#running-end-to-end-tests)
+  - [Additional Resources](#additional-resources)
+  - [Docker](#docker)
 # Balance
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.7.

@@ -1,0 +1,16 @@
+services:
+  angular: 
+    networks:
+      - balance
+    build: 
+      context: ./angular
+      dockerfile: ./Dockerfile
+    ports:
+      - "4200:4200"
+    env_file:
+      - .env.local
+
+
+networks:
+  balance:
+    name: balance
