@@ -2,7 +2,35 @@ import {
   BaseStyle,
   PrimeNG,
   base
-} from "./chunk-X4WUOKGX.js";
+} from "./chunk-2WLLCD5Z.js";
+import {
+  isPlatformServer
+} from "./chunk-JXF33VWW.js";
+import {
+  ChangeDetectorRef,
+  Directive,
+  ElementRef,
+  Injectable,
+  Input,
+  PLATFORM_ID,
+  Renderer2,
+  input,
+  setClassMetadata,
+  ɵɵNgOnChangesFeature,
+  ɵɵProvidersFeature,
+  ɵɵdefineDirective,
+  ɵɵgetInheritedFactory
+} from "./chunk-R6GDVNLI.js";
+import {
+  DOCUMENT,
+  InjectionToken,
+  Injector,
+  computed,
+  effect,
+  inject,
+  signal,
+  ɵɵdefineInjectable
+} from "./chunk-LOKY7SF2.js";
 import {
   N,
   S
@@ -20,37 +48,9 @@ import {
   w3 as w
 } from "./chunk-2WAAOCZZ.js";
 import {
-  isPlatformServer
-} from "./chunk-4YWGZHR3.js";
-import {
-  ChangeDetectorRef,
-  Directive,
-  ElementRef,
-  Injectable,
-  Input,
-  PLATFORM_ID,
-  Renderer2,
-  input,
-  setClassMetadata,
-  ɵɵNgOnChangesFeature,
-  ɵɵProvidersFeature,
-  ɵɵdefineDirective,
-  ɵɵgetInheritedFactory
-} from "./chunk-Z6OTLB77.js";
-import {
-  DOCUMENT,
-  InjectionToken,
-  Injector,
-  computed,
-  effect,
-  inject,
-  signal,
-  ɵɵdefineInjectable
-} from "./chunk-YFUGF3R7.js";
-import {
   __spreadProps,
   __spreadValues
-} from "./chunk-H2SRQSE4.js";
+} from "./chunk-GOMI4DH3.js";
 
 // node_modules/primeng/fesm2022/primeng-basecomponent.mjs
 var BaseComponentStyle = class _BaseComponentStyle extends BaseStyle {
@@ -585,4 +585,4 @@ export {
   PARENT_INSTANCE,
   BaseComponent
 };
-//# sourceMappingURL=chunk-4PU65SHJ.js.map
+//# sourceMappingURL=chunk-PXYBP5JK.js.map

@@ -1,25 +1,26 @@
-import {
-  FilterMatchMode
-} from "./chunk-AILUVAXJ.js";
+import { createRequire } from 'module';const require = createRequire(import.meta.url);
 import {
   E,
   N,
   S,
   ar
-} from "./chunk-FNWXYVIJ.js";
+} from "./chunk-OISFYD5W.js";
+import {
+  FilterMatchMode
+} from "./chunk-TCRIT5DL.js";
 import {
   A,
   Y,
   _t,
   m
-} from "./chunk-2WAAOCZZ.js";
+} from "./chunk-TKANYPZW.js";
 import {
   Injectable,
   PLATFORM_ID,
   provideAppInitializer,
   setClassMetadata,
   ɵɵgetInheritedFactory
-} from "./chunk-Z6OTLB77.js";
+} from "./chunk-F4T7EXKF.js";
 import {
   DOCUMENT,
   InjectionToken,
@@ -29,13 +30,17 @@ import {
   signal,
   untracked,
   ɵɵdefineInjectable
-} from "./chunk-YFUGF3R7.js";
+} from "./chunk-DD45DLIS.js";
 import {
-  Subject
-} from "./chunk-RSS3ODKE.js";
+  require_cjs
+} from "./chunk-O5J3CNTX.js";
 import {
-  __spreadValues
-} from "./chunk-H2SRQSE4.js";
+  __spreadValues,
+  __toESM
+} from "./chunk-6DU2HRTW.js";
+
+// node_modules/primeng/fesm2022/primeng-config.mjs
+var import_rxjs = __toESM(require_cjs(), 1);
 
 // node_modules/@primeuix/styles/dist/base/index.mjs
 var style = "\n    *,\n    ::before,\n    ::after {\n        box-sizing: border-box;\n    }\n\n    .p-collapsible-enter-active {\n        animation: p-animate-collapsible-expand 0.2s ease-out;\n        overflow: hidden;\n    }\n\n    .p-collapsible-leave-active {\n        animation: p-animate-collapsible-collapse 0.2s ease-out;\n        overflow: hidden;\n    }\n\n    @keyframes p-animate-collapsible-expand {\n        from {\n            grid-template-rows: 0fr;\n        }\n        to {\n            grid-template-rows: 1fr;\n        }\n    }\n\n    @keyframes p-animate-collapsible-collapse {\n        from {\n            grid-template-rows: 1fr;\n        }\n        to {\n            grid-template-rows: 0fr;\n        }\n    }\n\n    .p-disabled,\n    .p-disabled * {\n        cursor: default;\n        pointer-events: none;\n        user-select: none;\n    }\n\n    .p-disabled,\n    .p-component:disabled {\n        opacity: dt('disabled.opacity');\n    }\n\n    .pi {\n        font-size: dt('icon.size');\n    }\n\n    .p-icon {\n        width: dt('icon.size');\n        height: dt('icon.size');\n    }\n\n    .p-overlay-mask {\n        background: var(--px-mask-background, dt('mask.background'));\n        color: dt('mask.color');\n        position: fixed;\n        top: 0;\n        left: 0;\n        width: 100%;\n        height: 100%;\n    }\n\n    .p-overlay-mask-enter-active {\n        animation: p-animate-overlay-mask-enter dt('mask.transition.duration') forwards;\n    }\n\n    .p-overlay-mask-leave-active {\n        animation: p-animate-overlay-mask-leave dt('mask.transition.duration') forwards;\n    }\n\n    @keyframes p-animate-overlay-mask-enter {\n        from {\n            background: transparent;\n        }\n        to {\n            background: var(--px-mask-background, dt('mask.background'));\n        }\n    }\n    @keyframes p-animate-overlay-mask-leave {\n        from {\n            background: var(--px-mask-background, dt('mask.background'));\n        }\n        to {\n            background: transparent;\n        }\n    }\n\n    .p-anchored-overlay-enter-active {\n        animation: p-animate-anchored-overlay-enter 300ms cubic-bezier(.19,1,.22,1);\n    }\n\n    .p-anchored-overlay-leave-active {\n        animation: p-animate-anchored-overlay-leave 300ms cubic-bezier(.19,1,.22,1);\n    }\n\n    @keyframes p-animate-anchored-overlay-enter {\n        from {\n            opacity: 0;\n            transform: scale(0.93);\n        }\n    }\n\n    @keyframes p-animate-anchored-overlay-leave {\n        to {\n            opacity: 0;\n            transform: scale(0.93);\n        }\n    }\n";
@@ -498,7 +503,7 @@ var PrimeNG = class _PrimeNG extends ThemeProvider {
     menu: 1e3,
     tooltip: 1100
   };
-  translationSource = new Subject();
+  translationSource = new import_rxjs.Subject();
   translationObserver = this.translationSource.asObservable();
   getTranslation(key) {
     return this.translation[key];
@@ -583,4 +588,4 @@ export {
   PRIME_NG_CONFIG,
   providePrimeNG
 };
-//# sourceMappingURL=chunk-X4WUOKGX.js.map
+//# sourceMappingURL=chunk-WFS5PRHQ.js.map

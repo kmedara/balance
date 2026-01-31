@@ -37,7 +37,7 @@ import {
   w
 } from "./chunk-FNWXYVIJ.js";
 import "./chunk-2WAAOCZZ.js";
-import "./chunk-H2SRQSE4.js";
+import "./chunk-GOMI4DH3.js";
 
 // node_modules/@primeuix/themes/dist/index.mjs
 var t = (...t2) => ke(...t2);

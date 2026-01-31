@@ -9,6 +9,13 @@ services:
       - "4200:4200"
     env_file:
       - .env.local
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./angular/src:/app/src
+      - ./angular/angular.json:/app/angular.json
+      - ./angular/tsconfig.json:/app/tsconfig.json
+    
 
 
 networks:

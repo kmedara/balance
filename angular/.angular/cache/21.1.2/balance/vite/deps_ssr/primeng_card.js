@@ -2,21 +2,21 @@ import { createRequire } from 'module';const require = createRequire(import.meta
 import {
   BaseComponent,
   PARENT_INSTANCE
-} from "./chunk-TPHY32ID.js";
+} from "./chunk-56D4SBXA.js";
+import {
+  Bind,
+  BindModule
+} from "./chunk-NHSVFOLK.js";
 import {
   BaseStyle
-} from "./chunk-LSG3VSV6.js";
+} from "./chunk-WFS5PRHQ.js";
+import "./chunk-OISFYD5W.js";
 import {
   Footer,
   Header,
   PrimeTemplate,
   SharedModule
 } from "./chunk-TCRIT5DL.js";
-import {
-  Bind,
-  BindModule
-} from "./chunk-NHSVFOLK.js";
-import "./chunk-OISFYD5W.js";
 import {
   k
 } from "./chunk-TKANYPZW.js";

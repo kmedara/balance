@@ -1,26 +1,13 @@
-import { createRequire } from 'module';const require = createRequire(import.meta.url);
 import {
   FilterMatchMode
-} from "./chunk-TCRIT5DL.js";
-import {
-  E,
-  N,
-  S,
-  ar
-} from "./chunk-OISFYD5W.js";
-import {
-  A,
-  Y,
-  _t,
-  m
-} from "./chunk-TKANYPZW.js";
+} from "./chunk-LRW355GL.js";
 import {
   Injectable,
   PLATFORM_ID,
   provideAppInitializer,
   setClassMetadata,
   ɵɵgetInheritedFactory
-} from "./chunk-F4T7EXKF.js";
+} from "./chunk-R6GDVNLI.js";
 import {
   DOCUMENT,
   InjectionToken,
@@ -30,17 +17,25 @@ import {
   signal,
   untracked,
   ɵɵdefineInjectable
-} from "./chunk-DD45DLIS.js";
+} from "./chunk-LOKY7SF2.js";
 import {
-  require_cjs
-} from "./chunk-O5J3CNTX.js";
+  Subject
+} from "./chunk-RSS3ODKE.js";
 import {
-  __spreadValues,
-  __toESM
-} from "./chunk-6DU2HRTW.js";
-
-// node_modules/primeng/fesm2022/primeng-config.mjs
-var import_rxjs = __toESM(require_cjs(), 1);
+  E,
+  N,
+  S,
+  ar
+} from "./chunk-FNWXYVIJ.js";
+import {
+  A,
+  Y,
+  _t,
+  m
+} from "./chunk-2WAAOCZZ.js";
+import {
+  __spreadValues
+} from "./chunk-GOMI4DH3.js";
 
 // node_modules/@primeuix/styles/dist/base/index.mjs
 var style = "\n    *,\n    ::before,\n    ::after {\n        box-sizing: border-box;\n    }\n\n    .p-collapsible-enter-active {\n        animation: p-animate-collapsible-expand 0.2s ease-out;\n        overflow: hidden;\n    }\n\n    .p-collapsible-leave-active {\n        animation: p-animate-collapsible-collapse 0.2s ease-out;\n        overflow: hidden;\n    }\n\n    @keyframes p-animate-collapsible-expand {\n        from {\n            grid-template-rows: 0fr;\n        }\n        to {\n            grid-template-rows: 1fr;\n        }\n    }\n\n    @keyframes p-animate-collapsible-collapse {\n        from {\n            grid-template-rows: 1fr;\n        }\n        to {\n            grid-template-rows: 0fr;\n        }\n    }\n\n    .p-disabled,\n    .p-disabled * {\n        cursor: default;\n        pointer-events: none;\n        user-select: none;\n    }\n\n    .p-disabled,\n    .p-component:disabled {\n        opacity: dt('disabled.opacity');\n    }\n\n    .pi {\n        font-size: dt('icon.size');\n    }\n\n    .p-icon {\n        width: dt('icon.size');\n        height: dt('icon.size');\n    }\n\n    .p-overlay-mask {\n        background: var(--px-mask-background, dt('mask.background'));\n        color: dt('mask.color');\n        position: fixed;\n        top: 0;\n        left: 0;\n        width: 100%;\n        height: 100%;\n    }\n\n    .p-overlay-mask-enter-active {\n        animation: p-animate-overlay-mask-enter dt('mask.transition.duration') forwards;\n    }\n\n    .p-overlay-mask-leave-active {\n        animation: p-animate-overlay-mask-leave dt('mask.transition.duration') forwards;\n    }\n\n    @keyframes p-animate-overlay-mask-enter {\n        from {\n            background: transparent;\n        }\n        to {\n            background: var(--px-mask-background, dt('mask.background'));\n        }\n    }\n    @keyframes p-animate-overlay-mask-leave {\n        from {\n            background: var(--px-mask-background, dt('mask.background'));\n        }\n        to {\n            background: transparent;\n        }\n    }\n\n    .p-anchored-overlay-enter-active {\n        animation: p-animate-anchored-overlay-enter 300ms cubic-bezier(.19,1,.22,1);\n    }\n\n    .p-anchored-overlay-leave-active {\n        animation: p-animate-anchored-overlay-leave 300ms cubic-bezier(.19,1,.22,1);\n    }\n\n    @keyframes p-animate-anchored-overlay-enter {\n        from {\n            opacity: 0;\n            transform: scale(0.93);\n        }\n    }\n\n    @keyframes p-animate-anchored-overlay-leave {\n        to {\n            opacity: 0;\n            transform: scale(0.93);\n        }\n    }\n";
@@ -503,7 +498,7 @@ var PrimeNG = class _PrimeNG extends ThemeProvider {
     menu: 1e3,
     tooltip: 1100
   };
-  translationSource = new import_rxjs.Subject();
+  translationSource = new Subject();
   translationObserver = this.translationSource.asObservable();
   getTranslation(key) {
     return this.translation[key];
@@ -588,4 +583,4 @@ export {
   PRIME_NG_CONFIG,
   providePrimeNG
 };
-//# sourceMappingURL=chunk-LSG3VSV6.js.map
+//# sourceMappingURL=chunk-2WLLCD5Z.js.map

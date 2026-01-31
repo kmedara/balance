@@ -19,28 +19,8 @@ RUN --mount=type=cache,target=/root/.npm npm ci
 # Copy the rest of the application source code into the container
 COPY . .
 
-# Build the Angular application
-RUN npm run build 
+EXPOSE 4200 8080
 
-# =========================================
-# Stage 2: Prepare Nginx to Serve Static Files
-# =========================================
+EXPOSE 4200
 
-FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} AS runner
-
-# Copy custom Nginx config
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Copy the static build output from the build stage to Nginx's default HTML serving directory
-COPY --chown=nginx:nginx --from=builder /app/dist/balance/browser /usr/share/nginx/html
-
-# Use a built-in non-root user for security best practices
-USER nginx
-
-# Expose port 8080 to allow HTTP traffic
-# Note: The default Nginx container now listens on port 8080 instead of 80 
-#EXPOSE 8080
-
-# Start Nginx directly with custom config
-ENTRYPOINT ["nginx", "-c", "/etc/nginx/nginx.conf"]
-CMD ["-g", "daemon off;"]
+CMD ["npx", "ng", "serve", "--host=0.0.0.0", "--poll=1000", "--hmr"]

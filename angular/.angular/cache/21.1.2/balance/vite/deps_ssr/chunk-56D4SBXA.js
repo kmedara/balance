@@ -3,7 +3,7 @@ import {
   BaseStyle,
   PrimeNG,
   base
-} from "./chunk-LSG3VSV6.js";
+} from "./chunk-WFS5PRHQ.js";
 import {
   N,
   S
@@ -586,4 +586,4 @@ export {
   PARENT_INSTANCE,
   BaseComponent
 };
-//# sourceMappingURL=chunk-TPHY32ID.js.map
+//# sourceMappingURL=chunk-56D4SBXA.js.map

@@ -1,8 +1,4 @@
 import {
-  f,
-  k
-} from "./chunk-2WAAOCZZ.js";
-import {
   Directive,
   ElementRef,
   Input,
@@ -15,16 +11,20 @@ import {
   ɵɵdefineNgModule,
   ɵɵdirectiveInject,
   ɵɵstyleMap
-} from "./chunk-Z6OTLB77.js";
+} from "./chunk-R6GDVNLI.js";
 import {
   computed,
   effect,
   signal,
   ɵɵdefineInjector
-} from "./chunk-YFUGF3R7.js";
+} from "./chunk-LOKY7SF2.js";
+import {
+  f,
+  k
+} from "./chunk-2WAAOCZZ.js";
 import {
   __objRest
-} from "./chunk-H2SRQSE4.js";
+} from "./chunk-GOMI4DH3.js";
 
 // node_modules/primeng/fesm2022/primeng-bind.mjs
 var Bind = class _Bind {
@@ -165,4 +165,4 @@ export {
   Bind,
   BindModule
 };
-//# sourceMappingURL=chunk-QOE4NOGH.js.map
+//# sourceMappingURL=chunk-GQWIC2PE.js.map

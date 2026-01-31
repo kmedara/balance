@@ -1,9 +1,10 @@
+import { createRequire } from 'module';const require = createRequire(import.meta.url);
 import {
   BaseComponent
-} from "./chunk-4PU65SHJ.js";
+} from "./chunk-56D4SBXA.js";
 import {
   BaseStyle
-} from "./chunk-X4WUOKGX.js";
+} from "./chunk-WFS5PRHQ.js";
 import {
   C2 as C,
   K,
@@ -13,10 +14,10 @@ import {
   W,
   Zt,
   v
-} from "./chunk-2WAAOCZZ.js";
+} from "./chunk-TKANYPZW.js";
 import {
   isPlatformBrowser
-} from "./chunk-4YWGZHR3.js";
+} from "./chunk-TKCQAPSZ.js";
 import {
   Directive,
   Injectable,
@@ -27,14 +28,14 @@ import {
   ɵɵdefineDirective,
   ɵɵdefineNgModule,
   ɵɵgetInheritedFactory
-} from "./chunk-Z6OTLB77.js";
+} from "./chunk-F4T7EXKF.js";
 import {
   NgZone,
   effect,
   inject,
   ɵɵdefineInjectable,
   ɵɵdefineInjector
-} from "./chunk-YFUGF3R7.js";
+} from "./chunk-DD45DLIS.js";
 
 // node_modules/@primeuix/styles/dist/ripple/index.mjs
 var style = "\n    .p-ink {\n        display: block;\n        position: absolute;\n        background: dt('ripple.background');\n        border-radius: 100%;\n        transform: scale(0);\n        pointer-events: none;\n    }\n\n    .p-ink-active {\n        animation: ripple 0.4s linear;\n    }\n\n    @keyframes ripple {\n        100% {\n            opacity: 0;\n            transform: scale(2.5);\n        }\n    }\n";
@@ -238,4 +239,4 @@ var RippleModule = class _RippleModule {
 export {
   Ripple
 };
-//# sourceMappingURL=chunk-EVM7KSXS.js.map
+//# sourceMappingURL=chunk-ONDZQADC.js.map

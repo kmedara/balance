@@ -4,33 +4,28 @@ import {
   NG_VALUE_ACCESSOR,
   NgControlStatus,
   NgModel
-} from "./chunk-VYEZRX3U.js";
+} from "./chunk-HCMQV3HG.js";
 import {
   Ripple
-} from "./chunk-EVM7KSXS.js";
+} from "./chunk-U3BJN3BI.js";
 import {
   PARENT_INSTANCE
-} from "./chunk-4PU65SHJ.js";
+} from "./chunk-PXYBP5JK.js";
 import {
   Bind,
   BindModule
-} from "./chunk-QOE4NOGH.js";
+} from "./chunk-GQWIC2PE.js";
 import {
   BaseStyle
-} from "./chunk-X4WUOKGX.js";
+} from "./chunk-2WLLCD5Z.js";
 import {
   PrimeTemplate,
   SharedModule
-} from "./chunk-AILUVAXJ.js";
-import "./chunk-FNWXYVIJ.js";
-import {
-  k,
-  p
-} from "./chunk-2WAAOCZZ.js";
+} from "./chunk-LRW355GL.js";
 import {
   CommonModule,
   NgTemplateOutlet
-} from "./chunk-4YWGZHR3.js";
+} from "./chunk-JXF33VWW.js";
 import {
   ChangeDetectionStrategy,
   Component,
@@ -76,7 +71,7 @@ import {
   ɵɵtemplateRefExtractor,
   ɵɵtext,
   ɵɵtextInterpolate
-} from "./chunk-Z6OTLB77.js";
+} from "./chunk-R6GDVNLI.js";
 import {
   EventEmitter,
   InjectionToken,
@@ -86,12 +81,17 @@ import {
   ɵɵdefineInjector,
   ɵɵresetView,
   ɵɵrestoreView
-} from "./chunk-YFUGF3R7.js";
+} from "./chunk-LOKY7SF2.js";
 import "./chunk-RSS3ODKE.js";
+import "./chunk-FNWXYVIJ.js";
+import {
+  k,
+  p
+} from "./chunk-2WAAOCZZ.js";
 import {
   __spreadProps,
   __spreadValues
-} from "./chunk-H2SRQSE4.js";
+} from "./chunk-GOMI4DH3.js";
 
 // node_modules/@primeuix/styles/dist/togglebutton/index.mjs
 var style = "\n    .p-togglebutton {\n        display: inline-flex;\n        cursor: pointer;\n        user-select: none;\n        overflow: hidden;\n        position: relative;\n        color: dt('togglebutton.color');\n        background: dt('togglebutton.background');\n        border: 1px solid dt('togglebutton.border.color');\n        padding: dt('togglebutton.padding');\n        font-size: 1rem;\n        font-family: inherit;\n        font-feature-settings: inherit;\n        transition:\n            background dt('togglebutton.transition.duration'),\n            color dt('togglebutton.transition.duration'),\n            border-color dt('togglebutton.transition.duration'),\n            outline-color dt('togglebutton.transition.duration'),\n            box-shadow dt('togglebutton.transition.duration');\n        border-radius: dt('togglebutton.border.radius');\n        outline-color: transparent;\n        font-weight: dt('togglebutton.font.weight');\n    }\n\n    .p-togglebutton-content {\n        display: inline-flex;\n        flex: 1 1 auto;\n        align-items: center;\n        justify-content: center;\n        gap: dt('togglebutton.gap');\n        padding: dt('togglebutton.content.padding');\n        background: transparent;\n        border-radius: dt('togglebutton.content.border.radius');\n        transition:\n            background dt('togglebutton.transition.duration'),\n            color dt('togglebutton.transition.duration'),\n            border-color dt('togglebutton.transition.duration'),\n            outline-color dt('togglebutton.transition.duration'),\n            box-shadow dt('togglebutton.transition.duration');\n    }\n\n    .p-togglebutton:not(:disabled):not(.p-togglebutton-checked):hover {\n        background: dt('togglebutton.hover.background');\n        color: dt('togglebutton.hover.color');\n    }\n\n    .p-togglebutton.p-togglebutton-checked {\n        background: dt('togglebutton.checked.background');\n        border-color: dt('togglebutton.checked.border.color');\n        color: dt('togglebutton.checked.color');\n    }\n\n    .p-togglebutton-checked .p-togglebutton-content {\n        background: dt('togglebutton.content.checked.background');\n        box-shadow: dt('togglebutton.content.checked.shadow');\n    }\n\n    .p-togglebutton:focus-visible {\n        box-shadow: dt('togglebutton.focus.ring.shadow');\n        outline: dt('togglebutton.focus.ring.width') dt('togglebutton.focus.ring.style') dt('togglebutton.focus.ring.color');\n        outline-offset: dt('togglebutton.focus.ring.offset');\n    }\n\n    .p-togglebutton.p-invalid {\n        border-color: dt('togglebutton.invalid.border.color');\n    }\n\n    .p-togglebutton:disabled {\n        opacity: 1;\n        cursor: default;\n        background: dt('togglebutton.disabled.background');\n        border-color: dt('togglebutton.disabled.border.color');\n        color: dt('togglebutton.disabled.color');\n    }\n\n    .p-togglebutton-label,\n    .p-togglebutton-icon {\n        position: relative;\n        transition: none;\n    }\n\n    .p-togglebutton-icon {\n        color: dt('togglebutton.icon.color');\n    }\n\n    .p-togglebutton:not(:disabled):not(.p-togglebutton-checked):hover .p-togglebutton-icon {\n        color: dt('togglebutton.icon.hover.color');\n    }\n\n    .p-togglebutton.p-togglebutton-checked .p-togglebutton-icon {\n        color: dt('togglebutton.icon.checked.color');\n    }\n\n    .p-togglebutton:disabled .p-togglebutton-icon {\n        color: dt('togglebutton.icon.disabled.color');\n    }\n\n    .p-togglebutton-sm {\n        padding: dt('togglebutton.sm.padding');\n        font-size: dt('togglebutton.sm.font.size');\n    }\n\n    .p-togglebutton-sm .p-togglebutton-content {\n        padding: dt('togglebutton.content.sm.padding');\n    }\n\n    .p-togglebutton-lg {\n        padding: dt('togglebutton.lg.padding');\n        font-size: dt('togglebutton.lg.font.size');\n    }\n\n    .p-togglebutton-lg .p-togglebutton-content {\n        padding: dt('togglebutton.content.lg.padding');\n    }\n\n    .p-togglebutton-fluid {\n        width: 100%;\n    }\n";

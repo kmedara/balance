@@ -1,29 +1,25 @@
 import {
   BaseComponent,
   PARENT_INSTANCE
-} from "./chunk-4PU65SHJ.js";
+} from "./chunk-PXYBP5JK.js";
 import {
   Bind,
   BindModule
-} from "./chunk-QOE4NOGH.js";
+} from "./chunk-GQWIC2PE.js";
 import {
   BaseStyle
-} from "./chunk-X4WUOKGX.js";
+} from "./chunk-2WLLCD5Z.js";
 import {
   Footer,
   Header,
   PrimeTemplate,
   SharedModule
-} from "./chunk-AILUVAXJ.js";
-import "./chunk-FNWXYVIJ.js";
-import {
-  k
-} from "./chunk-2WAAOCZZ.js";
+} from "./chunk-LRW355GL.js";
 import {
   CommonModule,
   NgIf,
   NgTemplateOutlet
-} from "./chunk-4YWGZHR3.js";
+} from "./chunk-JXF33VWW.js";
 import {
   ChangeDetectionStrategy,
   Component,
@@ -58,16 +54,20 @@ import {
   ɵɵtemplate,
   ɵɵtext,
   ɵɵtextInterpolate
-} from "./chunk-Z6OTLB77.js";
+} from "./chunk-R6GDVNLI.js";
 import {
   InjectionToken,
   inject,
   signal,
   ɵɵdefineInjectable,
   ɵɵdefineInjector
-} from "./chunk-YFUGF3R7.js";
+} from "./chunk-LOKY7SF2.js";
 import "./chunk-RSS3ODKE.js";
-import "./chunk-H2SRQSE4.js";
+import "./chunk-FNWXYVIJ.js";
+import {
+  k
+} from "./chunk-2WAAOCZZ.js";
+import "./chunk-GOMI4DH3.js";
 
 // node_modules/@primeuix/styles/dist/card/index.mjs
 var style = "\n    .p-card {\n        background: dt('card.background');\n        color: dt('card.color');\n        box-shadow: dt('card.shadow');\n        border-radius: dt('card.border.radius');\n        display: flex;\n        flex-direction: column;\n    }\n\n    .p-card-caption {\n        display: flex;\n        flex-direction: column;\n        gap: dt('card.caption.gap');\n    }\n\n    .p-card-body {\n        padding: dt('card.body.padding');\n        display: flex;\n        flex-direction: column;\n        gap: dt('card.body.gap');\n    }\n\n    .p-card-title {\n        font-size: dt('card.title.font.size');\n        font-weight: dt('card.title.font.weight');\n    }\n\n    .p-card-subtitle {\n        color: dt('card.subtitle.color');\n    }\n";

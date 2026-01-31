@@ -1,7 +1,7 @@
 import { createRequire } from 'module';const require = createRequire(import.meta.url);
 import {
   BaseComponent
-} from "./chunk-TPHY32ID.js";
+} from "./chunk-56D4SBXA.js";
 import {
   s
 } from "./chunk-TKANYPZW.js";
@@ -4878,4 +4878,4 @@ export {
   BaseModelHolder,
   BaseEditableHolder
 };
-//# sourceMappingURL=chunk-EK36UCCH.js.map
+//# sourceMappingURL=chunk-O4NYGEKL.js.map
