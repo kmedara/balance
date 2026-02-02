@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tailwindcss-primeui";
 
+.sr-only-label .p-button-label {
+    @apply sr-only;
+  }
 /* @custom-variant dark (&:where(.p-dark, .p-dark *));
 
 .p-datatable-mask {

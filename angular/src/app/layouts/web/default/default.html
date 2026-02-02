@@ -1,45 +1,29 @@
-<div id="wrapper" class="flex flex-col h-full">
-  <header id="header">
+<div class="min-h-screen flex flex-col">
+  <header class="shrink-0">
     <p-toolbar>
-      <ng-template #start>
-        <div class="flex items-center gap-2">
-          <i class="pi pi-home" style="font-size: 3rem"></i>
-          @for (route of navigation(); track route) {
-            <span class="nav-item">
-              <a
-                class="nav-item"
-                routerLink="{{ route.route }}"
-                #rla="routerLinkActive"
-                routerLinkActive="active"
-              >
-                {{ route.name }}
-              </a>
-            </span>
-          }
-        </div>
+      <ng-template #start></ng-template>
+      <ng-template #center> </ng-template>
+      <ng-template #end>
+        <router-outlet name="actions"></router-outlet>
       </ng-template>
-      <ng-template #end> {{ navigation()[0].name }}{{ navigation()[0].route }} </ng-template>
     </p-toolbar>
   </header>
-  <main id="content" class="flex flex-col flex-1 p-4">
-    <router-outlet (activate)="onActivate($event)" />
-  </main>
-  <footer id="footer">
-    <p-toolbar>
-      <ng-template #start>
-        Footer
-        <!-- <div class="flex items-center gap-2">
-                    <i class="pi pi-home" style="font-size: 3rem;"></i>
-                    @for (route of navigation(); track route) {
-                    <p-button label="{{route.name}}" routerLink="{{route.route}}" routerLinkActive="active"></p-button>
-                    }
 
-                </div> -->
-      </ng-template>
-      <ng-template #end>
-        Footer
-        <!-- {{navigation()[0].name}}{{navigation()[0].route}} -->
-      </ng-template>
-    </p-toolbar>
-  </footer>
+  <main class="flex-1 overflow-hidden flex">
+    <div class="flex-1 flex overflow-hidden">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+
+  <!-- <footer class="shrink-0">
+    <p-toolbar class="w-full">
+      <div class="flex w-full items-center justify-evenly">
+        <p-button icon="pi pi-user" rounded></p-button>
+        <p-button icon="pi pi-plus" rounded></p-button>
+        <p-button icon="pi pi-plus" rounded></p-button>
+      </div>
+    </p-toolbar> -->
+
+  <!-- <router-outlet name="actions"></router-outlet> -->
+  <!-- </footer> -->
 </div>

@@ -20,6 +20,7 @@ export type Budget = {
   startDate: Date;
   category: 'Income' | 'Expense';
   frequency:
+    | 'Once'
     | 'Daily'
     | 'Weekly'
     | 'Bi-Weekly'
@@ -32,6 +33,3 @@ export type Budget = {
 
 export type BudgetCategory = Budget['category'];
 export type BudgetFrequency = Budget['frequency'];
-export type BudgetForm = {
-  [Property in keyof Budget]: FormControl<Budget[Property] | null>;
-};

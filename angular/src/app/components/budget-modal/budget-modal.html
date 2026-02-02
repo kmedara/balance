@@ -1,1 +1,61 @@
-<p>budget-modal works!</p>
+<form [formGroup]="form" class="p-5 space-y-4" (ngSubmit)="submit()">
+  <!-- Title -->
+  <div class="flex flex-col gap-1">
+    <label class="text-sm font-medium">Title</label>
+    <input pInputText formControlName="title" placeholder="e.g. Rent, Salary" />
+    @if (form.controls.title.touched && form.controls.title.invalid) {
+      <small class="text-red-500"> Title is required </small>
+    }
+  </div>
+
+  <!-- Start Date -->
+  <div class="flex flex-col gap-1">
+    <label class="text-sm font-medium">Start Date</label>
+    <p-date-picker formControlName="startDate" showIcon dateFormat="mm/dd/yy"></p-date-picker>
+  </div>
+
+  <!-- Category -->
+  <div class="flex flex-col gap-2">
+    <label class="text-sm font-medium">Category</label>
+    <div class="flex gap-4">
+      @for (c of categories; track c) {
+        <div class="flex items-center gap-2">
+          <p-radioButton name="categories" [value]="c" formControlName="category"></p-radioButton>
+          <span>{{ c }}</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Frequency -->
+  <div class="flex flex-col gap-1">
+    <label class="text-sm font-medium">Frequency</label>
+    <p-select
+      class="bg-white"
+      formControlName="frequency"
+      [options]="frequencies"
+      placeholder="Select frequency"
+    ></p-select>
+  </div>
+
+  <div class="flex flex-col gap-1">
+    <p-button
+      class="sr-only-label"
+      label="_"
+      styleClass="sr-only-label w-full justify-between d-block"
+      type="submit"
+      icon="pi pi-plus"
+      iconPos="left"
+      (click)="submit()"
+    >
+    </p-button>
+    <p-button
+      styleClass="w-full min-w-full justify-between"
+      label="Cancel"
+      icon="pi pi-cancel"
+      iconPos="left"
+      (click)="close()"
+    >
+    </p-button>
+  </div>
+</form>

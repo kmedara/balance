@@ -1,5 +1,15 @@
-import { DatePipe, NgClass, NgFor } from '@angular/common';
-import { Component, OnInit, Signal, signal, WritableSignal } from '@angular/core';
+import { DatePipe, NgClass, NgFor, NgStyle } from '@angular/common';
+import {
+  Component,
+  effect,
+  ElementRef,
+  inject,
+  OnInit,
+  Renderer2,
+  Signal,
+  signal,
+  WritableSignal,
+} from '@angular/core';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { DataViewModule } from 'primeng/dataview';
 import { TagModule } from 'primeng/tag';
@@ -8,6 +18,11 @@ import { TooltipModule } from 'primeng/tooltip';
 import { CardModule } from 'primeng/card';
 import { CalendarDay, Week } from '../../types/types';
 import { expenses, incomes } from '../../../../__data__/budgets.data';
+import { ModalService } from '../../services/modal/modal.service';
+import { BudgetModal } from '../budget-modal/budget-modal';
+import { BreakpointObserver, Breakpoints, BreakpointState } from '@angular/cdk/layout';
+import { first, merge } from 'rxjs';
+import { toObservable } from '@angular/core/rxjs-interop';
 @Component({
   selector: 'app-calendar',
   standalone: true,
@@ -18,25 +33,52 @@ import { expenses, incomes } from '../../../../__data__/budgets.data';
     TagModule,
     ButtonModule,
     TooltipModule,
-    DatePipe,
     CardModule,
   ],
   templateUrl: './calendar.html',
   styleUrl: './calendar.scss',
 })
 export class Calendar {
+  private _service = inject(ModalService);
   weeks: WritableSignal<Array<Week>> = signal([]);
+  weeks$ = toObservable(this.weeks);
   currentDate = new Date();
   monthLabel = '';
   days: WritableSignal<CalendarDay[]> = signal([]);
   weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  isToday = (date: Date) =>
+    date.getMonth() == new Date().getMonth() && date.getDate() == new Date().getDate();
 
+  constructor(
+    private BreakpointObserver: BreakpointObserver,
+    private renderer: Renderer2,
+    private el: ElementRef,
+  ) {}
   ngOnInit() {
     this.generateCalendar(this.currentDate);
   }
 
-  isToday = (date: Date) =>
-    date.getMonth() == new Date().getMonth() && date.getDate() == new Date().getDate();
+  ngAfterViewInit() {
+    merge(this.BreakpointObserver.observe([Breakpoints.Handset]), this.weeks$).subscribe((r) => {
+      const cardBodies = this.el.nativeElement.querySelectorAll('.p-card-body');
+
+      cardBodies.forEach((cardBody: HTMLElement) => {
+        if (r.hasOwnProperty('matches') && (r as BreakpointState).matches) {
+          if ((r as BreakpointState).matches) {
+            this.renderer.setStyle(cardBody, 'padding', '0px');
+          }
+        } else if (r.hasOwnProperty('length')) {
+          console.log('week change');
+          const firstBody = this.el.nativeElement.querySelector('.p-card-body');
+          this.renderer.setStyle(cardBody, 'padding', window.getComputedStyle(firstBody).padding);
+        }
+      });
+    });
+  }
+
+  add = () => {
+    this._service.open(BudgetModal, { headerComponent: 'header' });
+  };
 
   generateCalendar = (date: Date) => {
     this.days.set([]);

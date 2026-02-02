@@ -1,79 +1,52 @@
-<!-- @for (day of days(); track day) {
-  <div>{{ day.date.getDate() }}{{ day.date }}</div>
-} -->
-
-<p-dataview #dv [value]="days()" class="flex flex-col flex-1 calendar-view">
+<p-dataview #dv [value]="days()" class="calendar-view flex-1 flex flex-col w-full overflow-hidden">
   <ng-template #header>
-    <div class="flex justify-between items-center">
-      <p-button icon="pi pi-chevron-left" (click)="previousMonth()" text></p-button>
-      <span class="text-xl font-semibold">{{ monthLabel }}</span>
-      <p-button icon="pi pi-chevron-right" (click)="nextMonth()" text></p-button>
-    </div>
-    <div class="calendar-weekdays grid grid-cols-7 text-center text-sm font-medium mb-2">
-      @for (day of weekdayNames; track day) {
-        <div>
-          {{ day }}
-        </div>
-      }
+    <div class="shrink-0">
+      <div class="flex justify-between items-center mb-2">
+        <p-button icon="pi pi-chevron-left" (click)="previousMonth()" text />
+        <span class="text-xl font-semibold">{{ monthLabel }}</span>
+        <p-button icon="pi pi-chevron-right" (click)="nextMonth()" text />
+      </div>
+
+      <div class="grid grid-cols-7 text-center text-sm font-medium">
+        @for (day of weekdayNames; track day) {
+          <div class="py-1">{{ day }}</div>
+        }
+      </div>
     </div>
   </ng-template>
 
   <ng-template #list let-items>
-    <div class="flex flex-1 grid grid-cols-7 gap-0 grid-nogutter">
+    <div class="flex-1 h-full grid grid-cols-7">
       @for (item of items; track $index) {
-        <!-- <p-card class="day-cell"> -->
-        <ng-template #header>
-          {{ item.date.getDate() }}
-        </ng-template>
-        <ng-template #title>{{ item.budgets }} </ng-template>
-        <!-- <ng-template #subtitle> Card subtitle </ng-template>
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Inventore sed consequuntur
-            error repudiandae numquam deserunt quisquam repellat libero asperiores earum nam nobis,
-            culpa ratione quam perferendis esse, cupiditate neque quas!
-          </p> -->
-        <!-- <ng-template #footer> -->
-        <!-- <div class="flex gap-4 mt-1">
-              <p-button
-                label="Cancel"
-                severity="secondary"
-                class="w-full"
-                [outlined]="true"
-                styleClass="w-full"
-              />
-              <p-button label="Save" class="w-full" styleClass="w-full" />
-            </div> -->
-        <!-- </ng-template> -->
-        <!-- </p-card> -->
-        <div
-          class="day-cell"
+        <p-card
+          class="day-cell h-full flex flex-col"
           [ngClass]="{
             today: isToday(item.date),
+            'out-month': !item.inCurrentMonth,
           }"
-          pTooltip="{{ item.date | date: 'fullDate' }}"
-          tooltipPosition="top"
         >
-          <div
-            class="flex flex-col flex-1 w-full h-full pl-4"
-            [ngClass]="{
-              'out-month': !item.inCurrentMonth,
-            }"
-          >
-            <div class="flex flex-0 leading-10 justify-start w-full text-lg">
-              {{ item.date.getDate() }}
-            </div>
-            <div class="flex-1 flex items-center">
-              @if (item.budgets.expenses) {
-                <i class="pi pi-circle-on success pr-2" pTooltip="list of incomes"></i>
+          <ng-template #header>
+            {{ item.date.getDate() }}
+          </ng-template>
+
+          <ng-template #content>
+            <div class="flex gap-1">
+              @if (item.budgets.incomes) {
+                <i class="pi pi-circle-on text-green-500"></i>
               }
               @if (item.budgets.expenses) {
-                <i class="pi pi-circle-on text-info" pTooltip="list of expenses"></i>
+                <i class="pi pi-circle-on text-blue-500"></i>
               }
             </div>
-            <p-card></p-card>
-          </div>
-        </div>
+          </ng-template>
+        </p-card>
       }
+    </div>
+  </ng-template>
+
+  <ng-template #footer>
+    <div class="shrink-0 p-1 flex">
+      <p-button (click)="add()" icon="pi pi-plus" rounded></p-button>
     </div>
   </ng-template>
 </p-dataview>
