@@ -8,5 +8,5 @@ export default {
     plugins: [PrimeUI],
     corePlugins: {
       preflight: false
-    }
+    },
 }

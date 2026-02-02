@@ -2,6 +2,12 @@
 @use './tailwind.css';
 @use 'primeicons/primeicons.css';
 
+:root {
+  --expense-color: var(--p-yellow-500, #ef4444);
+  --income-color: var(--p-primary-400, #22c55e);
+  --sidebar-width: 4px;
+  --bar-radius: 6px;
+}
 .active {
   border-bottom: 0.3rem solid var(--p-primary-active-color);
 }

@@ -16,13 +16,15 @@ import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { CardModule } from 'primeng/card';
-import { CalendarDay, Week } from '../../types/types';
-import { expenses, incomes } from '../../../../__data__/budgets.data';
-import { ModalService } from '../../services/modal/modal.service';
-import { BudgetModal } from '../budget-modal/budget-modal';
+import { Budget, CalendarDay, Week } from '../types/types';
+import { expenses, incomes } from '../../../__data__/budgets.data';
+import { ModalService } from '../services/modal/modal.service';
+import { BudgetModal } from '../components/budget-modal/budget-modal';
 import { BreakpointObserver, Breakpoints, BreakpointState } from '@angular/cdk/layout';
 import { first, merge } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
+import { getBudgetsForDay } from './calendar.utils';
+import { BudgetCalendarItem } from '../components/budget-calendar-item/budget-calendar-item';
 @Component({
   selector: 'app-calendar',
   standalone: true,
@@ -34,12 +36,15 @@ import { toObservable } from '@angular/core/rxjs-interop';
     ButtonModule,
     TooltipModule,
     CardModule,
+    BudgetCalendarItem,
   ],
   templateUrl: './calendar.html',
   styleUrl: './calendar.scss',
 })
 export class Calendar {
   private _service = inject(ModalService);
+  hoveredBudget = signal<Budget | null>(null);
+  userBudgets = signal(incomes.concat(expenses));
   weeks: WritableSignal<Array<Week>> = signal([]);
   weeks$ = toObservable(this.weeks);
   currentDate = new Date();
@@ -49,37 +54,23 @@ export class Calendar {
   isToday = (date: Date) =>
     date.getMonth() == new Date().getMonth() && date.getDate() == new Date().getDate();
 
-  constructor(
-    private BreakpointObserver: BreakpointObserver,
-    private renderer: Renderer2,
-    private el: ElementRef,
-  ) {}
   ngOnInit() {
     this.generateCalendar(this.currentDate);
-  }
-
-  ngAfterViewInit() {
-    merge(this.BreakpointObserver.observe([Breakpoints.Handset]), this.weeks$).subscribe((r) => {
-      const cardBodies = this.el.nativeElement.querySelectorAll('.p-card-body');
-
-      cardBodies.forEach((cardBody: HTMLElement) => {
-        if (r.hasOwnProperty('matches') && (r as BreakpointState).matches) {
-          if ((r as BreakpointState).matches) {
-            this.renderer.setStyle(cardBody, 'padding', '0px');
-          }
-        } else if (r.hasOwnProperty('length')) {
-          console.log('week change');
-          const firstBody = this.el.nativeElement.querySelector('.p-card-body');
-          this.renderer.setStyle(cardBody, 'padding', window.getComputedStyle(firstBody).padding);
-        }
-      });
-    });
   }
 
   add = () => {
     this._service.open(BudgetModal, { headerComponent: 'header' });
   };
 
+  getTooltip(budget: Budget): string {
+    return `
+    <div>
+      <strong>${budget.title}</strong><br/>
+      ${budget.description}<br/>
+      <em>${budget.category}</em>
+    </div>
+  `;
+  }
   generateCalendar = (date: Date) => {
     this.days.set([]);
     const year = date.getFullYear();
@@ -93,30 +84,30 @@ export class Calendar {
 
     const startDayOfWeek = firstDayOfMonth.getDay();
 
-    // Previous month's trailing days
     const prevMonthLastDate = new Date(year, month, 0).getDate();
+
+    // Previous month's trailing days
     for (let i = startDayOfWeek - 1; i >= 0; i--) {
+      const date = new Date(year, month - 1, prevMonthLastDate - i);
       this.days.update((days) => [
         ...days,
         {
-          date: new Date(year, month - 1, prevMonthLastDate - i),
+          date,
           inCurrentMonth: false,
-          budgets: {},
+          budgets: getBudgetsForDay(date, this.userBudgets()),
         },
       ]);
     }
 
     // Current month days
     for (let d = 1; d <= totalDays; d++) {
+      const date = new Date(year, month, d);
       this.days.update((days) => [
         ...days,
         {
-          date: new Date(year, month, d),
+          date,
           inCurrentMonth: true,
-          budgets: {
-            incomes: incomes,
-            expenses: expenses,
-          },
+          budgets: getBudgetsForDay(date, this.userBudgets()),
         },
       ]);
     }
@@ -124,14 +115,14 @@ export class Calendar {
     // Next month's leading days
     const endIndex = this.days().length % 7;
     const remainingDays = endIndex === 0 ? 0 : 7 - endIndex;
-    console.log(remainingDays);
     for (let d = 1; d <= remainingDays; d++) {
+      const date = new Date(year, month + 1, d);
       this.days.update((days) => [
         ...days,
         {
-          date: new Date(year, month + 1, d),
+          date,
           inCurrentMonth: false,
-          budgets: {},
+          budgets: getBudgetsForDay(date, this.userBudgets()),
         },
       ]);
     }

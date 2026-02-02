@@ -9,15 +9,14 @@ export type Week = FixedLengthArray<CalendarDay, 7>;
 export type CalendarDay = {
   date: Date;
   inCurrentMonth: boolean;
-  budgets?: {
-    incomes?: Budget[];
-    expenses?: Budget[];
-  };
+  budgets?: Budget[];
 };
 
 export type Budget = {
   title: string;
+  description?: string;
   startDate: Date;
+  amount: number;
   category: 'Income' | 'Expense';
   frequency:
     | 'Once'
