@@ -31,14 +31,7 @@ export const routes: Routes = [
         data: {
           name: 'Calendar',
         },
-      },
-      {
-        path: 'expenses',
-        loadComponent: () => import('./expenses/expenses').then((mod) => mod.Expenses),
-        data: {
-          name: 'Expenses',
-        },
-      },
+      }
     ],
   },
   {

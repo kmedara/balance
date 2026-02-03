@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Button } from 'primeng/button';
-import { ModalService } from '../../services/modal/modal.service';
-import { BudgetModal } from '../budget-modal/budget-modal';
+import { ModalService } from 'src/app/modals/modal.service';
+import { BudgetModal } from 'src/app/modals/budget-modal/budget-modal';
 
 @Component({
   selector: 'app-user-actions',
@@ -13,6 +13,6 @@ export class UserActions {
   private _service = inject(ModalService);
 
   add = () => {
-    this._service.open(BudgetModal, { headerComponent: 'header' });
+    this._service.open(BudgetModal, { header: 'header' });
   };
 }

@@ -1,0 +1,62 @@
+import {
+  ApplicationRef,
+  EnvironmentInjector,
+  Injectable,
+  Type,
+  createComponent,
+  createEnvironmentInjector,
+  inject,
+  signal,
+} from '@angular/core';
+import { ModalShell } from './modal-shell/modal-shell';
+import { MODAL_CONFIG, MODAL_CONTEXT, MODAL_DATA, MODAL_ID, ModalConfig, ModalContext } from './modal.tokens';
+import { IEvent, ModalEvent } from '../types/events';
+
+/**
+ * Tracks all modals, owns signals for “results” or lifecycle, knows nothing about DOM or components.
+ */
+@Injectable({ providedIn: 'root' })
+export class ModalService {
+  private readonly _results = signal<ModalEvent[]>([]);
+  readonly results = this._results.asReadonly();
+  private readonly rootEnvInjector = inject(EnvironmentInjector);
+  private readonly appRef = inject(ApplicationRef);
+
+  open<T = unknown>(
+    content: Type<unknown>,
+    config: Partial<ModalConfig> = {},
+  ): string {
+    const id = crypto.randomUUID();
+
+    const shellInjector = createEnvironmentInjector(
+      [
+        { provide: MODAL_ID, useValue: id },
+        { provide: MODAL_CONFIG, useValue: { content, ...config } },
+        { provide: MODAL_DATA, useValue: config.data ?? null },
+      ],
+      this.rootEnvInjector
+    );
+
+    const shellRef = createComponent(ModalShell, {
+      environmentInjector: shellInjector,
+    });
+
+    this.appRef.attachView(shellRef.hostView);
+    document.body.appendChild(shellRef.location.nativeElement);
+    this.emit({
+      id,
+      outcome: 'ModalOpened',
+    });
+    return id;
+  }
+
+  close<T>(event: ModalEvent) {
+    this.emit(event);
+  }
+
+  emit(event: ModalEvent) {
+    if (!event.payload)
+      delete event.payload;
+    this._results.update(events => [...events, event]);
+  }
+}

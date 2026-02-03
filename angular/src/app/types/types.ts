@@ -9,7 +9,7 @@ export type Week = FixedLengthArray<CalendarDay, 7>;
 export type CalendarDay = {
   date: Date;
   inCurrentMonth: boolean;
-  budgets?: Budget[];
+  events?: any[];
 };
 
 export type Budget = {

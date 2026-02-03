@@ -9,7 +9,8 @@ import { appRoutes } from './routes.app';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
-import { DefaultPreset } from '../theme/default';
+import { DefaultPreset } from './theme.default';
+import { DialogService } from 'primeng/dynamicdialog';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -20,13 +21,10 @@ export const appConfig: ApplicationConfig = {
     providePrimeNG({
       theme: {
         preset: DefaultPreset,
-        options: {
-          darkModeSelector: 'system',
-          cssLayer: false,
-          prefix: 'p',
-        },
       },
       ripple: true,
     }),
+    DialogService
   ],
+  //imports: [DynamicD]
 };

@@ -6,7 +6,7 @@ import { Card } from 'primeng/card';
 
 @Component({
   selector: 'app-budget-calendar-item',
-  imports: [Tooltip, NgStyle, Card],
+  imports: [Tooltip, NgStyle],
   templateUrl: './budget-calendar-item.html',
   styleUrl: './budget-calendar-item.scss',
 })

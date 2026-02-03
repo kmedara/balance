@@ -16,15 +16,14 @@ import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { CardModule } from 'primeng/card';
-import { Budget, CalendarDay, Week } from '../types/types';
-import { expenses, incomes } from '../../../__data__/budgets.data';
-import { ModalService } from '../services/modal/modal.service';
-import { BudgetModal } from '../components/budget-modal/budget-modal';
-import { BreakpointObserver, Breakpoints, BreakpointState } from '@angular/cdk/layout';
-import { first, merge } from 'rxjs';
+import { Budget, CalendarDay, Week } from '@__types/types';
+import { expenses, incomes } from '@__data__/budgets.data';
+import { ModalService } from 'src/app/modals/modal.service';
+import { BudgetModal } from 'src/app/modals/budget-modal/budget-modal';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { getBudgetsForDay } from './calendar.utils';
-import { BudgetCalendarItem } from '../components/budget-calendar-item/budget-calendar-item';
+import { BudgetCalendarItem } from './budget-calendar-item/budget-calendar-item';
+import { UserActions } from '@components/user-actions/user-actions';
 @Component({
   selector: 'app-calendar',
   standalone: true,
@@ -51,15 +50,20 @@ export class Calendar {
   monthLabel = '';
   days: WritableSignal<CalendarDay[]> = signal([]);
   weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  isToday = (date: Date) =>
-    date.getMonth() == new Date().getMonth() && date.getDate() == new Date().getDate();
+  isToday = (date: Date) => {
+    var today = new Date();
+    return date.getMonth() == today.getMonth() 
+    && date.getDate() == today.getDate() 
+    && date.getFullYear() === today.getFullYear();
+  }
+    
 
   ngOnInit() {
     this.generateCalendar(this.currentDate);
   }
 
   add = () => {
-    this._service.open(BudgetModal, { headerComponent: 'header' });
+    this._service.open(BudgetModal, { header: 'Add a budget', data: { a: 'b'}});
   };
 
   getTooltip(budget: Budget): string {

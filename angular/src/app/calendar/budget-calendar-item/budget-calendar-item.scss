@@ -1,6 +1,6 @@
 :host ::ng-deep {
   .p-tooltip-text {
-    background-color: white;
+    //background-color: white;
     border: 1px solid #e5e7eb; /* subtle gray border */
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -9,8 +9,8 @@
 }
 
 .budget-bar {
-  height: 32px;
-  max-height: 32px;
+ // height: 32px;
+  //max-height: 1.25px;
   width: 100%;
   pointer-events: auto;
 }

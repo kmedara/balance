@@ -1,6 +1,6 @@
 import { Component, effect, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { ModalService } from './services/modal/modal.service';
+import { ModalService } from './modals/modal.service';
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet],
@@ -13,9 +13,8 @@ export class App {
 
   constructor() {
     effect(() => {
-      for (const event of this.modalService.events()) {
-        console.log('Modal event:', event);
-      }
+      const events = this.modalService.results();
+      console.log(events[events.length-1])
     });
   }
 }

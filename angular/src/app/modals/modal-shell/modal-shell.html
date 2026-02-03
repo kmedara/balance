@@ -1,0 +1,31 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  dismissableMask="true"
+  appendTo="body"
+  [baseZIndex]="20000"
+  [style]="{ width: '90%', 'max-width': '30rem'}"
+  (visibleChange)="close('ModalCanceled')"
+  
+>
+<ng-template #header>
+  @if (isHeaderString()) {
+    <span class="text-lg font-semibold">{{ headerText }}</span>
+  } @else if (isHeaderComponent()) {
+    <ng-container *ngComponentOutlet="headerComponent"></ng-container>
+  }
+</ng-template>
+<ng-template #content></ng-template>
+
+<!--
+Doesn't work if the content component attempts to access any injection tokens created after the shellRef view is attached
+to the appRef view. i.e, an error would throw if defining another injector in the shell and then referenced in the content component
+
+*ngComponentOutlet="config.content" automatically creates the component in that spot.
+
+#content + contentVcr.createComponent() is only needed if you want dynamic creation in code.
+
+See the implementation in modal.service ```this.appRef.attachView(shellRef.hostView);```
+-->
+<!-- <ng-container *ngComponentOutlet="config.content"></ng-container> -->
+</p-dialog>

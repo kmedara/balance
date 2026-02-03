@@ -55,6 +55,11 @@ export const occursOnDate = (budget: Budget, date: Date) => {
       return false;
   }
 };
-export const getBudgetsForDay = (date: Date, budgets: Budget[]): Budget[] => {
+
+/**
+ * logic to map objects to a day on the calendar
+ */
+export type CalendarMatchFn<T> = (date: Date,  objects: T[]) => T[]
+export const getBudgetsForDay: CalendarMatchFn<Budget> = (date: Date, budgets: Budget[]): Budget[] => {
   return budgets.filter((b) => occursOnDate(b, date));
 };
