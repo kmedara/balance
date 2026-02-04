@@ -65,7 +65,6 @@ export class ModalShell implements IClosable  {
 
   }
   ngAfterViewInit() {
-    console.log(this.contentVcr)
     if (!this.contentVcr) return; // safety check
 
     const context: ModalContext = {

@@ -1,5 +1,4 @@
 <form [formGroup]="form" class="p-5 space-y-4" >
-  <!-- Title -->
   <div class="flex flex-col gap-1">
     <label class="text-sm font-medium">Title</label>
     <input pInputText formControlName="title" placeholder="e.g. Rent, Salary" />
@@ -7,14 +6,12 @@
       <small class="text-red-500"> Title is required </small>
     }
   </div>
-
-  <!-- Start Date -->
+<!-- @defer  { -->
   <div class="flex flex-col gap-1">
     <label class="text-sm font-medium">Start Date</label>
     <p-date-picker formControlName="startDate" showIcon dateFormat="mm/dd/yy"></p-date-picker>
   </div>
-
-  <!-- Category -->
+<!-- }  -->
   <div class="flex flex-col gap-2">
     <label class="text-sm font-medium">Category</label>
     <div class="flex gap-4">
@@ -27,7 +24,6 @@
     </div>
   </div>
 
-  <!-- Frequency -->
   <div class="flex flex-col gap-1">
     <label class="text-sm font-medium">Frequency</label>
     <p-select

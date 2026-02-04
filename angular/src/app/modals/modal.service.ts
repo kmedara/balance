@@ -8,9 +8,8 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { ModalShell } from './modal-shell/modal-shell';
-import { MODAL_CONFIG, MODAL_CONTEXT, MODAL_DATA, MODAL_ID, ModalConfig, ModalContext } from './modal.tokens';
-import { IEvent, ModalEvent } from '../types/events';
+import { MODAL_CONFIG, MODAL_DATA, MODAL_ID, ModalConfig } from './modal.tokens';
+import { ModalEvent } from '../types/events';
 
 /**
  * Tracks all modals, owns signals for “results” or lifecycle, knows nothing about DOM or components.
@@ -22,10 +21,10 @@ export class ModalService {
   private readonly rootEnvInjector = inject(EnvironmentInjector);
   private readonly appRef = inject(ApplicationRef);
 
-  open<T = unknown>(
+  async open<T = unknown>(
     content: Type<unknown>,
     config: Partial<ModalConfig> = {},
-  ): string {
+  ): Promise<string> {
     const id = crypto.randomUUID();
 
     const shellInjector = createEnvironmentInjector(
@@ -36,7 +35,7 @@ export class ModalService {
       ],
       this.rootEnvInjector
     );
-
+    const { ModalShell } = await import('./modal-shell/modal-shell').then(m => m);
     const shellRef = createComponent(ModalShell, {
       environmentInjector: shellInjector,
     });

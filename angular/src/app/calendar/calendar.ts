@@ -19,11 +19,9 @@ import { CardModule } from 'primeng/card';
 import { Budget, CalendarDay, Week } from '@__types/types';
 import { expenses, incomes } from '@__data__/budgets.data';
 import { ModalService } from 'src/app/modals/modal.service';
-import { BudgetModal } from 'src/app/modals/budget-modal/budget-modal';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { getBudgetsForDay } from './calendar.utils';
 import { BudgetCalendarItem } from './budget-calendar-item/budget-calendar-item';
-import { UserActions } from '@components/user-actions/user-actions';
 @Component({
   selector: 'app-calendar',
   standalone: true,
@@ -62,7 +60,8 @@ export class Calendar {
     this.generateCalendar(this.currentDate);
   }
 
-  add = () => {
+  add = async () => {
+    const { BudgetModal } = await import('@modals/budget-modal/budget-modal')
     this._service.open(BudgetModal, { header: 'Add a budget', data: { a: 'b'}});
   };
 

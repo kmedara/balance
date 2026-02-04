@@ -7,7 +7,7 @@ const outlets: Routes = [
   {
     path: '',
     outlet: 'actions',
-    component: UserActions,
+    loadComponent: () => import('./components/user-actions/user-actions').then((mod) => mod.UserActions),
   },
 ];
 

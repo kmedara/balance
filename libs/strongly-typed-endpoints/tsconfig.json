@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+      "declaration": true,
+      "declarationMap": true,
+      "emitDeclarationOnly": false,
+      "outDir": "dist",
+      "rootDir": "src",
+      "moduleResolution": "NodeNext",
+      "module": "NodeNext"
+    },
+    "include": ["src"]
+  }

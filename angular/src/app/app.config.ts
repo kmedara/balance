@@ -10,7 +10,6 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
 import { DefaultPreset } from './theme.default';
-import { DialogService } from 'primeng/dynamicdialog';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -24,7 +23,6 @@ export const appConfig: ApplicationConfig = {
       },
       ripple: true,
     }),
-    DialogService
   ],
   //imports: [DynamicD]
 };

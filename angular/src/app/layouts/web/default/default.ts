@@ -21,6 +21,5 @@ export class Default {
   navigationInfo = computed(() => this.data()!['routes'] as NavigationItem[]);
 
   onActivate(event: any) {
-    console.log('Activated component:', event);
   }
 }

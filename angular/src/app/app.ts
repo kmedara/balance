@@ -14,7 +14,6 @@ export class App {
   constructor() {
     effect(() => {
       const events = this.modalService.results();
-      console.log(events[events.length-1])
     });
   }
 }

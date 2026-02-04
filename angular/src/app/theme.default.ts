@@ -4,6 +4,11 @@ import Aura from '@primeuix/themes/aura';
 export const PrimeAura = Aura;
 export const DefaultPreset = definePreset(Aura, {
   components: {
+    button: {
+      
+      root: {
+       
+    }},
     toolbar: {
       root: {
        

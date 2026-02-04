@@ -19,7 +19,6 @@ export const navigationMenuResolver: ResolveFn<NavigationItem[]> = (route, state
       route: r.path ? r.path : '',
     }));
 
-  console.log('items', items);
   return of(items ?? []);
 };
 
