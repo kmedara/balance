@@ -1,6 +1,6 @@
 import { Component, effect, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { ModalService } from './modals/modal.service';
+import { ModalService } from '@services/modal.service';
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet],

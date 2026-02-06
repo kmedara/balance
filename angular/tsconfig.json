@@ -17,12 +17,13 @@
     "module": "preserve",
     "paths": {
       "@services/*" : ["src/app/services/*"],
-      "@modals/*" : ["src/app/modals/*"],
-      "@events" : ["src/app/types/events"],
+      "@modals/*" : ["src/app/components/modals/*"],
       "@components/*" : ["src/app/components/*"],
-      "@__types/*" : ["src/app/types/*"],
-      "@resolvers/*" : ["src/app/resolvers/*"],
-      "@guards/*" : ["src/app/guards/*"],
+      "@__types/*" : ["src/app/core/types/*"],
+      "@resolvers/*" : ["src/app/core/resolvers/*"],
+      "@guards/*" : ["src/app/core/guards/*"],
+      "@routes/*" : ["src/app/routes/*"],
+      "@core/*" : ["src/app/core/*"],
       "@__data__/*" : ["__data__/*"],
 
     }

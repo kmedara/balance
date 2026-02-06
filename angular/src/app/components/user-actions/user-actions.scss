@@ -1,0 +1,30 @@
+.user-action-button {
+  width: 100%;
+  position: relative;
+  background: none;
+  font-size: var(--p-button-lg-font-size);
+  padding: var(--p-button-lg-padding-y) var(--p-button-lg-padding-x);
+  padding-left: calc(var(--p-drawer-header-padding) + var(--p-button-padding-x));
+  transition:
+    background var(--p-button-transition-duration),
+    color var(--p-button-transition-duration),
+    border-color var(--p-button-transition-duration),
+    outline-color var(--p-button-transition-duration),
+    box-shadow var(--p-button-transition-duration);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--p-button-gap);
+  font-weight: var(--p-button-label-font-weight);
+  &:hover {
+    background: var(--p-button-primary-hover-background);
+  }
+  i {
+    font-size: var(--p-button-lg-font-size);
+  }
+}
+:host ::ng-deep .user-action-drawer {
+  .p-drawer-content {
+    padding: 0;
+  }
+}

@@ -8,7 +8,7 @@ services:
     ports:
       - "4200:4200"
     env_file:
-      - .env.local
+      - ./angular/.env
     environment:
       - CHOKIDAR_USEPOLLING=true
     volumes:

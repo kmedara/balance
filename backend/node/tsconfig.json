@@ -44,5 +44,5 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
   },
-  "include": ["./src", "environment.d.ts", "util.ts", "index.ts"]
+  "include": ["./src", "environment.d.ts", "util.ts", "src/index.ts"]
 }

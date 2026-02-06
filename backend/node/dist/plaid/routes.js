@@ -1,28 +1,36 @@
-import { plaidClient } from './client.js';
-import { Products } from 'plaid';
-import { getPlaidEnvVars } from '../env.js';
-process.env.p;
-export async function plaidRoutes(app, options) {
-    // Create Link Token
-    app.post('/link-token', async () => {
-        const response = await plaidClient.linkTokenCreate({
-            user: {
-                client_user_id: 'user-123' // replace with your user ID
-            },
-            client_name: 'Balance',
-            products: [Products.Auth, Products.Balance],
-            country_codes: getPlaidEnvVars().PLAID_COUNTRY_CODES,
-            language: 'en'
-        });
-        return response.data;
+import { plaidClient } from "./client.js";
+import { getPlaidEnvVars } from "../env.helper.js";
+import { CountryCode, Products } from "plaid";
+export const plaidRoutes = (app, options) => {
+    app.get("/link-token", async () => {
+        const x = async () => "hello";
+        return await x().then((d) => d);
     });
-    // Exchange public_token for access_token
-    app.post('/exchange-token', async (request) => {
+    // Create Link Token
+    app.post("/link-token", async (req, res) => {
+        const { PLAID_CLIENT_NAME, PLAID_PRODUCTS, PLAID_COUNTRY_CODES, PLAID_CLIENT_ID, PLAID_SECRET, PLAID_REDIRECT_URI, } = getPlaidEnvVars();
+        const request = {
+            language: "en",
+            country_codes: [CountryCode.Us],
+            products: [Products.Transactions], //https://plaid.com/docs/balance/add-to-app/ should NOT include balance in products array in link creation, but should include signal
+            client_name: "Budget-Balance",
+            user: {
+                client_user_id: "user_good", // replace with your user ID
+            },
+            redirect_uri: PLAID_REDIRECT_URI,
+        };
+        return await plaidClient
+            .linkTokenCreate(request)
+            .then(({ data }) => data)
+            .catch((err) => err);
+    });
+    //Exchange public_token for access_token
+    app.post("/exchange-token", async (request) => {
         const { public_token } = request.body;
         const response = await plaidClient.itemPublicTokenExchange({
-            public_token
+            public_token,
         });
         return response.data;
     });
-}
+};
 //# sourceMappingURL=routes.js.map

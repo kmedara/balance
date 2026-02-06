@@ -1,4 +1,4 @@
-import { Budget } from '../src/app/types/types';
+import { Budget } from '@__types/budget';
 export const incomes: Budget[] = [
   {
     category: 'Income',

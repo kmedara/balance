@@ -1,6 +1,34 @@
+<p-button rounded icon="pi pi-cog" (click)="menu.toggle($event)"></p-button>
+<p-menu #menu [model]="items" [popup]="true">
+  <ng-template #item let-item>
+    <a
+      (click)="item.action()"
+      pRipple
+      class="flex items-center px-3 py-2 cursor-pointer text-nowrap"
+      [class]="item.linkClass"
+    >
+      <span [class]="item.icon"></span>
+      <span class="ms-2">{{ item.label }}</span>
+    </a>
+  </ng-template>
+</p-menu>
 
-<p-button rounded icon="pi pi-user"></p-button>
+<!-- <p-drawer
+  class="user-action-drawer"
+  [visible]="visible()"
+  dismissable
+  closeOnEscape
+  (onHide)="visible.set(false)"
+  class="w-30rem user-action-drawer"
+> -->
+<!-- @for (action of actions; track $index) {
+    <div class="user-action-button" size="large" variant="text">
+      <i [class]="action.icon"></i>
+      <span [innerHTML]="action.label"></span>
+    </div>
+  } -->
 
-<p-drawer [visible]="false" class="w-30rem">
-    Hello World
-</p-drawer>
+<!-- @for (action of actions; track $index) {
+    <p-button icon="pi pi-building-columns" size="large" label="Connect a bank account" />
+  } -->
+<!-- </p-drawer> -->

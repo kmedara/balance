@@ -1,23 +1,26 @@
 import {
   BaseComponent,
   PARENT_INSTANCE
-} from "./chunk-KY3XJ6HV.js";
-import {
-  Bind
-} from "./chunk-GKMVLIEZ.js";
+} from "./chunk-77JR2TL4.js";
 import {
   BaseStyle
-} from "./chunk-SF7P2EPO.js";
+} from "./chunk-AV56FG7P.js";
 import {
   PrimeTemplate,
   SharedModule
-} from "./chunk-7XXOATMO.js";
+} from "./chunk-KKOYKGUL.js";
+import {
+  Bind
+} from "./chunk-4UPT3YTR.js";
+import "./chunk-HCSEO4SP.js";
+import "./chunk-XQJAT3TD.js";
 import {
   CommonModule,
   NgClass,
   NgIf,
   NgTemplateOutlet
-} from "./chunk-JXF33VWW.js";
+} from "./chunk-MTU2WV7Q.js";
+import "./chunk-OV5FLENP.js";
 import {
   ChangeDetectionStrategy,
   Component,
@@ -61,8 +64,6 @@ import {
   ɵɵdefineInjector
 } from "./chunk-LOKY7SF2.js";
 import "./chunk-RSS3ODKE.js";
-import "./chunk-JDCUDN3F.js";
-import "./chunk-I6634VYK.js";
 import "./chunk-GOMI4DH3.js";
 
 // node_modules/@primeuix/styles/dist/tag/index.mjs
