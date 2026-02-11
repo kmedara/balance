@@ -1,63 +1,57 @@
 /**
- * 
+ * Creates a pascal case string literal from two inputs
  */
-export type ConcatCapitalizeLowercase<S1 extends string, S2 extends string> = `${Capitalize<Lowercase<S1>>}${Capitalize<Lowercase<S2>>}`
+type ConcatCapitalizeLowercase<
+  S1 extends string,
+  S2 extends string,
+> = `${Capitalize<Lowercase<S1>>}${Capitalize<Lowercase<S2>>}`;
 
 /**
- * 
+ * Template literal types distribute over unions
  */
-export type ModalOutcome = ConcatCapitalizeLowercase<
-'Modal',
-'Opened' | 'Submitted' | 'Canceled'>
+type ModalOutcome = ConcatCapitalizeLowercase<'Modal', 'Opened' | 'Submitted' | 'canceled'>;
+
+type ToastOutcome = ConcatCapitalizeLowercase<'Toast', 'Shown' | 'Dismissed'>;
+
+type ApiOutcome = ConcatCapitalizeLowercase<'Api', 'Success' | 'Failure'>;
 
 /**
- * 
+ * Master set of allowed outcomes
  */
-export type ToastOutcome = ConcatCapitalizeLowercase<
-  'Toast',
-  'Shown' | 'Dismissed'
->;
-
-export type ApiOutcome = ConcatCapitalizeLowercase<
-  'Api',
-  'Success' | 'Failure'
->;
+type EventOutcome = ModalOutcome | ToastOutcome | ApiOutcome | 'OK';
 
 /**
- * 
+ * Extract prefix before _ if present,
+ * i.e, Modal_Opened => Modal,
+ * but ModalOpened => ModalOpened
  */
-export type EventOutcome =
-  | ModalOutcome
-  | ToastOutcome
-  | ApiOutcome
-  | 'OK';
+type OutcomePrefix<T extends string> = T extends `${infer Prefix}_${string}` ? Prefix : T;
 
-  export type OutcomePrefix<T extends string> =
-  T extends `${infer Prefix}_${string}`
-    ? Prefix
-    : T;
+/**
+ * Appends Event to the prefix
+ * ModalOpened => ModalOpenedEvent
+ * Modal_Opened => ModalEvent
+ */
+type EventTypeName<TOutcome extends string> = `${OutcomePrefix<TOutcome>}Event`;
 
-    export type EventTypeName<TOutcome extends string> =
-  `${OutcomePrefix<TOutcome>}Event`;
+/**
+ *
+ */
+type Event<T = unknown, K = unknown> = {
+  id: string;
+  outcome: T;
+  payload?: K;
+};
 
-  export type EventFromOutcome<
-  TOutcome extends string,
-  TPayload = unknown
-> = {
-  [K in EventTypeName<TOutcome>]: IEvent<TOutcome, TPayload>
+/**
+ * if Outcome = ModalOpened,
+ * ModalOpenedEvent =>
+ */
+type EventFromOutcome<TOutcome extends string, TPayload = unknown> = {
+  [K in EventTypeName<TOutcome>]: Event<TOutcome, TPayload>;
 }[EventTypeName<TOutcome>];
 
 /**
- * 
+ *
  */
-export interface IEvent<T = unknown, K = unknown> {
-    id: string;
-    outcome: T
-    payload?: K;
-  }
-
-  /**
-   * 
-   */
-  export type ModalEvent<T = unknown> =
-  EventFromOutcome<ModalOutcome, T>;
+export type ModalEvent<T = unknown> = EventFromOutcome<ModalOutcome, T>;

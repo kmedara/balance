@@ -1,6 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { Button } from 'primeng/button';
-import { Drawer } from 'primeng/drawer';
 import { Menu } from 'primeng/menu';
 import { ModalService } from '@services/modal.service';
 import { BudgetModal } from '@modals/budget-modal/budget-modal';
@@ -8,7 +7,7 @@ import { PlaidService } from '@services/plaid.service';
 
 @Component({
   selector: 'app-user-actions',
-  imports: [Button, Drawer, Menu],
+  imports: [Button, Menu],
   templateUrl: './user-actions.html',
   styleUrl: './user-actions.scss',
 })

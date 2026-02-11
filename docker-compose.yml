@@ -2,6 +2,8 @@ services:
   angular: 
     networks:
       - balance
+    depends_on:
+      - node
     build: 
       context: ./angular
       dockerfile: ./Dockerfile
@@ -15,7 +17,28 @@ services:
       - ./angular/src:/app/src
       - ./angular/angular.json:/app/angular.json
       - ./angular/tsconfig.json:/app/tsconfig.json
+  node:
+    networks:
+      - balance
+    build: 
+      context: ./backend/node
+      dockerfile: ./Dockerfile
+    ports: 
+      - "3000:3000"
+    env_file: ./backend/node/.env
     
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
+
 
 
 networks:

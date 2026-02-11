@@ -35,9 +35,7 @@ export class ModalService {
       ],
       this.rootEnvInjector,
     );
-    const { ModalShell } = await import('../components/modals/modal-shell/modal-shell').then(
-      (m) => m,
-    );
+    const { ModalShell } = await this.loadShell();
     const shellRef = createComponent(ModalShell, {
       environmentInjector: shellInjector,
     });
@@ -59,4 +57,6 @@ export class ModalService {
     if (!event.payload) delete event.payload;
     this._results.update((events) => [...events, event]);
   }
+
+  protected loadShell = () => import('../components/modals/modal-shell/modal-shell');
 }

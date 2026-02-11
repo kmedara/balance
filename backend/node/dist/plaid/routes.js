@@ -19,18 +19,24 @@ export const plaidRoutes = (app, options) => {
             },
             redirect_uri: PLAID_REDIRECT_URI,
         };
-        return await plaidClient
-            .linkTokenCreate(request)
-            .then(({ data }) => data)
-            .catch((err) => err);
+        return await plaidClient.linkTokenCreate(request).then(({ data }) => data);
     });
     //Exchange public_token for access_token
     app.post("/exchange-token", async (request) => {
         const { public_token } = request.body;
-        const response = await plaidClient.itemPublicTokenExchange({
+        return await plaidClient
+            .itemPublicTokenExchange({
             public_token,
+        })
+            .then(({ data }) => {
+            return {
+                item_id: data.item_id,
+                request_id: data.request_id,
+            };
         });
-        return response.data;
+        //  "access_token": "access-sandbox-fe45a6ed-5804-41c9-9fa4-8a3d060b63c9",
+        //     "item_id": "vwyr1polMGFw8MBq63kPsRZEEPKoQJiWD7vn5",
+        //     "request_id"
     });
 };
 //# sourceMappingURL=routes.js.map
