@@ -54,4 +54,6 @@ type EventFromOutcome<TOutcome extends string, TPayload = unknown> = {
 /**
  *
  */
-export type ModalEvent<T = unknown> = EventFromOutcome<ModalOutcome, T>;
+type ModalEvent<T = unknown> = EventFromOutcome<ModalOutcome, T>;
+
+export type { ModalEvent, ModalOutcome, ToastOutcome, ApiOutcome };

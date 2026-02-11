@@ -24,6 +24,7 @@ import {
 } from 'src/app/core/tokens/modal';
 import { NgComponentOutlet, NgIf } from '@angular/common';
 import { IClosable } from '@__types/closable';
+import { ModalOutcome } from '@__types/events';
 
 /**
  * Renders the modal (PrimeNG dialog),
