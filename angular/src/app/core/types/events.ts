@@ -18,7 +18,7 @@ type ApiOutcome = ConcatCapitalizeLowercase<'Api', 'Success' | 'Failure'>;
 /**
  * Master set of allowed outcomes
  */
-type EventOutcome = ModalOutcome | ToastOutcome | ApiOutcome | 'OK';
+export type EventOutcome = ModalOutcome | ToastOutcome | ApiOutcome | 'OK';
 
 /**
  * Extract prefix before _ if present,

@@ -9,10 +9,9 @@ services:
       dockerfile: ./Dockerfile
     ports:
       - "4200:4200"
-    env_file:
-      - ./angular/.env
     environment:
       - CHOKIDAR_USEPOLLING=true
+      - GATEWAY=${GATEWAY}
     volumes:
       - ./angular/src:/app/src
       - ./angular/angular.json:/app/angular.json
@@ -25,7 +24,16 @@ services:
       dockerfile: ./Dockerfile
     ports: 
       - "3000:3000"
-    env_file: ./backend/node/.env
+    environment:
+      - PLAID_CLIENT_ID=${PLAID_CLIENT_ID}5f84994693b37b0012444970
+      - PLAID_SECRET=${PLAID_SECRET}ab6d8b806b10b42f7a06990142efe0
+      - PLAID_PRODUCTS=${PLAID_PRODUCTS}transactions
+      - PLAID_HOST=${PLAID_HOST}https://sandbox.plaid.com
+      - PLAID_COUNTRY_CODES=${PLAID_COUNTRY_CODES}US
+      - PLAID_ENV=${PLAID_ENV}sandbox
+      - PLAID_CLIENT_NAME=${PLAID_CLIENT_NAME}Budget-Balance
+      - PLAID_REDIRECT_URI=${PLAID_REDIRECT_URI}http://localhost:4200/
+      - MONGO_URL=${MONGO_URL}
     
   mongo:
     image: mongo:6

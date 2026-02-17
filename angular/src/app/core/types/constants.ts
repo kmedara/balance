@@ -1,5 +1,5 @@
 import { BudgetCategory, BudgetFrequency } from '@__types/budget';
-import { UnionToTuple } from './utility.types';
+import { UnionToTuple } from './util';
 
 export const frequencies: UnionToTuple<BudgetFrequency> = [
   'Once',
