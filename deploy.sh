@@ -26,6 +26,7 @@ required_vars=(
   PLAID_CLIENT_NAME
   PLAID_REDIRECT_URI
   GATEWAY
+  MONGO_URL
 )
 
 for var in "${required_vars[@]}"; do
