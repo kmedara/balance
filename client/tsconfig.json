@@ -25,7 +25,6 @@
       "@routes/*" : ["src/app/routes/*"],
       "@core/*" : ["src/app/core/*"],
       "@__data__/*" : ["__data__/*"],
-
     }
   },
   "angularCompilerOptions": {

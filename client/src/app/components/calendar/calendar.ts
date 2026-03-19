@@ -63,7 +63,7 @@ export class Calendar {
   }
 
   add = async () => {
-    const { BudgetModal } = await import('@modals/budget-modal/budget-modal');
+    const { BudgetModal } = await import('@modals/add-budget/add-budget');
     this._service.open(BudgetModal, { header: 'Add a budget', data: { a: 'b' } });
   };
 

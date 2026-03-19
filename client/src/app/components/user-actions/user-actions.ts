@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { Button } from 'primeng/button';
 import { Menu } from 'primeng/menu';
 import { ModalService } from '@services/modal.service';
-import { BudgetModal } from '@modals/budget-modal/budget-modal';
+import { BudgetModal } from '@modals/add-budget/add-budget';
 import { PlaidService } from '@services/plaid.service';
 
 @Component({

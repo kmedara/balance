@@ -29,11 +29,12 @@ import {
   MODAL_ID,
   ModalContext,
 } from '@core/tokens/modal';
+import { FileUpload } from '@components/file-upload/file-upload';
 @Component({
-  selector: 'app-budget-modal',
-  imports: [Select, DatePicker, RadioButton, ReactiveFormsModule, InputText, Button],
-  templateUrl: './budget-modal.html',
-  styleUrl: './budget-modal.scss',
+  selector: 'app-add-budget',
+  imports: [Select, DatePicker, RadioButton, ReactiveFormsModule, InputText, Button, FileUpload],
+  templateUrl: './add-budget.html',
+  styleUrl: './add-budget.scss',
   standalone: true,
 })
 /**
