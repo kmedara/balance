@@ -1,6 +1,11 @@
 import { Products, type CountryCode } from "plaid";
 import type { PlaidEnv } from "./plaid/types.js";
 
+export const getMongoEnvVars = () => {
+  return {
+    MONGO_URL: process.env.MONGO_URL,
+  };
+};
 export const getPlaidEnvVars = (): PlaidEnv => {
   const env: { [key in keyof PlaidEnv]: PlaidEnv[key] | undefined } = {
     PLAID_CLIENT_ID: process.env.PLAID_CLIENT_ID,

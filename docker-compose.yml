@@ -34,6 +34,7 @@ services:
       - PLAID_CLIENT_NAME=${PLAID_CLIENT_NAME}
       - PLAID_REDIRECT_URI=${PLAID_REDIRECT_URI}
       - MONGO_URL=${MONGO_URL}
+      - ACCESS_TOKEN_ENCRYPTION_KEY=${ACCESS_TOKEN_ENCRYPTION_KEY}
 
   mongo:
     image: mongo:6
@@ -46,6 +47,7 @@ services:
 
 volumes:
   mongo_data:
+  - ./mongo-data
 
 
 networks:

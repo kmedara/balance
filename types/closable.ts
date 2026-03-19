@@ -1,5 +1,5 @@
-import { EventOutcome } from "@__types/events";
+import type { ComponentEventType } from "./events";
 
 export interface IClosable {
-  close<T>(outcome: EventOutcome, payload: T): void;
+  close<T>(outcome: ComponentEventType, payload: T): void;
 }

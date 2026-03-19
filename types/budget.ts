@@ -1,20 +1,24 @@
+import type { IResourcable } from "./resourcable";
+
 export type Budget = {
   title: string;
   description?: string;
   startDate: Date;
   amount: number;
-  category: 'Income' | 'Expense';
+  type: "Income" | "Expense";
+  category: string;
+  subcategory: string;
   frequency:
-    | 'Once'
-    | 'Daily'
-    | 'Weekly'
-    | 'Bi-Weekly'
-    | 'Semi-Monthly'
-    | 'Monthly'
-    | 'Quarterly'
-    | 'Semi-Annually'
-    | 'Annually';
-};
+    | "Once"
+    | "Daily"
+    | "Weekly"
+    | "Bi-Weekly"
+    | "Semi-Monthly"
+    | "Monthly"
+    | "Quarterly"
+    | "Semi-Annually"
+    | "Annually";
+} & IResourcable;
 
-export type BudgetCategory = Budget['category'];
-export type BudgetFrequency = Budget['frequency'];
+export type BudgetType = Budget["type"];
+export type BudgetFrequency = Budget["frequency"];
