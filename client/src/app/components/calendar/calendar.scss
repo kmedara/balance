@@ -78,26 +78,4 @@
   .out-month {
     opacity: 0.45;
   }
-
-  .income-calendar-item,
-  .expense-calendar-item {
-    display: block;
-    overflow: hidden;
-    opacity: 0.75;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 95%;
-  }
-  .income-calendar-item {
-    background-color: var(--p-primary-color);
-    ::before {
-      width: 44px;
-      display: block;
-      background-color: red;
-      content: '\2022';
-    }
-  }
-  .expense-calendar-item {
-    background-color: var(--p-yellow-100);
-  }
 }

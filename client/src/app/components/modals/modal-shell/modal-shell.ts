@@ -21,10 +21,10 @@ import {
   MODAL_DATA,
   MODAL_ID,
   ModalContext,
-} from 'src/app/core/tokens/modal';
+} from 'src/app/tokens/modal';
 import { NgComponentOutlet, NgIf } from '@angular/common';
-import { IClosable } from '@__types/closable';
-import { ModalOutcome } from '@__types/events';
+import { IClosable, ModalEvent } from '@core/events/events';
+import { ModalEventType } from '@core/events/component-events';
 
 /**
  * Renders the modal (PrimeNG dialog),
@@ -88,9 +88,14 @@ export class ModalShell implements IClosable {
     });
   }
 
-  close<T>(outcome: ModalOutcome, payload?: T) {
+  close<T>(outcome: ModalEventType, payload?: T) {
     this.visible = false;
-    this.modalService.close({ id: this.modalId, outcome: outcome, payload });
+    this.modalService.close({
+      id: this.modalId,
+      eventType: outcome,
+      payload,
+      occurredAt: new Date(),
+    });
   }
   hello(event: any) {
     console.log('hello', event);

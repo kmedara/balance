@@ -1,4 +1,4 @@
-import { Budget } from '@__types/budget';
+import { Budget } from '@kmedara/balance-domain/domain/budget/budget';
 
 export const isSameDay = (a: Date, b: Date) => {
   return (

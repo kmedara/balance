@@ -13,9 +13,9 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - GATEWAY=${GATEWAY}
     volumes:
-      - ./angular/src:/app/src
-      - ./angular/angular.json:/app/angular.json
-      - ./angular/tsconfig.json:/app/tsconfig.json
+      - ./client/src:/app/src
+      - ./client/angular.json:/app/angular.json
+      - ./client/tsconfig.json:/app/tsconfig.json
   node:
     networks:
       - balance
@@ -35,7 +35,7 @@ services:
       - PLAID_REDIRECT_URI=${PLAID_REDIRECT_URI}
       - MONGO_URL=${MONGO_URL}
       - ACCESS_TOKEN_ENCRYPTION_KEY=${ACCESS_TOKEN_ENCRYPTION_KEY}
-
+   
   mongo:
     image: mongo:6
     container_name: mongo
@@ -47,8 +47,6 @@ services:
 
 volumes:
   mongo_data:
-  - ./mongo-data
-
 
 networks:
   balance:

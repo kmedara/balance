@@ -2,8 +2,8 @@ import type { FastifyInstance } from "fastify";
 import { plaidClient } from "./client.js";
 import { getPlaidEnvVars } from "../env.helper.js";
 import { CountryCode, Products, type LinkTokenCreateRequest } from "plaid";
-import { encrypt } from "@src/crypto.js";
-import type { PlaidItem } from "../../../types/plaid-item.js";
+import { encrypt } from "@kmedara/balance-domain/crypto";
+import type { PlaidItem } from "@kmedara/balance-domain";
 import { generateResourceId } from "@src/resource.js";
 
 export const plaidRoutes = (app: FastifyInstance, options: object) => {

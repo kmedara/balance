@@ -4,7 +4,7 @@ import { ActivatedRoute, RouterLink, RouterLinkActive, RouterOutlet } from '@ang
 import { ButtonModule } from 'primeng/button';
 import { ToolbarModule } from 'primeng/toolbar';
 import { CardModule } from 'primeng/card';
-import { NavigationItem } from '../../../resolvers/navigation-menu-resolver';
+import { NavigationItem } from '../../../../resolvers/navigation-menu-resolver';
 
 @Component({
   selector: 'app-default',
@@ -20,6 +20,5 @@ export class Default {
 
   navigationInfo = computed(() => this.data()!['routes'] as NavigationItem[]);
 
-  onActivate(event: any) {
-  }
+  onActivate(event: any) {}
 }

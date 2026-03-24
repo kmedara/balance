@@ -1,4 +1,4 @@
-import type { PlaidEnv } from "./src/plaid/types.ts";
+import type { PlaidEnv } from "./src/plaid/env.ts";
 import type { filterProps } from "./src/util.ts";
 
 type strings<T> = { [key in keyof T]: string };

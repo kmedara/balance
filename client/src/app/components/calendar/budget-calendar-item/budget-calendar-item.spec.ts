@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { BudgetCalendarItem } from './budget-calendar-item';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 describe('BudgetCalendarItem', () => {
   let component: BudgetCalendarItem;
@@ -8,9 +9,8 @@ describe('BudgetCalendarItem', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [BudgetCalendarItem]
-    })
-    .compileComponents();
+      imports: [BudgetCalendarItem],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(BudgetCalendarItem);
     component = fixture.componentInstance;

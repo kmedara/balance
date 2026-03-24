@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ModalOutcome } from '@__types/events';
+import { ModalOutcome } from '@kmedara/balance-domain/events';
 import {
   ApplicationRef,
   Component,

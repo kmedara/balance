@@ -1,4 +1,15 @@
-<form [formGroup]="form" class="p-5 space-y-4" >
+<form [formGroup]="form" class="p-5 space-y-4">
+  <div class="flex flex-col gap-2">
+    <label class="text-sm font-medium">Type</label>
+    <div class="flex gap-4">
+      @for (c of budgetTypes; track c) {
+        <div class="flex items-center gap-2">
+          <p-radioButton name="types" [value]="c" formControlName="type"></p-radioButton>
+          <span>{{ c }}</span>
+        </div>
+      }
+    </div>
+  </div>
   <div class="flex flex-col gap-1">
     <label class="text-sm font-medium">Title</label>
     <input pInputText formControlName="title" placeholder="e.g. Rent, Salary" />
@@ -6,21 +17,26 @@
       <small class="text-red-500"> Title is required </small>
     }
   </div>
-<!-- @defer  { -->
   <div class="flex flex-col gap-1">
     <label class="text-sm font-medium">Start Date</label>
     <p-date-picker formControlName="startDate" showIcon dateFormat="mm/dd/yy"></p-date-picker>
   </div>
-<!-- }  -->
   <div class="flex flex-col gap-2">
     <label class="text-sm font-medium">Category</label>
     <div class="flex gap-4">
-      @for (c of categories; track c) {
+      <p-autocomplete
+        dropdown
+        formControlName="category"
+        [suggestions]="suggestedCategories"
+        (completeMethod)="search($event)"
+      >
+      </p-autocomplete>
+      <!-- @for (c of categories; track c) {
         <div class="flex items-center gap-2">
           <p-radioButton name="categories" [value]="c" formControlName="category"></p-radioButton>
           <span>{{ c }}</span>
         </div>
-      }
+      } -->
     </div>
   </div>
 
@@ -35,7 +51,7 @@
   </div>
 
   <div class="flex flex-col gap-1">
-     <p-button
+    <p-button
       class="sr-only-label"
       label="_"
       styleClass="sr-only-label w-full justify-between d-block"

@@ -1,16 +1,29 @@
 :host ::ng-deep {
   .p-tooltip-text {
-    //background-color: white;
     border: 1px solid #e5e7eb; /* subtle gray border */
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     font-family: 'Inter', sans-serif;
   }
+
+  .income-calendar-item-tooltip {
+    background-color: var(--income-color);
+  }
+  .expense-calendar-item-tooltip {
+    background-color: var(--expense-color);
+  }
+
+  .income-calendar-item {
+    border-color: var(--income-color);
+    background-color: color-mix(in srgb, var(--income-color) 50%, transparent);
+  }
+  .expense-calendar-item {
+    border-color: var(--expense-color);
+    background-color: color-mix(in srgb, var(--expense-color) 50%, transparent);
+  }
 }
 
 .budget-bar {
- // height: 32px;
-  //max-height: 1.25px;
   width: 100%;
   pointer-events: auto;
 }

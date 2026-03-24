@@ -2,17 +2,15 @@
   [pTooltip]="tooltipTemplate"
   tooltipPosition="top"
   appendTo="body"
-  [ngStyle]="{
-    'border-color': getSidebarColor(budget()?.category),
-    'background-color': getBackgroundColor(budget()?.category),
-  }"
   class="budget-bar flex-1 text-xs py-[1px] truncate ps-1 pe-1 flex justify-between items-center border-s-4 rounded-s-sm border-1"
+  ,
+  [ngClass]="className()"
 >
-  <div class="font-semibold text-gray-800 truncate">
+  <div class="md:text-sm font-semibold text-gray-800 truncate">
     {{ budget()?.title }}
   </div>
-  <div class="text-gray-500 hidden sm:block">
-    {{ budget()?.amount }}
+  <div class="text-gray-600 hidden sm:block">
+    {{ budget()?.amount | currency }}
   </div>
 </div>
 
@@ -29,16 +27,11 @@
 
     <!-- Category & Amount -->
     <div class="flex justify-around items-center mt-1 text-xs">
-      <span
-        class="px-2 py-0.5 rounded text-white font-medium"
-        [ngStyle]="{
-          'background-color': getSidebarColor(budget()?.category),
-        }"
-      >
+      <span class="px-2 py-0.5 rounded text-white font-medium" [ngStyle]="tooltipStyle()">
         {{ budget()?.category }}
       </span>
       <span class="px-2 py-.0.5 font-medium">
-        {{ budget()?.amount }}
+        {{ budget()?.amount | currency }}
       </span>
     </div>
   </div>

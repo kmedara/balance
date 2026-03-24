@@ -1,6 +1,7 @@
 import { DatePipe, NgClass, NgFor, NgStyle } from '@angular/common';
 import {
   Component,
+  DEFAULT_CURRENCY_CODE,
   effect,
   ElementRef,
   inject,
@@ -16,8 +17,7 @@ import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { CardModule } from 'primeng/card';
-import { Budget } from '@__types/budget';
-import { CalendarDay, Week } from '@__types/calendar';
+import { CalendarDay, Week, Budget } from '@kmedara/balance-domain';
 import { expenses, incomes } from '@__data__/budgets.data';
 import { ModalService } from '@services/modal.service';
 import { toObservable } from '@angular/core/rxjs-interop';
@@ -46,6 +46,7 @@ export class Calendar {
   weeks: WritableSignal<Array<Week>> = signal([]);
   weeks$ = toObservable(this.weeks);
   currentDate = new Date();
+  default_ = inject(DEFAULT_CURRENCY_CODE);
   monthLabel = '';
   days: WritableSignal<CalendarDay[]> = signal([]);
   weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -60,6 +61,7 @@ export class Calendar {
 
   ngOnInit() {
     this.generateCalendar(this.currentDate);
+    console.log(this.default_);
   }
 
   add = async () => {

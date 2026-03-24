@@ -5,7 +5,7 @@
     "outDir": "./dist",
     "paths": {
       "@src/*": ["./src/*"],
-      "@plaid/*": ["./src/plaid/*"]
+      "@plaid/*": ["./src/plaid/*"],
     },
 
     // Environment Settings

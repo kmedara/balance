@@ -12,6 +12,10 @@ WORKDIR /app
 
 # Copy package-related files first to leverage Docker's caching mechanism
 COPY package.json *package-lock.json* ./
+RUN touch ./.npmrc
+
+COPY ../.npmrc ./.npmrc
+
 
 # Install project dependencies using npm ci (ensures a clean, reproducible install)
 RUN --mount=type=cache,target=/root/.npm npm ci

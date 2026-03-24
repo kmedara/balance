@@ -5,8 +5,9 @@ WORKDIR /app
 
 # Install dependencies (cached)
 COPY package*.json ./
+RUN touch ./.npmrc
+COPY ../.npmrc ./.npmrc
 RUN npm ci
-
 # Copy source and build
 COPY tsconfig.json ./
 COPY src ./src

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { navigationMenuResolver } from '@resolvers/navigation-menu-resolver';
+import { navigationMenuResolver } from 'src/app/resolvers/navigation-menu-resolver';
 const outlets = [
   {
     path: '',

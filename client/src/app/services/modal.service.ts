@@ -8,8 +8,9 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { MODAL_CONFIG, MODAL_DATA, MODAL_ID, ModalConfig } from '../core/tokens/modal';
-import { ModalEvent } from '@__types/events';
+import { MODAL_CONFIG, MODAL_DATA, MODAL_ID, ModalConfig } from '../tokens/modal';
+import { ModalEvent } from '@core/events/events';
+import { generateResourceId } from '@kmedara/balance-domain/domain/resourcable';
 
 /**
  * Tracks all modals, owns signals for “results” or lifecycle, knows nothing about DOM or components.
@@ -44,7 +45,8 @@ export class ModalService {
     document.body.appendChild(shellRef.location.nativeElement);
     this.emit({
       id,
-      outcome: 'ModalOpened',
+      eventType: 'ModalOpened',
+      occurredAt: new Date(),
     });
     return id;
   }
