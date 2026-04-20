@@ -3,9 +3,11 @@
   "compilerOptions": {
     // File Layout
     "outDir": "./dist",
+    "baseUrl": ".",
     "paths": {
       "@src/*": ["./src/*"],
       "@plaid/*": ["./src/plaid/*"],
+      "@kmedara/balance-lib/*": ["../lib/src/*"]
     },
 
     // Environment Settings
