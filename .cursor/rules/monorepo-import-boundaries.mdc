@@ -1,0 +1,37 @@
+---
+description: Enforce monorepo import boundaries for api, client, and shared libs
+globs: **/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Monorepo Import Boundaries
+
+## Dependency direction
+
+- Shared libraries may not import from `api` or `client`.
+- `api` and `client` may depend on shared libraries through public entrypoints only.
+- `client` must not import from `api` application code.
+- `api` must not import from `client` application code.
+
+## Shared library ownership
+
+- Domain models, interfaces, classes, and value objects belong in shared libraries.
+- Contracts shared across boundaries belong in shared libraries and are versioned.
+- If both `api` and `client` need a type, extract it to shared library in the same change.
+
+## Adapter boundaries
+
+- Keep provider-specific and transport-specific mappings at adapter edges.
+- Do not pass boundary DTOs directly into domain logic.
+- Map `contracts -> domain` on ingress and `domain -> contracts` on egress.
+
+## Import hygiene
+
+- Do not import from deep internal paths of other packages.
+- Prefer package-level exports (barrel or explicit public API file).
+- If a needed symbol is not exported publicly, add explicit export rather than deep-importing.
+
+## Review checks
+
+- Any new cross-package import must preserve the dependency direction above.
+- Any boundary bypass requires explicit technical-debt note and follow-up issue.
