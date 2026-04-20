@@ -16,6 +16,7 @@
     "@fastify/cors": "^11.2.0",
     "@fastify/mongodb": "^10.0.0",
     "@kmedara/balance-domain": "^2.11.1",
+    "@kmedara/balance-lib": "file:../lib",
     "dotenv": "^17.2.3",
     "fastify": "^5.7.4",
     "plaid": "^41.1.0"

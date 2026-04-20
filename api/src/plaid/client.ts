@@ -1,5 +1,5 @@
 import { Configuration, CountryCode, PlaidApi, PlaidEnvironments } from "plaid";
-import type { PlaidEnv } from "./env.js";
+import type { PlaidEnv } from "@kmedara/balance-lib/contracts/plaid/plaid-env";
 import { getPlaidEnvVars } from "../env.helper.js";
 import type { ApiConfiguration } from "@src/api-configuration.js";
 // Initialize the Plaid client

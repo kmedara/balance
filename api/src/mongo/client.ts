@@ -1,7 +1,7 @@
 import { Configuration, CountryCode, PlaidApi, PlaidEnvironments } from "plaid";
 import { getPlaidEnvVars } from "../env.helper.js";
 import type { ApiConfiguration } from "@src/api-configuration.js";
-import type { PlaidEnv } from "@src/plaid/env.js";
+import type { PlaidEnv } from "@kmedara/balance-lib/contracts/plaid/plaid-env";
 // Initialize the Plaid client
 // Find your API keys in the Dashboard (https://dashboard.plaid.com/account/keys)
 const configuration = (): ApiConfiguration => {

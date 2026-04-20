@@ -1,5 +1,5 @@
 import { Products, type CountryCode } from "plaid";
-import type { PlaidEnv } from "./plaid/env.js";
+import type { PlaidEnv } from "@kmedara/balance-lib/contracts/plaid/plaid-env";
 
 export const getMongoEnvVars = () => {
   return {

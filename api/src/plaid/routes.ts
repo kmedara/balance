@@ -5,8 +5,11 @@ import { CountryCode, Products, type LinkTokenCreateRequest } from "plaid";
 import { encrypt } from "@kmedara/balance-domain/crypto";
 import type { PlaidItem } from "@kmedara/balance-domain";
 import { generatePlaidItemId } from "@kmedara/balance-domain/domain/resourcable";
+import { createMongoPlaidItemRepository } from "../db/index.js";
 
 export const plaidRoutes = (app: FastifyInstance, options: object) => {
+  const plaidItemRepository = createMongoPlaidItemRepository(app);
+
   app.get("/link-token", async () => {
     const x = async () => "hello";
 
@@ -53,7 +56,7 @@ export const plaidRoutes = (app: FastifyInstance, options: object) => {
       .then(async ({ data }) => {
         const encrypted = encrypt(data.access_token);
         const userId = "test-123";
-        await app.mongo.db?.collection<PlaidItem>("plaid_items").insertOne({
+        await plaidItemRepository.save({
           userId,
           plaidItemId: data.item_id,
           accessTokenEncrypted: encrypted,
