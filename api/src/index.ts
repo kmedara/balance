@@ -3,7 +3,7 @@ import { fastify } from "fastify";
 import { plaidRoutes } from "./plaid/routes.js";
 import cors from "@fastify/cors";
 import { getMongoEnvVars } from "./env.helper.js";
-import { registerMongoAdapter } from "./db/index.js";
+import { registerMongoAdapter } from "../../db/index.js";
 const server = fastify();
 
 server.get("/ping", async (request, reply) => {

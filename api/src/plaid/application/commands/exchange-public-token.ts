@@ -1,7 +1,7 @@
 import { encrypt } from "@kmedara/balance-domain/crypto";
 import { generatePlaidItemId } from "@kmedara/balance-domain/domain/resourcable";
 import { plaidClient } from "../../client.js";
-import type { PlaidItemRepository } from "../../../db/index.js";
+import type { PlaidItemRepository } from "../../../../../db/index.js";
 import type { Mediator } from "../../../core/mediator.js";
 
 export const EXCHANGE_PUBLIC_TOKEN = "plaid.exchangePublicToken";

@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { Mediator } from "../core/mediator.js";
-import { createMongoPlaidItemRepository } from "../db/index.js";
+import { createMongoPlaidItemRepository } from "../../../db/index.js";
 import { registerPlaidApplication } from "./application/register.js";
 import { CREATE_LINK_TOKEN } from "./application/queries/create-link-token.js";
 import {
