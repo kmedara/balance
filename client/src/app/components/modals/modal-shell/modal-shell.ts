@@ -23,8 +23,8 @@ import {
   ModalContext,
 } from 'src/app/tokens/modal';
 import { NgComponentOutlet, NgIf } from '@angular/common';
-import { IClosable, ModalEvent } from '@core/events/events';
-import { ModalEventType } from '@core/events/component-events';
+import { IClosable } from '@events/events';
+import { ModalEventType } from '@events/component-events';
 
 /**
  * Renders the modal (PrimeNG dialog),

@@ -20,6 +20,7 @@
       "@modals/*" : ["src/app/components/modals/*"],
       "@components/*" : ["src/app/components/*"],
       "@resolvers/*" : ["src/app/resolvers/*"],
+      "@events/*": ["src/app/events/*"],
       "@guards/*" : ["src/app/guards/*"],
       "@routes/*" : ["src/app/routes/*"],
       "@layouts/*" : ["src/app/layouts/*"],

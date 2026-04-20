@@ -1,8 +1,8 @@
 import { Budget } from '@kmedara/balance-domain';
-import { generateResourceId } from '@kmedara/balance-domain/domain/resourcable';
+import { generateBudgetId } from '@kmedara/balance-domain/domain/resourcable';
 export const incomes: Budget[] = [
   {
-    resourceId: generateResourceId('Budget'),
+    resourceId: generateBudgetId(),
     type: 'Income',
     category: 'Salary Role',
     frequency: 'Bi-Weekly',
@@ -11,7 +11,7 @@ export const incomes: Budget[] = [
     amount: 4500.44,
   },
   {
-    resourceId: generateResourceId('Budget'),
+    resourceId: generateBudgetId(),
     type: 'Income',
     category: 'Hourly Role',
     frequency: 'Weekly',
@@ -23,7 +23,7 @@ export const incomes: Budget[] = [
 
 export const expenses: Budget[] = [
   {
-    resourceId: generateResourceId('Budget'),
+    resourceId: generateBudgetId(),
     type: 'Expense',
     category: 'Utilities',
     description: 'user input',

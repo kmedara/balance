@@ -4,7 +4,7 @@ import { getPlaidEnvVars } from "../env.helper.js";
 import { CountryCode, Products, type LinkTokenCreateRequest } from "plaid";
 import { encrypt } from "@kmedara/balance-domain/crypto";
 import type { PlaidItem } from "@kmedara/balance-domain";
-import { generateResourceId } from "@src/resource.js";
+import { generatePlaidItemId } from "@kmedara/balance-domain/domain/resourcable";
 
 export const plaidRoutes = (app: FastifyInstance, options: object) => {
   app.get("/link-token", async () => {
@@ -58,7 +58,7 @@ export const plaidRoutes = (app: FastifyInstance, options: object) => {
           plaidItemId: data.item_id,
           accessTokenEncrypted: encrypted,
           status: "active",
-          resourceId: generateResourceId(),
+          resourceId: generatePlaidItemId(),
         });
         return {
           item_id: data.item_id,

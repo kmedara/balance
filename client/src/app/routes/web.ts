@@ -17,7 +17,7 @@ export const routes: Routes = [
   },
   {
     path: '',
-    loadComponent: () => import('../core/layouts/web/default/default').then((mod) => mod.Default),
+    loadComponent: () => import('../layouts/web/default/default').then((mod) => mod.Default),
     data: { name: 'Layout' },
     resolve: { routes: navigationMenuResolver },
     children: [
