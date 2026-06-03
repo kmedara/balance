@@ -8,7 +8,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { MODAL_CONFIG, MODAL_DATA, MODAL_ID, ModalConfig } from '../core/tokens/modal';
+import { MODAL_CONFIG, MODAL_DATA, MODAL_ID, ModalConfig } from '../../core/tokens/modal.token';
 import { ModalEvent } from '@__types/events';
 
 /**
@@ -58,5 +58,5 @@ export class ModalService {
     this._results.update((events) => [...events, event]);
   }
 
-  protected loadShell = () => import('../components/modals/modal-shell/modal-shell');
+  protected loadShell = () => import('./modal-shell/modal-shell');
 }

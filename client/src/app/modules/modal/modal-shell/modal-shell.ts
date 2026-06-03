@@ -14,14 +14,14 @@ import {
   ViewContainerRef,
 } from '@angular/core';
 import { Dialog } from 'primeng/dialog';
-import { ModalService } from '@services/modal.service';
+import { ModalService } from '@modules/modal/modal.service';
 import {
   MODAL_CONFIG,
   MODAL_CONTEXT,
   MODAL_DATA,
   MODAL_ID,
   ModalContext,
-} from 'src/app/core/tokens/modal';
+} from '@core/tokens/modal.token';
 import { NgComponentOutlet, NgIf } from '@angular/common';
 import { IClosable } from '@__types/closable';
 import { ModalOutcome } from '@__types/events';

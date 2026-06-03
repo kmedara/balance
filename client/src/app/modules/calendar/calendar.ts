@@ -18,8 +18,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { CardModule } from 'primeng/card';
 import { Budget } from '@__types/budget';
 import { CalendarDay, Week } from '@__types/calendar';
-import { expenses, incomes } from '@__data__/budgets.data';
-import { ModalService } from '@services/modal.service';
+import { ModalService } from '@modules/modal/modal.service';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { getBudgetsForDay } from './calendar.utils';
 import { BudgetCalendarItem } from './budget-calendar-item/budget-calendar-item';
@@ -40,9 +39,12 @@ import { BudgetCalendarItem } from './budget-calendar-item/budget-calendar-item'
   styleUrl: './calendar.scss',
 })
 export class Calendar {
+
+  incomes = signal([]);
+  expenses = signal([]);
   private _service = inject(ModalService);
   hoveredBudget = signal<Budget | null>(null);
-  userBudgets = signal(incomes.concat(expenses));
+  userBudgets = signal(this.incomes().concat(this.expenses()));
   weeks: WritableSignal<Array<Week>> = signal([]);
   weeks$ = toObservable(this.weeks);
   currentDate = new Date();
@@ -63,7 +65,7 @@ export class Calendar {
   }
 
   add = async () => {
-    const { BudgetModal } = await import('@modals/add-budget/add-budget');
+    const { BudgetModal } = await import('@modules/budget/add-budget/add-budget');
     this._service.open(BudgetModal, { header: 'Add a budget', data: { a: 'b' } });
   };
 

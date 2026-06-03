@@ -7,11 +7,13 @@ ARG NGINX_VERSION=alpine3.22
 # Use a lightweight Node.js image for building (customizable via ARG)
 FROM node:${NODE_VERSION} AS builder
 
+ENV NODE_ENV=development
+
 # Set the working directory inside the container
 WORKDIR /app
 
 # Copy package-related files first to leverage Docker's caching mechanism
-COPY package.json *package-lock.json* ./
+COPY package.json package-lock.json* ./
 
 # Install project dependencies using npm ci (ensures a clean, reproducible install)
 RUN --mount=type=cache,target=/root/.npm npm ci
@@ -19,8 +21,7 @@ RUN --mount=type=cache,target=/root/.npm npm ci
 # Copy the rest of the application source code into the container
 COPY . .
 
-EXPOSE 4200 8080
-
 EXPOSE 4200
 
-CMD ["npx", "ng", "serve", "--host=0.0.0.0", "--poll=1000", "--hmr"]
+CMD ["npm", "start", "--", "--host=0.0.0.0"]
+#CMD ["ng", "serve", "--", "--host=0.0.0.0"]

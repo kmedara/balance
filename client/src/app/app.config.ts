@@ -11,6 +11,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { providePrimeNG } from 'primeng/config';
 import { DefaultPreset } from '@core/theme.default';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideGatewayHttpClient } from '@core/http';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -18,7 +19,8 @@ export const appConfig: ApplicationConfig = {
     provideRouter(appRoutes()),
     provideClientHydration(withEventReplay()),
     provideAnimationsAsync(),
-    provideHttpClient(withInterceptors([])),
+    //provideHttpClient(withInterceptors([])),
+    provideGatewayHttpClient(),
     providePrimeNG({
       theme: {
         preset: DefaultPreset,

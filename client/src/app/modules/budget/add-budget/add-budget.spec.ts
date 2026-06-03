@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { BudgetModal } from './add-budget';
+import { describe, beforeEach, it, expect } from 'vitest';
 
 describe('BudgetModal', () => {
   let component: BudgetModal;

@@ -17,14 +17,13 @@
     "module": "preserve",
     "paths": {
       "@services/*" : ["src/app/services/*"],
-      "@modals/*" : ["src/app/components/modals/*"],
+      "@modals/*" : ["src/app/modules/modal/*"],
       "@components/*" : ["src/app/components/*"],
-      "@__types/*" : ["../types/*"],
+      "@modules/*" : ["src/app/modules/*"],
       "@resolvers/*" : ["src/app/core/resolvers/*"],
       "@guards/*" : ["src/app/core/guards/*"],
       "@routes/*" : ["src/app/routes/*"],
       "@core/*" : ["src/app/core/*"],
-      "@__data__/*" : ["__data__/*"],
     }
   },
   "angularCompilerOptions": {

@@ -38,4 +38,4 @@ done
 
 echo "Environment variables loaded from $SECRETS_FILE"
 
-#docker compose up -d
+docker compose up --build --watch

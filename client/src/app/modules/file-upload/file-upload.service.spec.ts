@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
 import { FileUploadService } from './file-upload.service';
+import { describe, beforeEach, it, expect } from 'vitest';
 
 describe('FileUploadService', () => {
   let service: FileUploadService;

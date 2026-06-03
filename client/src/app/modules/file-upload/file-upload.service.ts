@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { utils, read } from 'xlsx';
 import { isBudget } from '@__types/guards'
+import { environment } from 'src/environments/environment';
 @Injectable({
   providedIn: 'root'
 })
 export class FileUploadService {
 
-  private apiUrl = 'http://localhost:3000/upload'; // your backend
+  private apiUrl = environment.GATEWAY + '/upload'; // your backend
 
   constructor(private http: HttpClient) { }
 

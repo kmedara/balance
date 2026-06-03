@@ -28,8 +28,8 @@ import {
   MODAL_DATA,
   MODAL_ID,
   ModalContext,
-} from '@core/tokens/modal';
-import { FileUpload } from '@components/file-upload/file-upload';
+} from '@core/tokens/modal.token';
+import { FileUpload } from '@modules/file-upload/file-upload';
 @Component({
   selector: 'app-add-budget',
   imports: [Select, DatePicker, RadioButton, ReactiveFormsModule, InputText, Button, FileUpload],

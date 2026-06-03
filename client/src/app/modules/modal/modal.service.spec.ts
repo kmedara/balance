@@ -8,7 +8,7 @@ import {
   Type,
 } from '@angular/core';
 import { ModalService } from './modal.service';
-import { ModalShell } from '@modals/modal-shell/modal-shell';
+import { ModalShell } from '@modules/modal/modal-shell/modal-shell';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 /* ------------------ Test doubles ------------------ */

@@ -1,9 +1,9 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { Button } from 'primeng/button';
 import { Menu } from 'primeng/menu';
-import { ModalService } from '@services/modal.service';
-import { BudgetModal } from '@modals/add-budget/add-budget';
-import { PlaidService } from '@services/plaid.service';
+import { ModalService } from '@modules/modal/modal.service';
+import { BudgetModal } from '@modules/budget/add-budget/add-budget';
+import { PlaidService } from 'src/app/modules/plaid/plaid.service';
 
 @Component({
   selector: 'app-user-actions',
