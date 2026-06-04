@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --configuration development",
+    "start": "ng serve --host 0.0.0.0 --poll 1",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "vitest",
@@ -31,6 +31,7 @@
     "@angular/platform-server": "^21.1.2",
     "@angular/router": "^21.1.2",
     "@angular/ssr": "^21.1.2",
+    "@kmedara/balance-domain": "^2.11.1",
     "@primeuix/themes": "^2.0.3",
     "@tailwindcss/postcss": "^4.1.18",
     "express": "^5.1.0",
@@ -41,13 +42,15 @@
     "tailwindcss": "^4.1.18",
     "tailwindcss-primeui": "^0.6.1",
     "tslib": "^2.3.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "@ngrx/signals": "^21.1.0"
   },
   "devDependencies": {
     "@angular/animations": "^21.1.2",
     "@angular/build": "^21.1.2",
     "@angular/cli": "^21.1.2",
     "@angular/compiler-cli": "^21.1.2",
+    "@ngrx/signals": "^21.1.0",
     "@types/express": "^5.0.1",
     "@types/node": "^25.2.2",
     "@types/plaid-link": "^2.0.15",

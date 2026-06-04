@@ -5,7 +5,9 @@ WORKDIR /app
 
 # Install dependencies (cached)
 COPY package*.json ./
-RUN npm ci
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
+    --mount=type=cache,target=/root/.npm \
+    npm i
 
 # Copy source and build
 COPY tsconfig.json ./
@@ -22,7 +24,7 @@ ENV NODE_ENV=production
 
 # Copy only runtime deps
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm i --omit=dev
 
 # Copy built output
 COPY --from=builder /app/dist ./dist

@@ -20,12 +20,11 @@ import {
   MODAL_CONTEXT,
   MODAL_DATA,
   MODAL_ID,
-  ModalContext,
-} from '@core/tokens/modal.token';
+} from '@modals/modal.token';
 import { NgComponentOutlet, NgIf } from '@angular/common';
-import { IClosable } from '@__types/closable';
-import { ModalOutcome } from '@__types/events';
-
+import { Dispatcher, injectDispatch } from '@ngrx/signals/events';
+import { ModalEvents } from '@modals/modal.events';
+import { ModalContext } from '@modals/modal.context';
 /**
  * Renders the modal (PrimeNG dialog),
  * injects the content component,
@@ -39,7 +38,9 @@ import { ModalOutcome } from '@__types/events';
   styleUrl: './modal-shell.scss',
   standalone: true,
 })
-export class ModalShell implements IClosable {
+export class ModalShell  {
+  private readonly dispatcher = inject(Dispatcher);
+
   visible = true;
 
   @ViewChild('content', { read: ViewContainerRef })
@@ -48,7 +49,6 @@ export class ModalShell implements IClosable {
   readonly config = inject(MODAL_CONFIG);
   private readonly modalId = inject(MODAL_ID);
   private readonly data = inject(MODAL_DATA, { optional: true });
-  private readonly modalService = inject(ModalService);
   private readonly rootEnvInjector = inject(EnvironmentInjector);
 
   // Header getters
@@ -70,8 +70,16 @@ export class ModalShell implements IClosable {
     if (!this.contentVcr) return; // safety check
 
     const context: ModalContext = {
-      submit: (data) => this.close('ModalSubmitted', data),
-      cancel: () => this.close('ModalCanceled'),
+      submit: (data, ec) =>{
+        this.dispatcher.dispatch(ec(data)); 
+        this.dispatcher.dispatch(ModalEvents.submitted({ resourceId: this.modalId, payload: data, occurredAt: new Date() }));
+        this.visible = false;
+         },
+      cancel: () => {
+        this.dispatcher.dispatch(ModalEvents.canceled({ resourceId: this.modalId, occurredAt: new Date() }));
+        this.visible = false;
+
+      }
     };
 
     // ModalContext for the content
@@ -88,11 +96,9 @@ export class ModalShell implements IClosable {
     });
   }
 
-  close<T>(outcome: ModalOutcome, payload?: T) {
+  close() {
+    this.dispatcher.dispatch(ModalEvents.closed({ resourceId: this.modalId, occurredAt: new Date() }));
+
     this.visible = false;
-    this.modalService.close({ id: this.modalId, outcome: outcome, payload });
-  }
-  hello(event: any) {
-    console.log('hello', event);
   }
 }

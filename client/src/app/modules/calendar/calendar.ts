@@ -16,8 +16,7 @@ import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { CardModule } from 'primeng/card';
-import { Budget } from '@__types/budget';
-import { CalendarDay, Week } from '@__types/calendar';
+import { Budget, CalendarDay, Week } from '@kmedara/balance-domain';
 import { ModalService } from '@modules/modal/modal.service';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { getBudgetsForDay } from './calendar.utils';
@@ -42,7 +41,7 @@ export class Calendar {
 
   incomes = signal([]);
   expenses = signal([]);
-  private _service = inject(ModalService);
+  private _modalService = inject(ModalService);
   hoveredBudget = signal<Budget | null>(null);
   userBudgets = signal(this.incomes().concat(this.expenses()));
   weeks: WritableSignal<Array<Week>> = signal([]);
@@ -66,7 +65,7 @@ export class Calendar {
 
   add = async () => {
     const { BudgetModal } = await import('@modules/budget/add-budget/add-budget');
-    this._service.open(BudgetModal, { header: 'Add a budget', data: { a: 'b' } });
+    this._modalService.open({content: BudgetModal, header: 'Add a budgeet'}, { a: 'b' });
   };
 
   getTooltip(budget: Budget): string {

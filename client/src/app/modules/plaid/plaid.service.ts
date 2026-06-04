@@ -1,4 +1,4 @@
-import { PlaidError } from '@__types/plaid';
+import type { PlaidError } from '@kmedara/balance-domain';
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { environment } from 'src/environments/environment';

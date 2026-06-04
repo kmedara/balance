@@ -25,7 +25,7 @@ export class UserActions {
 
   actions = [];
   add = () => {
-    this._service.open(BudgetModal, { header: 'header' });
+    this._service.open({content: BudgetModal, header: 'header'}, { a: 'b' });
   };
 
   items = [
@@ -33,6 +33,11 @@ export class UserActions {
       icon: 'pi pi-building-columns',
       label: 'Connect a bank account',
       action: this._plaidService.init,
+    },
+    {
+      icon: 'pi pi-plus',
+      label: 'Add a budget',
+      action: this.add,
     },
   ];
 }

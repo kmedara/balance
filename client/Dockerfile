@@ -16,12 +16,15 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # Install project dependencies using npm ci (ensures a clean, reproducible install)
-RUN --mount=type=cache,target=/root/.npm npm ci
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
+    --mount=type=cache,target=/root/.npm \
+    npm i
+
+RUN npm install -g @angular/cli
 
 # Copy the rest of the application source code into the container
 COPY . .
 
-EXPOSE 4200
+EXPOSE 4200 49153
 
-CMD ["npm", "start", "--", "--host=0.0.0.0"]
-#CMD ["ng", "serve", "--", "--host=0.0.0.0"]
+CMD ["npm", "start"]

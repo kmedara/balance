@@ -8,30 +8,30 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { MODAL_CONFIG, MODAL_DATA, MODAL_ID, ModalConfig } from '../../core/tokens/modal.token';
-import { ModalEvent } from '@__types/events';
-
+import { MODAL_CONFIG, MODAL_DATA, MODAL_ID } from './modal.token';
+import { ModalConfig } from './modal.context';
+import { ModalEvents } from './modal.events';
+import { Dispatcher, injectDispatch } from '@ngrx/signals/events';
 /**
  * Tracks all modals, owns signals for “results” or lifecycle, knows nothing about DOM or components.
  */
 @Injectable({ providedIn: 'root' })
 export class ModalService {
-  private readonly _results = signal<ModalEvent[]>([]);
-  readonly results = this._results.asReadonly();
+  private readonly dispatch = injectDispatch(ModalEvents);
   private readonly rootEnvInjector = inject(EnvironmentInjector);
   private readonly appRef = inject(ApplicationRef);
 
   async open<T = unknown>(
-    content: Type<unknown>,
-    config: Partial<ModalConfig> = {},
+    config: ModalConfig,
+    data: unknown = null,
   ): Promise<string> {
     const id = crypto.randomUUID();
 
     const shellInjector = createEnvironmentInjector(
       [
         { provide: MODAL_ID, useValue: id },
-        { provide: MODAL_CONFIG, useValue: { content, ...config } },
-        { provide: MODAL_DATA, useValue: config.data ?? null },
+        { provide: MODAL_CONFIG, useValue: config  },
+        { provide: MODAL_DATA, useValue: data ?? null },
       ],
       this.rootEnvInjector,
     );
@@ -42,20 +42,9 @@ export class ModalService {
 
     this.appRef.attachView(shellRef.hostView);
     document.body.appendChild(shellRef.location.nativeElement);
-    this.emit({
-      id,
-      outcome: 'ModalOpened',
-    });
+    this.dispatch.opened({ resourceId: id, occurredAt: new Date() });
+
     return id;
-  }
-
-  close<T>(event: ModalEvent) {
-    this.emit(event);
-  }
-
-  emit(event: ModalEvent) {
-    if (!event.payload) delete event.payload;
-    this._results.update((events) => [...events, event]);
   }
 
   protected loadShell = () => import('./modal-shell/modal-shell');

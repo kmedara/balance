@@ -1,4 +1,4 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ModalService } from '@modules/modal/modal.service';
 @Component({
@@ -12,8 +12,6 @@ export class App {
   private readonly modalService = inject(ModalService);
 
   constructor() {
-    effect(() => {
-      const events = this.modalService.results();
-    });
+  
   }
 }

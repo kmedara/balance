@@ -7,12 +7,15 @@ services:
     build:
       context: ./client
       dockerfile: ./Dockerfile
+      secrets:
+        - npmrc
     ports:
       - "4200:4200"
+      - "49153:49153"
     develop:
       watch:
         - action: sync
-          path: .
+          path: ./client
           target: /app
   node:
     networks:
@@ -20,6 +23,8 @@ services:
     build:
       context: ./api
       dockerfile: ./Dockerfile
+      secrets: 
+        - npmrc
     ports:
       - "3000:3000"
     environment:
@@ -45,6 +50,9 @@ services:
 volumes:
   mongo_data:
 
+secrets:
+  npmrc:
+    file: ~/.npmrc
 
 networks:
   balance:

@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import { Budget } from '@__types/budget';
+import { Budget } from '@kmedara/balance-domain';
 import { NgClass, NgStyle } from '@angular/common';
 import { Tooltip } from 'primeng/tooltip';
 import { Card } from 'primeng/card';
