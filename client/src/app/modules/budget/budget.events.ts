@@ -7,6 +7,8 @@ export const BudgetEvents = eventGroup({
   source: 'Budget',
   events: {
     load: type<{ filter: BudgetFilter }>(),
+    loadCategories: type<{ category: string }>(),
+    categoriesLoaded: type<{ categories: string[] }>(),
     create: type<{ payload: Omit<Budget, 'resourceId'> }>(),
     created: type<{ resourceId: string }>(),
   },

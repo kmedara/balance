@@ -1,13 +1,4 @@
-import {
-  AfterViewInit,
-  Component,
-  effect,
-  inject,
-  input,
-  model,
-  output,
-  signal,
-} from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -20,6 +11,7 @@ import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { DatePicker } from 'primeng/datepicker';
 import { RadioButton } from 'primeng/radiobutton';
+import { AutoComplete, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { frequencies, Budget, budgetTypes } from '@kmedara/balance-domain';
 import {
   MODAL_CONFIG,
@@ -31,6 +23,7 @@ import { ModalContext } from '@modals/modal.context';
 import { FileUpload } from '@modules/file-upload/file-upload';
 import { injectDispatch } from '@ngrx/signals/events';
 import { BudgetEvents } from '../budget.events';
+import { BudgetStore } from '../budget.store';
 
 
 type BudgetForm = {
@@ -38,7 +31,7 @@ type BudgetForm = {
 };
 @Component({
   selector: 'app-add-budget',
-  imports: [Select, DatePicker, RadioButton, ReactiveFormsModule, InputText, Button, FileUpload],
+  imports: [Select, DatePicker, ReactiveFormsModule, InputText, Button, FileUpload, AutoComplete],
   templateUrl: './add-budget.html',
   styleUrl: './add-budget.scss',
   standalone: true,
@@ -48,8 +41,14 @@ type BudgetForm = {
  */
 export class BudgetModal {
   private readonly modalContext = inject<ModalContext<Budget>>(MODAL_CONTEXT);
+  private readonly dispatch = injectDispatch(BudgetEvents);
   frequencies = frequencies;
-  categories = [];
+  private readonly store = inject(BudgetStore);
+  readonly categories = computed(() => this.store.categorySuggestions());
+
+  onCategoryComplete(event: AutoCompleteCompleteEvent): void {
+    this.dispatch.loadCategories({ category: event.query });
+  }
   private fb = inject(FormBuilder);
   form = this.fb.group<BudgetForm>({
     type: this.fb.control('Expense', { nonNullable: true, validators: [Validators.required] }),
@@ -59,7 +58,7 @@ export class BudgetModal {
       nonNullable: true,
       validators: [Validators.required],
     }),
-    category: this.fb.control(this.categories[0], { nonNullable: true, validators: [Validators.required] }),
+    category: this.fb.control('', { nonNullable: true, validators: [Validators.required] }),
     frequency: this.fb.control('Daily', { nonNullable: true, validators: [Validators.required] }),
   });
 

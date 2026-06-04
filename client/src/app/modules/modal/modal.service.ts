@@ -11,12 +11,16 @@ import {
 import { MODAL_CONFIG, MODAL_DATA, MODAL_ID } from './modal.token';
 import { ModalConfig } from './modal.context';
 import { ModalEvents } from './modal.events';
-import { Dispatcher, injectDispatch } from '@ngrx/signals/events';
+import { injectDispatch } from '@ngrx/signals/events';
+import { ModalStore } from './modal.store';
+
 /**
  * Tracks all modals, owns signals for “results” or lifecycle, knows nothing about DOM or components.
  */
 @Injectable({ providedIn: 'root' })
 export class ModalService {
+  /** Eagerly creates the store so event reducers subscribe to the dispatcher. */
+  private readonly modalStore = inject(ModalStore);
   private readonly dispatch = injectDispatch(ModalEvents);
   private readonly rootEnvInjector = inject(EnvironmentInjector);
   private readonly appRef = inject(ApplicationRef);
@@ -43,7 +47,6 @@ export class ModalService {
     this.appRef.attachView(shellRef.hostView);
     document.body.appendChild(shellRef.location.nativeElement);
     this.dispatch.opened({ resourceId: id, occurredAt: new Date() });
-
     return id;
   }
 

@@ -1,35 +1,34 @@
-// modal.store.ts
-import { patchState, signalStore, withComputed, withState } from '@ngrx/signals';
-import { EventCreator, EventInstance, on, withReducer } from '@ngrx/signals/events';
+import { signalStore, withState } from '@ngrx/signals';
+import { EventCreator, on } from '@ngrx/signals/events';
 import { ModalEvents } from './modal.events';
+import { withDevtools, withGlitchTracking, withTrackedReducer } from '@angular-architects/ngrx-toolkit';
+
+type ModalOpenedEvent = ReturnType<typeof ModalEvents.opened>;
+type ModalSubmittedEvent = ReturnType<typeof ModalEvents.submitted>;
+type ModalCanceledEvent = ReturnType<typeof ModalEvents.canceled>;
+type ModalClosedEvent = ReturnType<typeof ModalEvents.closed>;
+
+export type ModalEventInstance =
+  | ModalOpenedEvent
+  | ModalSubmittedEvent
+  | ModalCanceledEvent
+  | ModalClosedEvent;
+
 type ModalState = {
-    events: ReturnType<typeof ModalEvents.opened | typeof ModalEvents.submitted | typeof ModalEvents.canceled>[]
+  events: ModalEventInstance[];
 };
 
+var x : EventCreator<any,any>[] = [ModalEvents.opened, ModalEvents.submitted, ModalEvents.canceled, ModalEvents.closed];
 export const ModalStore = signalStore(
-    { providedIn: 'root' },
-    withState<ModalState>({ events: [] }),
-    withReducer(
-        on(ModalEvents.opened, ({ payload }) => (state) => {
-            console.log('opened', payload);
-            return {
-                events: [
-                    ...state.events,
-                    ModalEvents.opened(payload),
-                ],
-            };
-        }),
-        on(ModalEvents.submitted, ({ payload }) => (state) => ({
-            events: [
-                ...state.events,
-
-            ],
-        })),
-        on(ModalEvents.canceled, ({ payload }) => (state) => ({
-            events: [
-                ...state.events,
-
-            ],
-        })),
-    ),
+  { providedIn: 'root' },
+  withDevtools('Modals', withGlitchTracking()),
+  withState<ModalState>({ events: [] }),
+  withTrackedReducer(
+    on(...Object.values(ModalEvents), (event, state) => {        
+        console.log(event.type, event.payload);
+        return {
+            events: [...state.events, event],
+        };
+    }),
+  ),
 );

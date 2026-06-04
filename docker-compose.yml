@@ -6,7 +6,7 @@ services:
       - node
     build:
       context: ./client
-      dockerfile: ./Dockerfile
+      dockerfile: ./Dockerfile.dev
       secrets:
         - npmrc
     ports:
@@ -22,7 +22,7 @@ services:
       - balance
     build:
       context: ./api
-      dockerfile: ./Dockerfile
+      dockerfile: ./Dockerfile.dev
       secrets: 
         - npmrc
     ports:
@@ -37,6 +37,18 @@ services:
       - PLAID_CLIENT_NAME=${PLAID_CLIENT_NAME}
       - PLAID_REDIRECT_URI=${PLAID_REDIRECT_URI}
       - MONGO_URL=${MONGO_URL}
+    develop:
+    watch:
+      - action: sync
+        path: ./api/src
+        target: /app/src
+        ignore:
+          - node_modules/
+      - action: sync
+        path: ./api/tsconfig.json
+        target: /app/tsconfig.json
+      - action: rebuild
+        path: ./api/package-lock.json
 
   mongo:
     image: mongo:6

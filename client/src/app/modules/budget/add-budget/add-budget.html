@@ -14,14 +14,12 @@
 <!-- }  -->
   <div class="flex flex-col gap-2">
     <label class="text-sm font-medium">Category</label>
-    <div class="flex gap-4">
-      @for (c of categories; track c) {
-        <div class="flex items-center gap-2">
-          <p-radioButton name="categories" [value]="c" formControlName="category"></p-radioButton>
-          <span>{{ c }}</span>
-        </div>
-      }
-    </div>
+    <p-autocomplete
+      formControlName="category"
+      [suggestions]="categories()"
+      (completeMethod)="onCategoryComplete($event)"
+      [dropdown]="true"
+    />
   </div>
 
   <div class="flex flex-col gap-1">
