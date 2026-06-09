@@ -63,6 +63,6 @@
     "postcss": "^8.5.3",
     "source-map-explorer": "^2.5.3",
     "typescript": "~5.9.2",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.0"
   }
 }
