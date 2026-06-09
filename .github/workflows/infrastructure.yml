@@ -28,7 +28,6 @@ concurrency:
 
 permissions:
   contents: read
-  id-token: write
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
@@ -68,12 +67,31 @@ jobs:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: read
+      id-token: write
     defaults:
       run:
         working-directory: infrastructure
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Verify AWS credentials configuration
+        env:
+          ROLE_ARN: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        run: |
+          if [ -n "$ROLE_ARN" ]; then
+            echo "Using OIDC role authentication"
+          elif [ -n "$ACCESS_KEY" ]; then
+            echo "Using access key authentication (fallback)"
+          else
+            echo "::error::No AWS credentials configured."
+            echo "Set secret AWS_DEPLOY_ROLE_ARN (recommended) after deploying BalanceGitHubOidcStack,"
+            echo "or set AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY as repository/environment secrets."
+            exit 1
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -88,10 +106,20 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials (OIDC)
+        if: secrets.AWS_DEPLOY_ROLE_ARN != ''
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: balance-github-${{ github.run_id }}
+
+      - name: Configure AWS credentials (access keys)
+        if: secrets.AWS_DEPLOY_ROLE_ARN == '' && secrets.AWS_ACCESS_KEY_ID != ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: CDK diff

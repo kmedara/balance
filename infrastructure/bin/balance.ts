@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
 import { AuthStack } from '../lib/auth-stack';
+import { GitHubOidcStack } from '../lib/github-oidc-stack';
 
 const parseUrlList = (
   contextValue: string[] | undefined,
@@ -39,11 +40,26 @@ const logoutUrls = parseUrlList(
   ['http://localhost:4200/'],
 );
 
+const stackEnv = {
+  account: process.env.CDK_DEFAULT_ACCOUNT,
+  region: process.env.CDK_DEFAULT_REGION,
+};
+
+const githubOrg = app.node.tryGetContext('githubOrg') as string | undefined;
+const githubRepo = app.node.tryGetContext('githubRepo') as string | undefined;
+
+if (githubOrg && githubRepo) {
+  new GitHubOidcStack(app, 'BalanceGitHubOidcStack', {
+    env: stackEnv,
+    githubOrg,
+    githubRepo,
+    githubEnvironment:
+      (app.node.tryGetContext('githubEnvironment') as string | undefined) ?? 'production',
+  });
+}
+
 new AuthStack(app, 'BalanceAuthStack', {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION ?? process.env.AWS_REGION ?? 'us-east-1',
-  },
+  env: stackEnv,
   callbackUrls,
   logoutUrls,
 });

@@ -12,7 +12,7 @@ Provisions Cognito authentication for the Balance app.
 ```bash
 cd infrastructure
 npm install
-npx cdk bootstrap   # once per account/region
+npx cdk bootstrap   # once per account/region (uses default AWS credentials)
 npm run deploy
 ```
 
@@ -37,52 +37,55 @@ Workflow: [`.github/workflows/infrastructure.yml`](../.github/workflows/infrastr
 | Push to `main` | Validate, then deploy `BalanceAuthStack` |
 | Manual `workflow_dispatch` | Deploy with optional callback/logout URL overrides |
 
-### One-time AWS setup
+### Fix: "Credentials could not be loaded"
 
-1. **Bootstrap CDK** in your account/region (local or CloudShell):
+This error means the **Configure AWS credentials** step had nothing to use. Fix in order:
+
+1. **Add a GitHub secret** (Settings → Secrets and variables → Actions):
+   - Repository secret **or** `production` environment secret named `AWS_DEPLOY_ROLE_ARN`
+   - Value: IAM role ARN from `BalanceGitHubOidcStack` output (see below)
+
+2. **Deploy the OIDC role stack once** (local admin credentials):
 
    ```bash
    cd infrastructure
-   npm install
-   npx cdk bootstrap aws://ACCOUNT_ID/us-east-1
+   npx cdk bootstrap
+   npm run deploy:oidc -- -c githubOrg=YOUR_GITHUB_USER -c githubRepo=balance
    ```
 
-2. **Create an IAM role** for GitHub OIDC (replace `OWNER/REPO`):
+   Copy output `DeployRoleArn` → GitHub secret `AWS_DEPLOY_ROLE_ARN`.
 
-   ```json
-   {
-     "Version": "2012-10-17",
-     "Statement": [
-       {
-         "Effect": "Allow",
-         "Principal": {
-           "Federated": "arn:aws:iam::ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com"
-         },
-         "Action": "sts:AssumeRoleWithWebIdentity",
-         "Condition": {
-           "StringEquals": {
-             "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
-           },
-           "StringLike": {
-             "token.actions.githubusercontent.com:sub": "repo:OWNER/REPO:ref:refs/heads/main"
-           }
-         }
-       }
-     ]
-   }
+3. **Trust policy must match the workflow.** The deploy job uses `environment: production`, so the IAM role trust policy must allow:
+
+   ```
+   repo:OWNER/REPO:environment:production
    ```
 
-   Attach policies that allow CloudFormation and the services CDK manages (or start with `AdministratorAccess` for a personal project).
+   `BalanceGitHubOidcStack` configures this automatically. If you created the role manually, add that subject (not only `ref:refs/heads/main`).
 
-3. **Register the OIDC provider** in IAM if it does not exist yet (`token.actions.githubusercontent.com`).
+4. **Secret scope:** If you use a GitHub Environment named `production`, add `AWS_DEPLOY_ROLE_ARN` under **Environment secrets** for `production`, not only repository secrets (environment secrets take precedence; an empty environment override blocks repo secrets).
+
+**Fallback (not recommended):** Set repository secrets `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` instead of `AWS_DEPLOY_ROLE_ARN`. The workflow uses these only when the role ARN is unset.
+
+### One-time AWS setup (manual alternative)
+
+If you prefer not to use `BalanceGitHubOidcStack`:
+
+1. Bootstrap CDK (see above).
+2. Create IAM OIDC provider `token.actions.githubusercontent.com` with audience `sts.amazonaws.com`.
+3. Create a role with trust policy allowing:
+   - `repo:OWNER/REPO:environment:production`
+   - `repo:OWNER/REPO:ref:refs/heads/main`
+4. Attach CDK deploy permissions (e.g. `AdministratorAccess` for personal projects).
+5. Set `AWS_DEPLOY_ROLE_ARN` in GitHub.
 
 ### GitHub repository configuration
 
-Add a **GitHub Environment** named `production` (Settings → Environments) if you want deployment protection rules.
+Create a **GitHub Environment** named `production` (Settings → Environments) if you use deployment protection rules.
 
 | Type | Name | Example |
 |---|---|---|
-| Secret | `AWS_DEPLOY_ROLE_ARN` | `arn:aws:iam::123456789012:role/balance-github-deploy` |
+| Secret | `AWS_DEPLOY_ROLE_ARN` | `arn:aws:iam::123456789012:role/balance-github-cdk-deploy` |
 | Variable | `AWS_REGION` | `us-east-1` |
 | Variable | `COGNITO_CALLBACK_URLS` | `["https://app.example.com/auth/callback"]` |
 | Variable | `COGNITO_LOGOUT_URLS` | `["https://app.example.com/"]` |
