@@ -27,6 +27,10 @@ required_vars=(
   PLAID_REDIRECT_URI
   GATEWAY
   MONGO_URL
+  ACCESS_TOKEN_ENCRYPTION_KEY
+  ACCESS_TOKEN_ENCRYPTION_ALGORITHM
+  ACCESS_TOKEN_ENCRYPTION_KEY_VERSION
+  ACCESS_TOKEN_ENCRYPTION_IV_LENGTH
 )
 
 for var in "${required_vars[@]}"; do
@@ -36,6 +40,20 @@ for var in "${required_vars[@]}"; do
   fi
 done
 
+if [[ "${AUTH_DISABLED:-true}" != "true" ]]; then
+  cognito_vars=(
+    COGNITO_USER_POOL_ID
+    COGNITO_CLIENT_ID
+    COGNITO_AUTHORITY
+  )
+  for var in "${cognito_vars[@]}"; do
+    if [[ -z "${!var:-}" ]]; then
+      echo "Error: $var is required when AUTH_DISABLED is not true"
+      exit 1
+    fi
+  done
+fi
+
 echo "Environment variables loaded from $SECRETS_FILE"
 
-docker compose up --build --watch -d
+docker compose up --build --watch

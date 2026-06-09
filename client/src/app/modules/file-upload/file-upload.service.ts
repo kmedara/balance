@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { utils, read } from 'xlsx';
 import { environment } from 'src/environments/environment';
-import { isBudget } from '@kmedara/balance-domain';
+import { isBudget } from '@core/domain';
 @Injectable({
   providedIn: 'root'
 })

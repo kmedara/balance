@@ -1,0 +1,32 @@
+.calendar-item--income {
+  --item-accent: var(--income-color);
+  --item-bg: color-mix(in srgb, var(--income-color) 10%, var(--p-surface-0));
+  --item-border: color-mix(in srgb, var(--income-color) 24%, transparent);
+  --item-text: var(--p-text-color);
+  --item-amount: color-mix(in srgb, var(--income-color) 78%, var(--p-text-color));
+
+  background: var(--item-bg);
+  border-color: var(--item-border);
+  color: var(--item-text);
+
+  .calendar-item__accent {
+    background: var(--item-accent);
+  }
+
+  .calendar-item__amount::before {
+    content: '+';
+    margin-right: 1px;
+    color: var(--income-color);
+    font-weight: 600;
+  }
+
+  .calendar-item__amount {
+    color: var(--item-amount);
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--income-color) 16%, var(--p-surface-0));
+    border-color: color-mix(in srgb, var(--income-color) 38%, transparent);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--income-color) 18%, transparent);
+  }
+}

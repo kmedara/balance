@@ -1,158 +1,63 @@
-import { DatePipe, NgClass, NgFor, NgStyle } from '@angular/common';
-import {
-  Component,
-  effect,
-  ElementRef,
-  inject,
-  OnInit,
-  Renderer2,
-  Signal,
-  signal,
-  WritableSignal,
-} from '@angular/core';
-import { SelectButtonModule } from 'primeng/selectbutton';
-import { DataViewModule } from 'primeng/dataview';
-import { TagModule } from 'primeng/tag';
+import { CurrencyPipe, NgClass } from '@angular/common';
+import { Component, computed, inject } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
-import { TooltipModule } from 'primeng/tooltip';
-import { CardModule } from 'primeng/card';
-import { Budget, CalendarDay, Week } from '@kmedara/balance-domain';
+import { DataViewModule } from 'primeng/dataview';
+import { CalendarResponse } from '@core/domain';
 import { ModalService } from '@modules/modal/modal.service';
-import { toObservable } from '@angular/core/rxjs-interop';
-import { getBudgetsForDay } from './calendar.utils';
-import { BudgetCalendarItem } from './budget-calendar-item/budget-calendar-item';
+import { CalendarEventItem } from './calendar-item/calendar-event-item';
+import { calendarStore } from './calendar.store';
+import { reviveCalendarResponse, summarizeMonth } from './calendar.utils';
+import { RouterOutlet } from '@angular/router';
+
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [
-    NgClass,
-    DataViewModule,
-    SelectButtonModule,
-    TagModule,
-    ButtonModule,
-    TooltipModule,
-    CardModule,
-    BudgetCalendarItem,
-  ],
+  imports: [NgClass, CurrencyPipe, DataViewModule, ButtonModule, CalendarEventItem, RouterOutlet],
   templateUrl: './calendar.html',
   styleUrl: './calendar.scss',
 })
 export class Calendar {
+  private readonly modalService = inject(ModalService);
+  readonly store = inject(calendarStore);
 
-  incomes = signal([]);
-  expenses = signal([]);
-  private _modalService = inject(ModalService);
-  hoveredBudget = signal<Budget | null>(null);
-  userBudgets = signal(this.incomes().concat(this.expenses()));
-  weeks: WritableSignal<Array<Week>> = signal([]);
-  weeks$ = toObservable(this.weeks);
-  currentDate = new Date();
-  monthLabel = '';
-  days: WritableSignal<CalendarDay[]> = signal([]);
   weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  private calendar = computed(() => {
+    const value = this.store.calendarValue() as CalendarResponse | undefined;
+    return value ? reviveCalendarResponse(value) : undefined;
+  });
+
+  days = computed(() => this.calendar()?.days ?? []);
+  monthLabel = computed(() => {
+    const label = this.calendar()?.monthLabel;
+    if (label) return label;
+
+    const { month, year } = this.store.filter();
+    return new Date(year, month - 1, 1).toLocaleString('default', {
+      month: 'long',
+      year: 'numeric',
+    });
+  });
+  monthSummary = computed(() => summarizeMonth(this.days()));
+  isLoading = computed(() => this.store.calendarIsLoading());
+
   isToday = (date: Date) => {
-    var today = new Date();
+    const today = new Date();
     return (
-      date.getMonth() == today.getMonth() &&
-      date.getDate() == today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate() &&
       date.getFullYear() === today.getFullYear()
     );
   };
 
-  ngOnInit() {
-    this.generateCalendar(this.currentDate);
-  }
+  isWeekend = (date: Date) => {
+    const day = date.getDay();
+    return day === 0 || day === 6;
+  };
 
-  add = async () => {
+  showModal = async () => {
+
     const { BudgetModal } = await import('@modules/budget/add-budget/add-budget');
-    this._modalService.open({content: BudgetModal, header: 'Add a budgeet'}, { a: 'b' });
+    this.modalService.open({ content: BudgetModal, header: 'Add budget' }, { a: 'b' });
   };
-
-  getTooltip(budget: Budget): string {
-    return `
-    <div>
-      <strong>${budget.title}</strong><br/>
-      ${budget.description}<br/>
-      <em>${budget.category}</em>
-    </div>
-  `;
-  }
-  generateCalendar = (date: Date) => {
-    this.days.set([]);
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    this.monthLabel = date.toLocaleString('default', { month: 'long', year: 'numeric' });
-
-    const firstDayOfMonth = new Date(year, month, 1);
-    const lastDayOfMonth = new Date(year, month + 1, 0);
-
-    const totalDays = lastDayOfMonth.getDate();
-
-    const startDayOfWeek = firstDayOfMonth.getDay();
-
-    const prevMonthLastDate = new Date(year, month, 0).getDate();
-
-    // Previous month's trailing days
-    for (let i = startDayOfWeek - 1; i >= 0; i--) {
-      const date = new Date(year, month - 1, prevMonthLastDate - i);
-      this.days.update((days) => [
-        ...days,
-        {
-          date,
-          inCurrentMonth: false,
-          budgets: getBudgetsForDay(date, this.userBudgets()),
-        },
-      ]);
-    }
-
-    // Current month days
-    for (let d = 1; d <= totalDays; d++) {
-      const date = new Date(year, month, d);
-      this.days.update((days) => [
-        ...days,
-        {
-          date,
-          inCurrentMonth: true,
-          budgets: getBudgetsForDay(date, this.userBudgets()),
-        },
-      ]);
-    }
-
-    // Next month's leading days
-    const endIndex = this.days().length % 7;
-    const remainingDays = endIndex === 0 ? 0 : 7 - endIndex;
-    for (let d = 1; d <= remainingDays; d++) {
-      const date = new Date(year, month + 1, d);
-      this.days.update((days) => [
-        ...days,
-        {
-          date,
-          inCurrentMonth: false,
-          budgets: getBudgetsForDay(date, this.userBudgets()),
-        },
-      ]);
-    }
-
-    // Split into weeks
-    for (let i = 0; i < this.days().length; i += 7) {
-      this.weeks.update((curr) => {
-        const week = this.days().slice(i, i + 7);
-        return [...curr, week] as Week[];
-      });
-    }
-  };
-
-  previousMonth() {
-    this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() - 1, 1);
-    this.generateCalendar(this.currentDate);
-  }
-
-  nextMonth() {
-    this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 1);
-    this.generateCalendar(this.currentDate);
-  }
-
-  today() {
-    this.generateCalendar(this.currentDate);
-  }
 }

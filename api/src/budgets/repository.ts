@@ -1,32 +1,47 @@
 import type { Db } from 'mongodb';
-import type { Budget } from '@kmedara/balance-domain';
+import type { BudgetDocument } from '@kmedara/balance-domain';
+import { BUDGET_EVENT_TYPE } from './constants.js';
+import { eventOccursInRange } from '../events/recurrence.utils.js';
 
-type BudgetDocument = Budget & {
-  _id?: unknown;
-  endDate?: Date | null;
-};
+const EVENTS_COLLECTION = 'events';
+type EventCollectionDocument = BudgetDocument & { _id?: unknown };
 
-export const toBudget = (doc: BudgetDocument): Budget => {
+export const toBudgetDocument = (doc: EventCollectionDocument): BudgetDocument => {
   const { _id, ...budget } = doc;
   return budget;
+};
+
+export const findBudgetsByResourceIds = async (
+  db: Db,
+  resourceIds: string[],
+): Promise<BudgetDocument[]> => {
+  if (resourceIds.length === 0) return [];
+
+  const docs = await db
+    .collection<EventCollectionDocument>(EVENTS_COLLECTION)
+    .find({
+      resourceId: { $in: resourceIds },
+      eventType: BUDGET_EVENT_TYPE,
+    } as Record<string, unknown>)
+    .toArray();
+
+  return docs.map(toBudgetDocument);
+};
+
+export const findAllBudgetEvents = async (db: Db): Promise<BudgetDocument[]> => {
+  const docs = await db
+    .collection<EventCollectionDocument>(EVENTS_COLLECTION)
+    .find({ eventType: BUDGET_EVENT_TYPE, rrule: { $exists: true, $ne: '' } })
+    .toArray();
+
+  return docs.map(toBudgetDocument);
 };
 
 export const findBudgetsOverlapping = async (
   db: Db,
   rangeStart: Date,
   rangeEnd: Date,
-): Promise<Budget[]> => {
-  const docs = await db
-    .collection<BudgetDocument>('budgets')
-    .find({
-      startDate: { $lte: rangeEnd },
-      $or: [
-        { endDate: undefined },
-        { endDate: { $exists: false } },
-        { endDate: { $gte: rangeStart } },
-      ],
-    })
-    .toArray();
-
-  return docs.map(toBudget);
+): Promise<BudgetDocument[]> => {
+  const docs = await findAllBudgetEvents(db);
+  return docs.filter((budget) => eventOccursInRange(budget, rangeStart, rangeEnd));
 };

@@ -1,0 +1,26 @@
+{
+  "name": "balance-infrastructure",
+  "version": "1.0.0",
+  "private": true,
+  "bin": {
+    "balance-infrastructure": "bin/balance.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "cdk": "cdk",
+    "deploy": "cdk deploy BalanceAuthStack --require-approval never",
+    "deploy:ci": "cdk deploy BalanceAuthStack --require-approval never --outputs-file cdk-outputs.json",
+    "synth": "cdk synth",
+    "diff": "cdk diff BalanceAuthStack"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.0",
+    "aws-cdk": "^2.1100.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.220.0",
+    "constructs": "^10.4.2"
+  }
+}

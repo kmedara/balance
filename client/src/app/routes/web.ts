@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
+import { authGuard } from '@core/auth/auth.guard';
 import { navigationMenuResolver } from '@resolvers/navigation-menu-resolver';
+
 const outlets = [
   {
     path: '',
@@ -11,29 +13,38 @@ const outlets = [
 
 export const routes: Routes = [
   {
+    path: 'login',
+    loadComponent: () => import('../modules/auth/login/login').then((mod) => mod.Login),
+  },
+  {
+    path: 'auth/callback',
+    loadComponent: () =>
+      import('../modules/auth/callback/callback').then((mod) => mod.AuthCallback),
+  },
+  {
     path: '',
     redirectTo: 'calendar',
     pathMatch: 'full',
   },
   {
     path: '',
+    canActivate: [authGuard],
     loadComponent: () => import('../core/layouts/web/default/default').then((mod) => mod.Default),
     data: { name: 'Layout' },
     resolve: { routes: navigationMenuResolver },
     children: [
-      ...outlets,
       {
         path: 'calendar',
-
         loadComponent: () => import('../modules/calendar/calendar').then((mod) => mod.Calendar),
         data: {
           name: 'Calendar',
         },
+        children: [...outlets],
       },
     ],
   },
   {
     path: '**',
-    redirectTo: 'dashboard',
+    redirectTo: 'calendar',
   },
 ];

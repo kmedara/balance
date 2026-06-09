@@ -1,4 +1,5 @@
 import {
+  APP_INITIALIZER,
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
@@ -10,8 +11,10 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
 import { DefaultPreset } from '@core/theme.default';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideGatewayHttpClient } from '@core/http';
+import { provideOAuthClient } from 'angular-oauth2-oidc';
+import { AuthService } from '@core/auth/auth.service';
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -19,8 +22,14 @@ export const appConfig: ApplicationConfig = {
     provideRouter(appRoutes()),
     provideClientHydration(withEventReplay()),
     provideAnimationsAsync(),
-    //provideHttpClient(withInterceptors([])),
+    provideOAuthClient(),
     provideGatewayHttpClient(),
+    {
+      provide: APP_INITIALIZER,
+      multi: true,
+      deps: [AuthService],
+      useFactory: (auth: AuthService) => () => auth.init(),
+    },
     providePrimeNG({
       theme: {
         preset: DefaultPreset,
@@ -28,5 +37,4 @@ export const appConfig: ApplicationConfig = {
       ripple: true,
     }),
   ],
-  //imports: [DynamicD]
 };

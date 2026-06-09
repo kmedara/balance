@@ -1,5 +1,17 @@
-import type { Budget } from '@kmedara/balance-domain';
+import type { BudgetDocumentFields } from '@kmedara/balance-domain';
+import type { EventDocumentInput } from '@kmedara/balance-domain';
+import { RRule } from '../src/budgets/rrule.utils.js';
+import { BUDGET_EVENT_TYPE, SEED_USER_ID } from './seed.constants.js';
 
+type BudgetDocumentInput = EventDocumentInput<BudgetDocumentFields>;
+
+const budgetSeed = (
+  fields: Omit<BudgetDocumentInput, 'userId' | 'eventType'>,
+): BudgetDocumentInput => ({
+  ...fields,
+  userId: SEED_USER_ID,
+  eventType: BUDGET_EVENT_TYPE,
+});
 /** Stable ids so re-running the seed upserts instead of duplicating rows. */
 export const SEED_BUDGET_IDS = {
   salary: '11111111-1111-4111-8111-111111111101',
@@ -25,8 +37,6 @@ export const categorySeeds: CategorySeed[] = [
   { name: 'other', displayName: 'Other', isSystem: true },
 ];
 
-type BudgetSeed = Budget & { endDate?: Date | null };
-
 const today = (): Date => {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
@@ -39,66 +49,85 @@ const daysFromToday = (offset: number): Date => {
   return d;
 };
 
-export const budgetSeeds: BudgetSeed[] = [
-  {
+export const budgetSeeds: BudgetDocumentInput[] = [
+  budgetSeed({
     resourceId: SEED_BUDGET_IDS.salary,
     title: 'Salary',
     type: 'Income',
     category: 'Other',
-    frequency: 'Bi-Weekly',
-    startDate: daysFromToday(-200),
+    rrule: new RRule({
+      freq: RRule.WEEKLY,
+      interval: 2,
+      dtstart: daysFromToday(-200),
+    }).toString(),
     amount: 4500,
-  },
-  {
+  }),
+  budgetSeed({
     resourceId: SEED_BUDGET_IDS.freelance,
     title: 'Freelance',
     description: 'Side project income',
     type: 'Income',
     category: 'Other',
-    frequency: 'Monthly',
-    startDate: daysFromToday(-75),
-    endDate: daysFromToday(45),
+    rrule: new RRule({
+      freq: RRule.MONTHLY,
+      interval: 1,
+      dtstart:daysFromToday(-75),
+      until: daysFromToday(45),
+    }).toString(),
     amount: 800,
-  },
-  {
+  }),
+  budgetSeed({
     resourceId: SEED_BUDGET_IDS.rent,
     title: 'Rent',
     type: 'Expense',
     category: 'Rent',
-    frequency: 'Monthly',
-    startDate: daysFromToday(-420),
+    rrule: new RRule({
+      freq: RRule.MONTHLY,
+      interval: 1,
+      dtstart:daysFromToday(-175),
+    }).toString(),
     amount: 1650,
-  },
-  {
+  }),
+  budgetSeed({
     resourceId: SEED_BUDGET_IDS.groceries,
     title: 'Groceries',
     type: 'Expense',
     category: 'Food',
-    frequency: 'Weekly',
-    startDate: daysFromToday(-21),
-    endDate: daysFromToday(120),
+    rrule: new RRule({
+      freq: RRule.MONTHLY,
+      interval: 1,
+      dtstart:daysFromToday(-21),
+      until: daysFromToday(120),
+    }).toString(),
     amount: 120,
-  },
-  {
+  }),
+  budgetSeed({
     resourceId: SEED_BUDGET_IDS.utilities,
     title: 'Utilities',
     type: 'Expense',
     category: 'Utilities',
-    frequency: 'Monthly',
-    startDate: daysFromToday(-150),
-    endDate: daysFromToday(-20),
+    rrule: new RRule({
+      freq: RRule.MONTHLY,
+      interval: 1,
+      dtstart:daysFromToday(-150),
+      until: daysFromToday(-20),
+    }).toString(),
     amount: 185,
-  },
-  {
+  }),
+  budgetSeed({
     resourceId: SEED_BUDGET_IDS.transport,
     title: 'Transit pass',
     type: 'Expense',
     category: 'Transportation',
-    frequency: 'Monthly',
-    startDate: daysFromToday(-10),
+    rrule: new RRule({
+      freq: RRule.MONTHLY,
+      interval: 1,
+      dtstart:daysFromToday(-10),
+    }).toString(),
     amount: 95,
-  },
+  }),
 ];
+
 /** @deprecated Use budgetSeeds from seed.data.ts */
 export const incomes = budgetSeeds.filter((b) => b.type === 'Income');
 /** @deprecated Use budgetSeeds from seed.data.ts */

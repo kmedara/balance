@@ -1,0 +1,8 @@
+@switch (eventType()) {
+  @case ('budget') {
+    <app-budget-calendar-item [event]="event()" />
+  }
+  @default {
+    <app-default-calendar-item [event]="event()" />
+  }
+}

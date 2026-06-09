@@ -1,7 +1,27 @@
-import type { PlaidError } from '@kmedara/balance-domain';
+import type { PlaidError } from '@core/domain';
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { environment } from 'src/environments/environment';
+
+export type PlaidTransaction = {
+  transaction_id: string;
+  account_id: string;
+  amount: number;
+  date: string;
+  name: string;
+  merchant_name?: string | null;
+  pending: boolean;
+};
+
+export type PlaidTransactionsSyncResponse = {
+  items: {
+    item_id: string;
+    added: PlaidTransaction[];
+    modified: PlaidTransaction[];
+    removed: { transaction_id: string }[];
+  }[];
+};
+
 @Injectable({
   providedIn: 'root',
 })
@@ -9,6 +29,8 @@ export class PlaidService {
   private http = inject(HttpClient);
   readonly error = signal<PlaidError | null>(null);
   readonly linkedItems = signal<string[]>([]);
+  readonly transactions = signal<PlaidTransaction[]>([]);
+  readonly isFetchingTransactions = signal(false);
   private handler?: any;
 
   init = async () => {
@@ -41,5 +63,26 @@ export class PlaidService {
       });
       this.handler.open();
     });
+  };
+
+  fetchTransactions = (itemId?: string) => {
+    this.isFetchingTransactions.set(true);
+    this.error.set(null);
+
+    this.http
+      .post<PlaidTransactionsSyncResponse>(`${environment.GATEWAY}/plaid/transactions/sync`, {
+        item_id: itemId,
+      })
+      .subscribe({
+        next: ({ items }) => {
+          const synced = items.flatMap(({ added, modified }) => [...added, ...modified]);
+          this.transactions.set(synced);
+          this.isFetchingTransactions.set(false);
+        },
+        error: (err) => {
+          this.error.set(err.error as PlaidError);
+          this.isFetchingTransactions.set(false);
+        },
+      });
   };
 }

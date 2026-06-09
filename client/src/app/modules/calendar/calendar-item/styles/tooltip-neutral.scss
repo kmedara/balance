@@ -1,0 +1,20 @@
+.calendar-item__tooltip--neutral {
+  .calendar-item__tooltip-type {
+    color: var(--p-text-muted-color);
+    background: var(--p-surface-100);
+  }
+
+  .calendar-item__tooltip-amount {
+    color: var(--p-text-color);
+  }
+
+  .calendar-item__tooltip-category {
+    background: var(--p-surface-100);
+    color: var(--p-text-muted-color);
+  }
+}
+
+:host ::ng-deep .calendar-item-tooltip--neutral.p-tooltip .p-tooltip-text {
+  border: 1px solid var(--p-surface-200);
+  border-left: 3px solid var(--p-surface-400);
+}

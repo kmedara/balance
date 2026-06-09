@@ -1,68 +1,54 @@
-import { Budget } from "@kmedara/balance-domain";
+import type { CalendarDay, CalendarResponse } from '@core/domain';
 
-export const isSameDay = (a: Date, b: Date) => {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
+export type MonthSummary = {
+  income: number;
+  expenses: number;
+  net: number;
 };
 
-export const daysBetween = (a: Date, b: Date) => {
-  const msPerDay = 1000 * 60 * 60 * 24;
-  return Math.floor((b.getTime() - a.getTime()) / msPerDay);
-};
+const hasAmount = (event: unknown): event is { amount: number; type?: string } =>
+  typeof event === 'object' &&
+  event !== null &&
+  'amount' in event &&
+  typeof (event as { amount: unknown }).amount === 'number';
 
-export const occursOnDate = (budget: Budget, date: Date) => {
-  const start = new Date(budget.startDate);
-  start.setHours(0, 0, 0, 0);
+/** Sum expected income and expenses for days in the displayed month. */
+export const summarizeMonth = (days: CalendarDay[]): MonthSummary => {
+  let income = 0;
+  let expenses = 0;
 
-  const target = new Date(date);
-  target.setHours(0, 0, 0, 0);
+  for (const day of days) {
+    if (!day.inCurrentMonth) continue;
 
-  if (target < start) return false;
+    for (const event of day.events ?? []) {
+      if (!hasAmount(event)) continue;
 
-  const diffDays = daysBetween(start, target);
-
-  switch (budget.frequency) {
-    case 'Daily':
-      return true;
-
-    case 'Weekly':
-      return diffDays % 7 === 0;
-
-    case 'Bi-Weekly':
-      return diffDays % 14 === 0;
-
-    case 'Semi-Monthly':
-      // occurs on start day AND 15 days later
-      return target.getDate() === start.getDate() || target.getDate() === start.getDate() + 15;
-
-    case 'Monthly':
-      return target.getDate() === start.getDate();
-
-    case 'Quarterly':
-      return (
-        target.getDate() === start.getDate() && (target.getMonth() - start.getMonth()) % 3 === 0
-      );
-
-    case 'Semi-Annually':
-      return (
-        target.getDate() === start.getDate() && (target.getMonth() - start.getMonth()) % 6 === 0
-      );
-
-    default:
-      return false;
+      if (event.type === 'Income') income += event.amount;
+      else if (event.type === 'Expense') expenses += event.amount;
+    }
   }
+
+  return { income, expenses, net: income - expenses };
 };
 
-/**
- * logic to map objects to a day on the calendar
- */
-export type CalendarMatchFn<T> = (date: Date, objects: T[]) => T[];
-export const getBudgetsForDay: CalendarMatchFn<Budget> = (
-  date: Date,
-  budgets: Budget[],
-): Budget[] => {
-  return budgets.filter((b) => occursOnDate(b, date));
+/** Parse `YYYY-MM-DD` (or ISO prefix) into local midnight. */
+export const parseCalendarDate = (value: Date | string): Date => {
+  if (typeof value === 'string') {
+    const [y, m, d] = value.slice(0, 10).split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  return new Date(value.getFullYear(), value.getMonth(), value.getDate());
 };
+
+const reviveDay = (day: CalendarDay): CalendarDay => ({
+  ...day,
+  date: parseCalendarDate(day.date as Date | string),
+});
+
+/** JSON responses serialize dates as strings — revive as local calendar dates. */
+export const reviveCalendarResponse = (response: CalendarResponse): CalendarResponse => ({
+  ...response,
+  days: response.days.map(reviveDay),
+  weeks: response.weeks.map((week) => week.map(reviveDay)),
+});

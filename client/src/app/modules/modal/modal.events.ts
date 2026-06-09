@@ -1,7 +1,7 @@
 // modal.events.ts
 import { type } from '@ngrx/signals';
 import { eventGroup } from '@ngrx/signals/events';
-import type { Budget } from '@kmedara/balance-domain';
+import type { Budget } from '@core/domain';
 export const ModalEvents = eventGroup({
   source: 'Modal',
   events: {

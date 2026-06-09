@@ -1,51 +1,125 @@
-<p-dataview #dv [value]="days()" class="calendar-view flex-1 flex flex-col">
-  <ng-template #header>
-    <div class="shrink-0">
-      <div class="flex justify-between items-center mb-1">
-        <p-button icon="pi pi-chevron-left" (click)="previousMonth()" text />
-        <span class="text-l font-semibold">{{ monthLabel }}</span>
-        <p-button icon="pi pi-chevron-right" (click)="nextMonth()" text />
-      </div>
-
-      <div class="grid grid-cols-7 text-center text-sm font-medium">
-        @for (day of weekdayNames; track day) {
-          <div class="py-1">{{ day }}</div>
-        }
-      </div>
+<div class="calendar-shell flex flex-1 flex-col w-full min-w-0">
+  <header class="calendar-toolbar">
+    <div class="calendar-toolbar__nav">
+      <p-button
+        icon="pi pi-chevron-left"
+        (click)="store.previousMonth()"
+        [rounded]="true"
+        [text]="true"
+        severity="secondary"
+        aria-label="Previous month"
+      />
+      <p-button
+        label="Today"
+        (click)="store.goToToday()"
+        [outlined]="true"
+        severity="secondary"
+        size="small"
+      />
+      <p-button
+        icon="pi pi-chevron-right"
+        (click)="store.nextMonth()"
+        [rounded]="true"
+        [text]="true"
+        severity="secondary"
+        aria-label="Next month"
+      />
     </div>
-  </ng-template>
 
-  <ng-template #list let-items>
-    <div class="flex-1 h-full grid grid-cols-7">
-      @for (item of items; track $index) {
-        <p-card
-          class="day-cell flex flex-col"
-          [ngClass]="{
-            today: isToday(item.date),
-            'out-month': !item.inCurrentMonth,
-          }"
-        >
-          <ng-template #header>
-            <span class="h2">
-              {{ item.date.getDate() }}
-            </span>
-          </ng-template>
-
-          <ng-template #content>
-            @for (budget of item.budgets; track $index) {
-              <div class="flex flex-col gap-1 overflow-hidden">
-                <app-budget-calendar-item [budget]="budget" class=""></app-budget-calendar-item>
-              </div>
+    <div class="calendar-toolbar__center">
+      <h1 class="calendar-toolbar__title">{{ monthLabel() }}</h1>
+      <div
+        class="calendar-toolbar__summary"
+        [attr.aria-busy]="isLoading()"
+        aria-label="Expected monthly totals"
+      >
+        <div class="calendar-toolbar__stat calendar-toolbar__stat--income">
+          <span class="calendar-toolbar__stat-label">Income</span>
+          <span class="calendar-toolbar__stat-value">
+            @if (isLoading()) {
+              <span class="calendar-toolbar__stat-bar" aria-hidden="true"></span>
+            } @else {
+              {{ monthSummary().income | currency: 'USD' : 'symbol' : '1.0-0' }}
             }
-          </ng-template>
-        </p-card>
-      }
+          </span>
+        </div>
+        <div class="calendar-toolbar__stat calendar-toolbar__stat--expense">
+          <span class="calendar-toolbar__stat-label">Expenses</span>
+          <span class="calendar-toolbar__stat-value">
+            @if (isLoading()) {
+              <span class="calendar-toolbar__stat-bar" aria-hidden="true"></span>
+            } @else {
+              {{ monthSummary().expenses | currency: 'USD' : 'symbol' : '1.0-0' }}
+            }
+          </span>
+        </div>
+        <div
+          class="calendar-toolbar__stat calendar-toolbar__stat--net"
+          [class.calendar-toolbar__stat--negative]="!isLoading() && monthSummary().net < 0"
+        >
+          <span class="calendar-toolbar__stat-label">Net</span>
+          <span class="calendar-toolbar__stat-value">
+            @if (isLoading()) {
+              <span class="calendar-toolbar__stat-bar" aria-hidden="true"></span>
+            } @else {
+              {{ monthSummary().net | currency: 'USD' : 'symbol' : '1.0-0' }}
+            }
+          </span>
+        </div>
+      </div>
     </div>
-  </ng-template>
 
-  <ng-template #footer>
-    <div class="shrink-0 p-1 justify-start">
-      <p-button (click)="add()" icon="pi pi-plus" rounded></p-button>
+    <div class="calendar-toolbar__actions">
+      <router-outlet name="actions"></router-outlet>
+      <!-- <p-button label="Add budget" icon="pi pi-plus" (click)="add()" size="small" /> -->
     </div>
-  </ng-template>
-</p-dataview>
+  </header>
+
+  <div class="calendar-body" [attr.aria-busy]="isLoading()">
+    @if (isLoading()) {
+      <div class="calendar-loading" aria-live="polite">
+        <div class="calendar-loading__spinner"></div>
+        <span>Loading calendar…</span>
+      </div>
+    }
+
+    <p-dataview
+      [value]="days()"
+      class="calendar-view flex flex-1 flex-col w-full min-w-0"
+      [class.calendar-view--loading]="isLoading()"
+    >
+      <ng-template #header>
+        <div class="calendar-weekdays" aria-hidden="true">
+          @for (day of weekdayNames; track day) {
+            <div class="calendar-weekdays__cell">{{ day }}</div>
+          }
+        </div>
+      </ng-template>
+
+      <ng-template #list let-items>
+        <div class="calendar-grid">
+          @for (item of items; track item.date) {
+            <div
+              class="day-cell"
+              [ngClass]="{
+                'day-cell--today': isToday(item.date),
+                'day-cell--muted': !item.inCurrentMonth,
+                'day-cell--weekend': isWeekend(item.date),
+              }"
+            >
+              <div class="day-cell__header">
+                <span class="day-cell__date">{{ item.date.getDate() }}</span>
+              </div>
+
+              <div class="day-events">
+                @for (event of item.events; track event.resourceId) {
+                  <app-calendar-event-item [event]="event" />
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </ng-template>
+    </p-dataview>
+  </div>
+</div>

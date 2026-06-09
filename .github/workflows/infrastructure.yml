@@ -1,0 +1,113 @@
+name: Infrastructure
+
+on:
+  pull_request:
+    paths:
+      - 'infrastructure/**'
+      - '.github/workflows/infrastructure.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'infrastructure/**'
+      - '.github/workflows/infrastructure.yml'
+  workflow_dispatch:
+    inputs:
+      callback_urls:
+        description: 'OAuth callback URLs (JSON array or comma-separated)'
+        required: false
+        type: string
+      logout_urls:
+        description: 'OAuth logout URLs (JSON array or comma-separated)'
+        required: false
+        type: string
+
+concurrency:
+  group: infrastructure-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+  COGNITO_CALLBACK_URLS: ${{ inputs.callback_urls || vars.COGNITO_CALLBACK_URLS || '["http://localhost:4200/auth/callback"]' }}
+  COGNITO_LOGOUT_URLS: ${{ inputs.logout_urls || vars.COGNITO_LOGOUT_URLS || '["http://localhost:4200/"]' }}
+
+jobs:
+  validate:
+    name: Validate CDK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infrastructure
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: infrastructure/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Synth
+        run: npm run synth
+
+  deploy:
+    name: Deploy CDK
+    needs: validate
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: infrastructure
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: infrastructure/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: CDK diff
+        run: npm run diff
+
+      - name: CDK deploy
+        run: npm run deploy:ci
+
+      - name: Upload stack outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: cdk-outputs
+          path: infrastructure/cdk-outputs.json
+          retention-days: 30
+
+      - name: Print Cognito outputs
+        run: |
+          echo "Cognito stack outputs:"
+          cat cdk-outputs.json

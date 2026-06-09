@@ -12,7 +12,7 @@ import { Select } from 'primeng/select';
 import { DatePicker } from 'primeng/datepicker';
 import { RadioButton } from 'primeng/radiobutton';
 import { AutoComplete, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
-import { frequencies, Budget, budgetTypes } from '@kmedara/balance-domain';
+import { frequencies, Budget, budgetTypes } from '@core/domain';
 import {
   MODAL_CONFIG,
   MODAL_CONTEXT,
@@ -22,8 +22,7 @@ import {
 import { ModalContext } from '@modals/modal.context';
 import { FileUpload } from '@modules/file-upload/file-upload';
 import { injectDispatch } from '@ngrx/signals/events';
-import { BudgetEvents } from '../budget.events';
-import { BudgetStore } from '../budget.store';
+// import { BudgetStore } from '../../calendar/calendar.store';
 
 
 type BudgetForm = {
@@ -41,25 +40,24 @@ type BudgetForm = {
  */
 export class BudgetModal {
   private readonly modalContext = inject<ModalContext<Budget>>(MODAL_CONTEXT);
-  private readonly dispatch = injectDispatch(BudgetEvents);
   frequencies = frequencies;
-  private readonly store = inject(BudgetStore);
-  readonly categories = computed(() => this.store.categorySuggestions());
+  // private readonly store = inject(BudgetStore);
+  //readonly categories = computed(() => this.store.categorySuggestions());
 
   onCategoryComplete(event: AutoCompleteCompleteEvent): void {
-    this.dispatch.loadCategories({ category: event.query });
+    //this.dispatch.loadCategories({ category: event.query });
   }
   private fb = inject(FormBuilder);
-  form = this.fb.group<BudgetForm>({
+  form = this.fb.group({
     type: this.fb.control('Expense', { nonNullable: true, validators: [Validators.required] }),
     title: this.fb.control('', { nonNullable: true, validators: [Validators.required] }),
     amount: this.fb.control(0, { nonNullable: true, validators: [Validators.required] }),
-    startDate: this.fb.control(new Date(), {
-      nonNullable: true,
-      validators: [Validators.required],
-    }),
+    // startDate: this.fb.control(new Date(), {
+    //   nonNullable: true,
+    //   validators: [Validators.required],
+    // }),
     category: this.fb.control('', { nonNullable: true, validators: [Validators.required] }),
-    frequency: this.fb.control('Daily', { nonNullable: true, validators: [Validators.required] }),
+    // frequency: this.fb.control('Daily', { nonNullable: true, validators: [Validators.required] }),
   });
 
   submit(): void {
@@ -67,7 +65,7 @@ export class BudgetModal {
       this.form.markAllAsTouched();
       return;
     }
-    this.modalContext.submit(this.form.value as Required<Budget>, BudgetEvents.create);
+    //this.modalContext.submit(this.form.value as Required<Budget>, BudgetEvents.create);
   }
   cancel(): void {
     this.modalContext.cancel();
