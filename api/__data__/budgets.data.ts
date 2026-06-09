@@ -1,25 +1,5 @@
-import { Budget } from '@kmedara/balance-domain';
-export const incomes: Budget[] = [
-  {
-    category: 'anything',
-    type: 'Income',
-    frequency: 'Bi-Weekly',
-    startDate: new Date(),
-    title: 'job',
-    amount: 4500.44,
-    resourceId: crypto.randomUUID(),
-  },
-];
+import { budgetSeeds } from './seed.data.js';
 
-export const expenses: Budget[] = [
-  {
-    category: 'anything',
-    type: 'Expense',
-    description: 'user input',
-    frequency: 'Monthly',
-    startDate: new Date(),
-    title: 'bill',
-    amount: 344.11,
-    resourceId: crypto.randomUUID(),
-  },
-];
+export const incomes = budgetSeeds.filter((b) => b.type === 'Income');
+export const expenses = budgetSeeds.filter((b) => b.type === 'Expense');
+export { budgetSeeds };

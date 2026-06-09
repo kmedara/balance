@@ -3,7 +3,8 @@ import { fastify } from "fastify";
 import { plaidRoutes } from "./plaid/routes.js";
 import cors from "@fastify/cors";
 import { cateogoryRoutes } from "./categories/routes.js";
-
+import { budgetRoutes } from "./budgets/routes.js";
+import mongodb from "@fastify/mongodb";
 const server = fastify();
 
 server.get("/ping", async (request, reply) => {
@@ -12,9 +13,12 @@ server.get("/ping", async (request, reply) => {
 server.register(cors, {
   origin: "http://localhost:4200",
 });
+server.register(mongodb as any, {
+  url: process.env.MONGO_URL,
+});
 server.register(plaidRoutes, { prefix: "/plaid" });
 server.register(cateogoryRoutes, { prefix: "/categories" });
-
+server.register(budgetRoutes, { prefix: "/budgets" });
 server.listen({ port: 3000, host: "0.0.0.0" }, (err, address) => {
   if (err) {
     console.error(err);

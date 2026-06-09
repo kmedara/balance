@@ -20,6 +20,8 @@ services:
   node:
     networks:
       - balance
+    depends_on:
+      - mongo
     build:
       context: ./api
       dockerfile: ./Dockerfile.dev
@@ -38,19 +40,14 @@ services:
       - PLAID_REDIRECT_URI=${PLAID_REDIRECT_URI}
       - MONGO_URL=${MONGO_URL}
     develop:
-    watch:
-      - action: sync
-        path: ./api/src
-        target: /app/src
-        ignore:
-          - node_modules/
-      - action: sync
-        path: ./api/tsconfig.json
-        target: /app/tsconfig.json
-      - action: rebuild
-        path: ./api/package-lock.json
+      watch:
+        - action: sync
+          path: ./api/src
+          target: /app/src
 
   mongo:
+    networks:
+      - balance
     image: mongo:6
     container_name: mongo
     restart: always
