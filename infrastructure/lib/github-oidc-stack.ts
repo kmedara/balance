@@ -22,7 +22,6 @@ export class GitHubOidcStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: GitHubOidcStackProps) {
     super(scope, id, props);
 
-    console.log(props);
     const githubEnvironment = props.githubEnvironment ?? 'production';
     const githubBranches = props.githubBranches?.length
       ? props.githubBranches

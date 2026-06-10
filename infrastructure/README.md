@@ -84,16 +84,16 @@ The IAM role **trust policy `sub` claim** does not match what GitHub sends. Comm
 
 1. Confirm `githubOrg` / `githubRepo` match your repo exactly (case-sensitive):
    ```bash
-   npm run deploy:oidc -- -c githubOrg=YOUR_USER -c githubRepo=balance
+   npm run deploy:oidc -- -c githubOrg=YOUR_USER -c githubRepo=balance -c githubBranches=master
    ```
 2. **Redeploy the OIDC stack** after any trust policy change (updates the existing role):
    ```bash
-   npm run deploy:oidc -- -c githubOrg=YOUR_USER -c githubRepo=balance
+   npm run deploy:oidc -- -c githubOrg=YOUR_USER -c githubRepo=balance -c githubBranches=main,master,develop
    ```
 3. Ensure `AWS_DEPLOY_ROLE_ARN` is the **`DeployRoleArn`** output from that stack (same AWS account).
 4. Default allowed subjects include **`main`**, **`master`**, and **`environment:production`**. Custom branches:
    ```bash
-   npm run deploy:oidc -c githubOrg=OWNER -c githubRepo=REPO -c 'githubBranches=["main","master","develop"]'
+   npm run deploy:oidc -c githubOrg=OWNER -c githubRepo=REPO -c githubBranches=main,master,develop
    ```
 
 Check allowed subjects in the CloudFormation output **`TrustSubjects`** after deploy.
@@ -123,6 +123,18 @@ Create a **GitHub Environment** named `production` (Settings → Environments) i
 | Variable | `COGNITO_LOGOUT_URLS` | `["https://app.example.com/"]` |
 
 After a successful deploy, download the **`cdk-outputs`** workflow artifact or read the job log for Cognito values.
+
+### CI outputs but nothing in the AWS console
+
+CI deploy **did work** if the job log shows a real `UserPoolId` (e.g. `us-east-1_smK0IYHjx`). Cognito is regional — you must open the console in the **same account and region** as the deploy log.
+
+| Look here | Not here |
+|---|---|
+| **Cognito → User pools** in region from `CognitoRegion` output (default `us-east-1`) | IAM → Roles (that is `BalanceGitHubOidcStack` only) |
+| Pool name **`balance-users`** | Stack name `BalanceGitHubOidcStack` |
+| CloudFormation stack **`BalanceAuthStack`** | `cdk.out/` templates (local synth only) |
+
+Check the deploy job line **Deploying BalanceAuthStack to account … in …** and match that account in the AWS console account switcher. The **Verify Cognito resources** step prints a direct console link.
 
 ### Manual deploy from Actions
 
