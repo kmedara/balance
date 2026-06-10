@@ -5,7 +5,9 @@ import { Construct } from 'constructs';
 export type GitHubOidcStackProps = cdk.StackProps & {
   githubOrg: string;
   githubRepo: string;
-  /** Must match the GitHub Actions `environment:` name (default: production). */
+  /** Branches allowed to assume the role (push / workflow_dispatch). */
+  githubBranches?: string[];
+  /** GitHub Actions environment name when the deploy job uses `environment:`. */
   githubEnvironment?: string;
 };
 
@@ -21,7 +23,15 @@ export class GitHubOidcStack extends cdk.Stack {
     super(scope, id, props);
 
     const githubEnvironment = props.githubEnvironment ?? 'production';
+    const githubBranches = props.githubBranches?.length
+      ? props.githubBranches
+      : ['main', 'master'];
     const repository = `${props.githubOrg}/${props.githubRepo}`;
+
+    const trustSubjects = [
+      ...githubBranches.map((branch) => `repo:${repository}:ref:refs/heads/${branch}`),
+      `repo:${repository}:environment:${githubEnvironment}`,
+    ];
 
     const provider = new iam.OpenIdConnectProvider(this, 'GitHubOidcProvider', {
       url: 'https://token.actions.githubusercontent.com',
@@ -35,10 +45,7 @@ export class GitHubOidcStack extends cdk.Stack {
           'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
         },
         StringLike: {
-          'token.actions.githubusercontent.com:sub': [
-            `repo:${repository}:environment:${githubEnvironment}`,
-            `repo:${repository}:ref:refs/heads/main`,
-          ],
+          'token.actions.githubusercontent.com:sub': trustSubjects,
         },
       }),
       description: 'GitHub Actions OIDC role for Balance CDK deploys',
@@ -53,6 +60,11 @@ export class GitHubOidcStack extends cdk.Stack {
       value: this.deployRole.roleArn,
       description: 'Set as GitHub secret AWS_DEPLOY_ROLE_ARN (repo or production environment)',
       exportName: 'BalanceGitHubDeployRoleArn',
+    });
+
+    new cdk.CfnOutput(this, 'TrustSubjects', {
+      value: trustSubjects.join(', '),
+      description: 'OIDC sub claims allowed to assume this role',
     });
   }
 }

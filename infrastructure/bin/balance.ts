@@ -47,10 +47,13 @@ const githubOrg = app.node.tryGetContext('githubOrg') as string | undefined;
 const githubRepo = app.node.tryGetContext('githubRepo') as string | undefined;
 
 if (githubOrg && githubRepo) {
+  const githubBranches = app.node.tryGetContext('githubBranches') as string[] | undefined;
+
   new GitHubOidcStack(app, 'BalanceGitHubOidcStack', {
     env: stackEnv,
     githubOrg,
     githubRepo,
+    githubBranches,
     githubEnvironment:
       (app.node.tryGetContext('githubEnvironment') as string | undefined) ?? 'production',
   });

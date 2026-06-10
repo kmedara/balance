@@ -38,7 +38,7 @@ Workflow: [`.github/workflows/infrastructure.yml`](../.github/workflows/infrastr
 | Event | Behavior |
 |---|---|
 | Pull request (infrastructure changes) | `npm ci`, build, `cdk synth` |
-| Push to `main` | Validate, then deploy `BalanceAuthStack` |
+| Push to `master` | Validate, then deploy `BalanceAuthStack` |
 | Manual `workflow_dispatch` | Deploy with optional callback/logout URL overrides |
 
 ### Fix: "Credentials could not be loaded"
@@ -71,6 +71,33 @@ This error means the **Configure AWS credentials** step had nothing to use. Fix 
 
 **Fallback (not recommended):** Set repository secrets `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` instead of `AWS_DEPLOY_ROLE_ARN`. The workflow uses these only when the role ARN is unset.
 
+### Fix: `Not authorized to perform sts:AssumeRoleWithWebIdentity`
+
+The IAM role **trust policy `sub` claim** does not match what GitHub sends. Common mismatches:
+
+| GitHub sends | When |
+|---|---|
+| `repo:OWNER/REPO:environment:production` | Deploy job has `environment: production` |
+| `repo:OWNER/REPO:ref:refs/heads/master` | Push to `master` (no environment on job) |
+
+**Fix:**
+
+1. Confirm `githubOrg` / `githubRepo` match your repo exactly (case-sensitive):
+   ```bash
+   npm run deploy:oidc -- -c githubOrg=YOUR_USER -c githubRepo=balance
+   ```
+2. **Redeploy the OIDC stack** after any trust policy change (updates the existing role):
+   ```bash
+   npm run deploy:oidc -- -c githubOrg=YOUR_USER -c githubRepo=balance
+   ```
+3. Ensure `AWS_DEPLOY_ROLE_ARN` is the **`DeployRoleArn`** output from that stack (same AWS account).
+4. Default allowed subjects include **`main`**, **`master`**, and **`environment:production`**. Custom branches:
+   ```bash
+   npm run deploy:oidc -c githubOrg=OWNER -c githubRepo=REPO -c 'githubBranches=["main","master","develop"]'
+   ```
+
+Check allowed subjects in the CloudFormation output **`TrustSubjects`** after deploy.
+
 ### One-time AWS setup (manual alternative)
 
 If you prefer not to use `BalanceGitHubOidcStack`:
@@ -80,6 +107,7 @@ If you prefer not to use `BalanceGitHubOidcStack`:
 3. Create a role with trust policy allowing:
    - `repo:OWNER/REPO:environment:production`
    - `repo:OWNER/REPO:ref:refs/heads/main`
+   - `repo:OWNER/REPO:ref:refs/heads/master`
 4. Attach CDK deploy permissions (e.g. `AdministratorAccess` for personal projects).
 5. Set `AWS_DEPLOY_ROLE_ARN` in GitHub.
 
