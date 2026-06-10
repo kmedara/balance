@@ -30,7 +30,6 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
   COGNITO_CALLBACK_URLS: ${{ inputs.callback_urls || vars.COGNITO_CALLBACK_URLS || '["http://localhost:4200/auth/callback"]' }}
   COGNITO_LOGOUT_URLS: ${{ inputs.logout_urls || vars.COGNITO_LOGOUT_URLS || '["http://localhost:4200/"]' }}
 
@@ -114,7 +113,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}
           role-session-name: balance-github-${{ github.run_id }}
 
       - name: Configure AWS credentials (access keys)
@@ -123,7 +122,9 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          CDK_DEFAULT_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
+          CDK_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
 
       - name: CDK diff
         run: npm run diff
