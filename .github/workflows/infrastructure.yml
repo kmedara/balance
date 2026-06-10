@@ -34,7 +34,6 @@ env:
   CDK_DEFAULT_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
   COGNITO_CALLBACK_URLS: ${{ inputs.callback_urls || vars.COGNITO_CALLBACK_URLS || '["http://localhost:4200/auth/callback"]' }}
   COGNITO_LOGOUT_URLS: ${{ inputs.logout_urls || vars.COGNITO_LOGOUT_URLS || '["http://localhost:4200/"]' }}
-  environment: ${{ vars.environment || 'production' }}
 
 jobs:
   validate:
@@ -68,7 +67,6 @@ jobs:
     needs: validate
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    environment: ${{ env.environment }}
     permissions:
       contents: read
       id-token: write
