@@ -45,6 +45,7 @@ const stackEnv = {
   region: process.env.CDK_DEFAULT_REGION,
 };
 
+console.log(stackEnv);
 const githubOrg = app.node.tryGetContext('githubOrg') as string | undefined;
 const githubRepo = app.node.tryGetContext('githubRepo') as string | undefined;
 
