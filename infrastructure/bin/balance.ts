@@ -2,6 +2,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { AuthStack } from '../lib/auth-stack';
 import { GitHubOidcStack } from '../lib/github-oidc-stack';
+import { getStackEnv } from '../lib/stack-env';
 
 const parseUrlList = (
   contextValue: string[] | undefined,
@@ -40,12 +41,8 @@ const logoutUrls = parseUrlList(
   ['http://localhost:4200/'],
 );
 
-const stackEnv = {
-  account: process.env.CDK_DEFAULT_ACCOUNT,
-  region: process.env.CDK_DEFAULT_REGION,
-};
+const stackEnv = getStackEnv();
 
-console.log(stackEnv);
 const githubOrg = app.node.tryGetContext('githubOrg') as string | undefined;
 const githubRepo = app.node.tryGetContext('githubRepo') as string | undefined;
 

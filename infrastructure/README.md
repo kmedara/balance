@@ -16,6 +16,10 @@ npx cdk bootstrap   # once per account/region (uses default AWS credentials)
 npm run deploy
 ```
 
+CDK reads `CDK_DEFAULT_ACCOUNT` and `CDK_DEFAULT_REGION`. During **`cdk synth`**, account is often **undefined** — that is normal; CDK uses a CloudFormation token and resolves the account at **deploy** time from your AWS credentials.
+
+Region defaults to `CDK_DEFAULT_REGION`, then `AWS_REGION`, then `us-east-1`.
+
 Copy stack outputs into the repo root `.env.local.secrets`:
 
 ```bash
