@@ -30,8 +30,10 @@ permissions:
   contents: read
 
 env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
   COGNITO_CALLBACK_URLS: ${{ inputs.callback_urls || vars.COGNITO_CALLBACK_URLS || '["http://localhost:4200/auth/callback"]' }}
   COGNITO_LOGOUT_URLS: ${{ inputs.logout_urls || vars.COGNITO_LOGOUT_URLS || '["http://localhost:4200/"]' }}
+  environment: ${{ vars.environment || 'production' }}
 
 jobs:
   validate:
@@ -65,7 +67,7 @@ jobs:
     needs: validate
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ env.environment }}
     permissions:
       contents: read
       id-token: write
@@ -113,7 +115,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
           role-session-name: balance-github-${{ github.run_id }}
 
       - name: Configure AWS credentials (access keys)
@@ -122,7 +124,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: CDK diff
         run: npm run diff
