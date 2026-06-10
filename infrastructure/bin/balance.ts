@@ -47,7 +47,7 @@ const githubOrg = app.node.tryGetContext('githubOrg') as string | undefined;
 const githubRepo = app.node.tryGetContext('githubRepo') as string | undefined;
 
 if (githubOrg && githubRepo) {
-  const githubBranches = app.node.tryGetContext('githubBranches') as string[] | undefined;
+  const githubBranches = (app.node.tryGetContext('githubBranches') as string | undefined)?.split(',').map((branch) => branch.trim());
 
   console.log(githubBranches);
   new GitHubOidcStack(app, 'BalanceGitHubOidcStack', {

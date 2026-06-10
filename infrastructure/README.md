@@ -54,7 +54,7 @@ This error means the **Configure AWS credentials** step had nothing to use. Fix 
    ```bash
    cd infrastructure
    npx cdk bootstrap
-   npm run deploy:oidc -- -c githubOrg=YOUR_GITHUB_USER -c githubRepo=balance
+   npm run deploy:oidc -- -c githubOrg=YOUR_GITHUB_USER -c githubRepo=balance -c githubBranches=master
    ```
 
    Copy output `DeployRoleArn` → GitHub secret `AWS_DEPLOY_ROLE_ARN`.
