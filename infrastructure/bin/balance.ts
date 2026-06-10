@@ -49,6 +49,7 @@ const githubRepo = app.node.tryGetContext('githubRepo') as string | undefined;
 if (githubOrg && githubRepo) {
   const githubBranches = app.node.tryGetContext('githubBranches') as string[] | undefined;
 
+  console.log(githubBranches);
   new GitHubOidcStack(app, 'BalanceGitHubOidcStack', {
     env: stackEnv,
     githubOrg,
