@@ -1,0 +1,43 @@
+<div class="login-page">
+  <div class="login-page__backdrop" aria-hidden="true"></div>
+
+  <main class="login-card">
+    <div class="login-card__brand">
+      <div class="login-card__logo" aria-hidden="true">
+        <i class="pi pi-calendar"></i>
+      </div>
+      <p class="login-card__eyebrow">Personal finance</p>
+      <h1 class="login-card__title">Balance</h1>
+      <p class="login-card__subtitle">
+        Plan cash flow on a calendar, track budgets, and sync bank activity in one place.
+      </p>
+    </div>
+
+    <ul class="login-card__features">
+      <li>
+        <i class="pi pi-calendar-clock" aria-hidden="true"></i>
+        <span>Recurring budgets on a month grid</span>
+      </li>
+      <li>
+        <i class="pi pi-chart-line" aria-hidden="true"></i>
+        <span>Income and expense at a glance</span>
+      </li>
+      <li>
+        <i class="pi pi-building-columns" aria-hidden="true"></i>
+        <span>Connect accounts when you are ready</span>
+      </li>
+    </ul>
+
+    <p-button
+      label="Sign in"
+      icon="pi pi-sign-in"
+      size="large"
+      styleClass="login-card__button"
+      (onClick)="login()"
+    />
+
+    <p class="login-card__footnote">
+      We never store your bank password or sell your data.
+    </p>
+  </main>
+</div>

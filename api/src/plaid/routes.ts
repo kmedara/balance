@@ -1,15 +1,17 @@
 import type { FastifyInstance } from 'fastify';
 import { CountryCode, Products, type LinkTokenCreateRequest } from 'plaid';
 import { requireAuthUser } from '../auth/cognito.js';
-import { getPlaidEnvVars } from '../env.helper.js';
 import {
   bearerSecurity,
   errorResponseSchema,
+} from '../swagger/schemas.js';
+import {
   exchangeTokenBodySchema,
+  linkTokenResponseSchema,
   plaidExchangeTokenResponseSchema,
   plaidSyncResponseSchema,
   syncTransactionsBodySchema,
-} from '../swagger/schemas.js';
+} from './schemas.js';
 import { getDb } from './db.js';
 import { plaidClient } from './client.js';
 import {
@@ -25,12 +27,11 @@ export const plaidRoutes = async (app: FastifyInstance) => {
       summary: 'Create a Plaid Link token',
       security: bearerSecurity,
       response: {
-        200: { type: 'object', additionalProperties: true },
+        200: linkTokenResponseSchema,
         403: errorResponseSchema,
       },
     },
     handler: async (request) => {
-      const { PLAID_REDIRECT_URI } = getPlaidEnvVars();
       const user = requireAuthUser(request);
 
       const linkRequest: LinkTokenCreateRequest = {
@@ -41,7 +42,7 @@ export const plaidRoutes = async (app: FastifyInstance) => {
         user: {
           client_user_id: user.userId,
         },
-        redirect_uri: PLAID_REDIRECT_URI,
+        redirect_uri: process.env.PLAID_REDIRECT_URI,
       };
 
       return plaidClient.linkTokenCreate(linkRequest).then(({ data }) => data);

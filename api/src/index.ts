@@ -16,13 +16,15 @@ import { cateogoryRoutes } from "./categories/routes.js";
 
 import { eventRoutes } from "./events/routes.js";
 
+import { billingRoutes } from "./billing/routes.js";
+
 import { ensureEventIndexes } from "./events/repository.js";
 
 import { ensureOccurrenceIndexes } from "./events/occurrence.repository.js";
 
 import { registerSwagger, registerSwaggerUi } from "./swagger/register.js";
 
-import { createEventBodySchema, publicRouteSecurity } from "./swagger/schemas.js";
+import { publicRouteSecurity } from "./swagger/schemas.js";
 
 import mongodb from "@fastify/mongodb";
 
@@ -93,6 +95,8 @@ const start = async (): Promise<void> => {
   await server.register(cateogoryRoutes, { prefix: "/categories" });
 
   await server.register(eventRoutes, { prefix: "/events" });
+
+  await server.register(billingRoutes, { prefix: "/billing" });
 
   await server.register(registerSwaggerUi);
 

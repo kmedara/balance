@@ -46,7 +46,7 @@ Workflow: [`.github/workflows/infrastructure.yml`](../.github/workflows/infrastr
 This error means the **Configure AWS credentials** step had nothing to use. Fix in order:
 
 1. **Add a GitHub secret** (Settings → Secrets and variables → Actions):
-   - Repository secret **or** `production` environment secret named `AWS_DEPLOY_ROLE_ARN`
+   - Repository secret **or** environment secret named `AWS_DEPLOY_ROLE_ARN`
    - Value: IAM role ARN from `BalanceGitHubOidcStack` output (see below)
 
 2. **Deploy the OIDC role stack once** (local admin credentials):
@@ -108,8 +108,10 @@ If you prefer not to use `BalanceGitHubOidcStack`:
    - `repo:OWNER/REPO:environment:production`
    - `repo:OWNER/REPO:ref:refs/heads/main`
    - `repo:OWNER/REPO:ref:refs/heads/master`
-4. Attach CDK deploy permissions (e.g. `AdministratorAccess` for personal projects).
+4. Attach scoped CDK + Cognito deploy permissions (see `lib/github-deploy-policy.ts`). Do **not** use `AdministratorAccess` on this role.
 5. Set `AWS_DEPLOY_ROLE_ARN` in GitHub.
+
+**Note:** `BalanceGitHubOidcStack` updates this role itself — redeploy that stack with a human admin/developer identity, not via the GitHub role.
 
 ### GitHub repository configuration
 

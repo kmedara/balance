@@ -63,7 +63,8 @@ jobs:
         run: npm run synth
 
   deploy:
-    name: Deploy CDK
+    name: Deploy CDK - Development
+    environment: development
     needs: validate
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest

@@ -27,6 +27,7 @@ export const registerSwagger = fp(
           { name: 'Events', description: 'Unified events and calendar' },
           { name: 'Categories', description: 'Budget categories' },
           { name: 'Plaid', description: 'Bank linking and transaction sync' },
+          { name: 'Billing', description: 'Stripe subscriptions and entitlements' },
         ],
         components: {
           securitySchemes: {

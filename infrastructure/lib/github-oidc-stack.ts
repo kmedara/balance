@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
+import { grantGitHubDeployPermissions } from './github-deploy-policy';
 
 export type GitHubOidcStackProps = cdk.StackProps & {
   githubOrg: string;
@@ -9,6 +10,8 @@ export type GitHubOidcStackProps = cdk.StackProps & {
   githubBranches?: string[];
   /** GitHub Actions environment name when the deploy job uses `environment:`. */
   githubEnvironment?: string;
+  /** CloudFormation stack name deployed by CI (default BalanceAuthStack). */
+  deployStackName?: string;
 };
 
 /**
@@ -22,7 +25,7 @@ export class GitHubOidcStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: GitHubOidcStackProps) {
     super(scope, id, props);
 
-    const githubEnvironment = props.githubEnvironment ?? 'production';
+    const githubEnvironment = props.githubEnvironment;
     const githubBranches = props.githubBranches?.length
       ? props.githubBranches
       : ['main', 'master'];
@@ -52,9 +55,9 @@ export class GitHubOidcStack extends cdk.Stack {
       maxSessionDuration: cdk.Duration.hours(1),
     });
 
-    this.deployRole.addManagedPolicy(
-      iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'),
-    );
+    grantGitHubDeployPermissions(this, this.deployRole, {
+      deployStackName: props.deployStackName ?? 'BalanceAuthStack',
+    });
 
     new cdk.CfnOutput(this, 'DeployRoleArn', {
       value: this.deployRole.roleArn,

@@ -1,16 +1,13 @@
-import { Configuration, CountryCode, PlaidApi, PlaidEnvironments } from 'plaid'
-import type { PlaidEnv } from './types.js';
-import { getPlaidEnvVars } from '../env.helper.js';
+import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid'
 // Initialize the Plaid client
 // Find your API keys in the Dashboard (https://dashboard.plaid.com/account/keys)
 const configuration = () => {
-    const env: PlaidEnv = getPlaidEnvVars();
     return new Configuration({
-        basePath: PlaidEnvironments[env.PLAID_ENV],
+        basePath: PlaidEnvironments[process.env.PLAID_ENV],
         baseOptions: {
             headers: {
-                'PLAID-CLIENT-ID': env.PLAID_CLIENT_ID,
-                'PLAID-SECRET': env.PLAID_SECRET,
+                'PLAID-CLIENT-ID': process.env.PLAID_CLIENT_ID,
+                'PLAID-SECRET': process.env.PLAID_SECRET,
                 'Plaid-Version': '2020-09-14',
             },
         },

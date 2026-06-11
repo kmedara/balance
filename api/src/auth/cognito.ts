@@ -85,7 +85,12 @@ export const authenticateRequest = async (
 ): Promise<void> => {
   const path = request.url.split('?')[0] ?? request.url;
 
-  if (path === '/ping' || path.startsWith('/docs') || request.method === 'OPTIONS') {
+  if (
+    path === '/ping' ||
+    path.startsWith('/docs') ||
+    path === '/billing/webhooks/stripe' ||
+    request.method === 'OPTIONS'
+  ) {
     return;
   }
 

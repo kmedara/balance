@@ -3,12 +3,14 @@ import type { EventDocument } from '@kmedara/balance-domain';
 import { requireAuthUser } from '../auth/cognito.js';
 import {
   bearerSecurity,
+  errorResponseSchema,
+} from '../swagger/schemas.js';
+import {
   calendarQuerySchema,
   calendarResponseSchema,
   createEventBodySchema,
   createEventResponseSchema,
-  errorResponseSchema,
-} from '../swagger/schemas.js';
+} from './schemas.js';
 import {
   buildMonthCalendarFromDayEvents,
   gridDateRange,

@@ -14,12 +14,12 @@ const outlets = [
 export const routes: Routes = [
   {
     path: 'login',
-    loadComponent: () => import('../modules/auth/login/login').then((mod) => mod.Login),
+    loadComponent: () => import('../core/auth/login').then((mod) => mod.Login),
   },
   {
     path: 'auth/callback',
     loadComponent: () =>
-      import('../modules/auth/callback/callback').then((mod) => mod.AuthCallback),
+      import('../core/auth/callback').then((mod) => mod.AuthCallback),
   },
   {
     path: '',
@@ -33,7 +33,7 @@ export const routes: Routes = [
     data: { name: 'Layout' },
     resolve: { routes: navigationMenuResolver },
     children: [
-      {
+      { 
         path: 'calendar',
         loadComponent: () => import('../modules/calendar/calendar').then((mod) => mod.Calendar),
         data: {

@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { bearerSecurity } from '../swagger/schemas.js';
+import { categoryListResponseSchema } from './schemas.js';
 
 export const cateogoryRoutes = async (app: FastifyInstance) => {
   app.get('/', {
@@ -8,10 +9,7 @@ export const cateogoryRoutes = async (app: FastifyInstance) => {
       summary: 'List category display names',
       security: bearerSecurity,
       response: {
-        200: {
-          type: 'array',
-          items: { type: 'string' },
-        },
+        200: categoryListResponseSchema,
       },
     },
     handler: async () => {

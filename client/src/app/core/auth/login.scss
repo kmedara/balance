@@ -1,0 +1,150 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.login-page {
+  position: relative;
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow: hidden;
+  background: var(--p-surface-50);
+}
+
+.login-page__backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      circle at 15% 20%,
+      color-mix(in srgb, var(--p-primary-color) 14%, transparent),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at 85% 80%,
+      color-mix(in srgb, var(--income-color, var(--p-green-400)) 12%, transparent),
+      transparent 40%
+    ),
+    linear-gradient(160deg, var(--p-surface-0) 0%, var(--p-surface-100) 100%);
+  pointer-events: none;
+}
+
+.login-card {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: min(100%, 26rem);
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem;
+  border: 1px solid var(--p-surface-200);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--p-surface-0) 92%, transparent);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--p-surface-900) 6%, transparent),
+    0 16px 40px color-mix(in srgb, var(--p-surface-900) 8%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.login-card__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.login-card__logo {
+  display: inline-flex;
+  width: 3rem;
+  height: 3rem;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.25rem;
+  border-radius: 0.875rem;
+  background: color-mix(in srgb, var(--p-primary-color) 12%, var(--p-surface-0));
+  color: var(--p-primary-color);
+  font-size: 1.35rem;
+}
+
+.login-card__eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--p-text-muted-color);
+}
+
+.login-card__title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--p-text-color);
+}
+
+.login-card__subtitle {
+  margin: 0;
+  max-width: 22rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--p-text-muted-color);
+}
+
+.login-card__features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.login-card__features li {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.625rem;
+  background: var(--p-surface-50);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--p-text-color);
+  transition: background-color 0.15s ease;
+}
+
+.login-card__features li:hover {
+  background: var(--p-surface-100);
+}
+
+.login-card__features i {
+  flex-shrink: 0;
+  color: var(--p-primary-color);
+  font-size: 0.95rem;
+}
+
+.login-card__footnote {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--p-text-muted-color);
+}
+
+:host ::ng-deep .login-card__button {
+  width: 100%;
+}
+
+:host ::ng-deep .login-card__button .p-button {
+  width: 100%;
+  justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .login-card {
+    padding: 2.25rem;
+  }
+}
