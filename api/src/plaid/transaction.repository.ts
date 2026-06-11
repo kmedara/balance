@@ -1,29 +1,71 @@
 import type { Db } from 'mongodb';
 import type { RemovedTransaction, Transaction as PlaidSdkTransaction } from 'plaid';
-import { PLAID_TRANSACTIONS_COLLECTION } from './constants.js';
-import { mapPlaidTransactionToDocument, toClientTransaction } from './mapper.js';
-import type {
-  ClientPlaidTransaction,
-  PlaidTransactionDocument,
-} from './types.js';
+import { materializeOccurrenceDocuments } from '../events/expand-occurrences.js';
+import { EVENTS_COLLECTION } from '../events/repository.js';
+import {
+  deleteOccurrencesForEventResourceIds,
+  upsertOccurrences,
+} from '../events/occurrence.repository.js';
+import { PLAID_TRANSACTION_EVENT_TYPE } from './constants.js';
+import type { PlaidTransactionEventDocument } from './event-document.js';
+import { mapPlaidTransactionToEventDocument, toClientTransaction } from './mapper.js';
+import type { ClientPlaidTransaction } from './types.js';
 
-type TransactionCollectionDocument = PlaidTransactionDocument & { _id?: unknown };
+type EventCollectionDocument = PlaidTransactionEventDocument & { _id?: unknown };
 
-const findExistingResourceIds = async (
+const sameCalendarDay = (left: Date, right: Date): boolean =>
+  left.getFullYear() === right.getFullYear() &&
+  left.getMonth() === right.getMonth() &&
+  left.getDate() === right.getDate();
+
+const findExistingEvents = async (
   db: Db,
   plaidTransactionIds: string[],
-): Promise<Map<string, string>> => {
+): Promise<Map<string, PlaidTransactionEventDocument>> => {
   if (plaidTransactionIds.length === 0) return new Map();
 
   const docs = await db
-    .collection<TransactionCollectionDocument>(PLAID_TRANSACTIONS_COLLECTION)
-    .find(
-      { plaidTransactionId: { $in: plaidTransactionIds } },
-      { projection: { plaidTransactionId: 1, resourceId: 1 } },
-    )
+    .collection<EventCollectionDocument>(EVENTS_COLLECTION)
+    .find({
+      eventType: PLAID_TRANSACTION_EVENT_TYPE,
+      plaidTransactionId: { $in: plaidTransactionIds },
+    })
     .toArray();
 
-  return new Map(docs.map((doc) => [doc.plaidTransactionId, doc.resourceId]));
+  return new Map(
+    docs.map((doc) => {
+      const { _id, ...event } = doc;
+      return [event.plaidTransactionId, event];
+    }),
+  );
+};
+
+const syncOccurrencesForEvent = async (
+  db: Db,
+  event: PlaidTransactionEventDocument,
+  previousDtstart: Date | undefined,
+  now: Date,
+): Promise<void> => {
+  const dtstartChanged =
+    previousDtstart !== undefined &&
+    event.dtstart !== undefined &&
+    !sameCalendarDay(previousDtstart, event.dtstart);
+
+  if (previousDtstart === undefined || dtstartChanged) {
+    await deleteOccurrencesForEventResourceIds(db, [event.resourceId]);
+  }
+
+  if (event.removed) return;
+
+  const occurrences = materializeOccurrenceDocuments({
+    eventResourceId: event.resourceId,
+    userId: event.userId,
+    eventType: PLAID_TRANSACTION_EVENT_TYPE,
+    rrule: event.rrule,
+    dtstart: event.dtstart,
+  });
+
+  await upsertOccurrences(db, occurrences, now);
 };
 
 export const upsertPlaidTransactions = async (
@@ -32,20 +74,20 @@ export const upsertPlaidTransactions = async (
   userId: string,
   plaidItemId: string,
   now = new Date(),
-): Promise<PlaidTransactionDocument[]> => {
+): Promise<PlaidTransactionEventDocument[]> => {
   if (transactions.length === 0) return [];
 
-  const existingIds = await findExistingResourceIds(
+  const existingEvents = await findExistingEvents(
     db,
     transactions.map((tx) => tx.transaction_id),
   );
 
   const documents = transactions.map((tx) =>
-    mapPlaidTransactionToDocument(
+    mapPlaidTransactionToEventDocument(
       tx,
       userId,
       plaidItemId,
-      existingIds.get(tx.transaction_id),
+      existingEvents.get(tx.transaction_id)?.resourceId,
     ),
   );
 
@@ -60,9 +102,18 @@ export const upsertPlaidTransactions = async (
     },
   }));
 
-  await db
-    .collection<TransactionCollectionDocument>(PLAID_TRANSACTIONS_COLLECTION)
-    .bulkWrite(ops, { ordered: false });
+  await db.collection<EventCollectionDocument>(EVENTS_COLLECTION).bulkWrite(ops, { ordered: false });
+
+  await Promise.all(
+    documents.map((document) =>
+      syncOccurrencesForEvent(
+        db,
+        document,
+        existingEvents.get(document.plaidTransactionId)?.dtstart,
+        now,
+      ),
+    ),
+  );
 
   return documents;
 };
@@ -74,6 +125,10 @@ export const markPlaidTransactionsRemoved = async (
 ): Promise<number> => {
   if (removed.length === 0) return 0;
 
+  const plaidTransactionIds = removed.map(({ transaction_id }) => transaction_id);
+  const existingEvents = await findExistingEvents(db, plaidTransactionIds);
+  const eventResourceIds = [...existingEvents.values()].map((event) => event.resourceId);
+
   const ops = removed.map(({ transaction_id }) => ({
     updateOne: {
       filter: { plaidTransactionId: transaction_id },
@@ -84,14 +139,18 @@ export const markPlaidTransactionsRemoved = async (
   }));
 
   const result = await db
-    .collection<TransactionCollectionDocument>(PLAID_TRANSACTIONS_COLLECTION)
+    .collection<EventCollectionDocument>(EVENTS_COLLECTION)
     .bulkWrite(ops, { ordered: false });
+
+  if (eventResourceIds.length > 0) {
+    await deleteOccurrencesForEventResourceIds(db, eventResourceIds);
+  }
 
   return result.modifiedCount;
 };
 
 export const toClientTransactions = (
-  documents: PlaidTransactionDocument[],
+  documents: PlaidTransactionEventDocument[],
 ): ClientPlaidTransaction[] => documents.map(toClientTransaction);
 
 export const toRemovedClientTransactions = (

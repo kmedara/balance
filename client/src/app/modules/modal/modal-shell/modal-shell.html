@@ -1,12 +1,11 @@
   <p-dialog
-  [(visible)]="visible"
+  [visible]="visible()"
   [modal]="true"
   dismissableMask="true"
-  appendTo="body"
   [baseZIndex]="20000"
-  [style]="{ width: '90%', 'max-width': '30rem'}"
-  (visibleChange)="close()"
-  
+  [style]="{ width: '90%', 'max-width': '30rem' }"
+  [contentStyle]="{ overflowX: 'hidden', overflowY: 'auto' }"
+  (visibleChange)="onVisibleChange($event)"
 >
 <ng-template #header>
   @if (isHeaderString()) {

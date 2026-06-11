@@ -2,6 +2,9 @@
   @case ('budget') {
     <app-budget-calendar-item [event]="event()" />
   }
+  @case ('plaid_transaction') {
+    <app-plaid-transaction-calendar-item [event]="event()" />
+  }
   @default {
     <app-default-calendar-item [event]="event()" />
   }

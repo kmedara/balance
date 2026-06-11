@@ -1,5 +1,5 @@
 import type { EventDocument } from '@kmedara/balance-domain';
-import { RRule } from '../budgets/rrule.utils.js';
+import { RRule } from './rrule.utils.js';
 
 const startOfDay = (date: Date): Date => {
   const d = new Date(date);

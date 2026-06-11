@@ -7,6 +7,12 @@ const target = path.join(__dirname, '../src/environments/environment.development
 
 const authDisabled = process.env.AUTH_DISABLED === 'true';
 
+if (!authDisabled && (!process.env.COGNITO_AUTHORITY || !process.env.COGNITO_CLIENT_ID)) {
+  console.warn(
+    'AUTH_DISABLED is false but COGNITO_AUTHORITY or COGNITO_CLIENT_ID is missing — OAuth will not work',
+  );
+}
+
 const environment = {
   GATEWAY: process.env.GATEWAY ?? 'http://localhost:3000',
   authDisabled,
@@ -27,4 +33,4 @@ export const environment: Environment = ${JSON.stringify(environment, null, 2)};
 `;
 
 fs.writeFileSync(target, contents);
-console.log(`Wrote ${target}`);
+console.log(`Wrote ${target} (authDisabled=${authDisabled})`);

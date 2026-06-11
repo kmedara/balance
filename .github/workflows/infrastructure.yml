@@ -141,29 +141,6 @@ jobs:
       - name: CDK deploy
         run: npm run deploy:ci
 
-      - name: Verify Cognito resources
-        run: |
-          POOL_ID=$(jq -r '.BalanceAuthStack.UserPoolId' cdk-outputs.json)
-          REGION=$(jq -r '.BalanceAuthStack.CognitoRegion' cdk-outputs.json)
-          ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
-
-          echo "Deployed to account $ACCOUNT, region $REGION"
-          echo "User pool: $POOL_ID (name: balance-users)"
-          echo "CloudFormation stack: BalanceAuthStack"
-          echo "Console: https://${REGION}.console.aws.amazon.com/cognito/v2/idp/user-pools/${POOL_ID}/users"
-
-          aws cloudformation describe-stacks \
-            --stack-name BalanceAuthStack \
-            --region "$REGION" \
-            --query 'Stacks[0].StackStatus' \
-            --output text
-
-          aws cognito-idp describe-user-pool \
-            --user-pool-id "$POOL_ID" \
-            --region "$REGION" \
-            --query 'UserPool.{Name:Name,Id:Id}' \
-            --output json
-
       - name: Upload stack outputs
         uses: actions/upload-artifact@v4
         with:

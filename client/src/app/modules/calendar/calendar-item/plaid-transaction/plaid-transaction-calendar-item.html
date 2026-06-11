@@ -1,0 +1,36 @@
+<div
+  [class]="itemClass()"
+  [pTooltip]="tooltipTemplate"
+  tooltipPosition="top"
+  appendTo="body"
+  [tooltipStyleClass]="tooltipClass()"
+>
+  <span class="calendar-item__accent" aria-hidden="true"></span>
+  <span class="calendar-item__title">{{ event()?.title }}</span>
+  @if (event()?.amount !== undefined) {
+    <span class="calendar-item__amount">{{ event()!.amount | currency: 'USD' : 'symbol' : '1.0-0' }}</span>
+  }
+</div>
+
+<ng-template #tooltipTemplate>
+  <div [class]="tooltipContentClass()">
+    <div class="calendar-item__tooltip-header">
+      <span class="calendar-item__tooltip-type">{{ typeLabel() }}</span>
+      @if (event()?.amount !== undefined) {
+        <span class="calendar-item__tooltip-amount">
+          {{ event()!.amount | currency: 'USD' : 'symbol' : '1.0-0' }}
+        </span>
+      }
+    </div>
+
+    <p class="calendar-item__tooltip-title">{{ event()?.title }}</p>
+
+    @if (event()?.name && event()?.name !== event()?.title) {
+      <p class="calendar-item__tooltip-description">{{ event()?.name }}</p>
+    }
+
+    @if (event()?.category) {
+      <span class="calendar-item__tooltip-category">{{ event()?.category }}</span>
+    }
+  </div>
+</ng-template>

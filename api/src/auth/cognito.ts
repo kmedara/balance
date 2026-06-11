@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
-import type { AuthUser } from './types.js';
+import { ForbiddenError, type AuthUser } from './types.js';
 import './types.js';
 
 const isAuthDisabled = (): boolean => process.env.AUTH_DISABLED === 'true';
@@ -10,26 +10,52 @@ const DEV_AUTH_USER: AuthUser = {
   email: 'dev@localhost',
 };
 
-let verifier: ReturnType<typeof CognitoJwtVerifier.create> | null = null;
+type CognitoVerifier = ReturnType<typeof CognitoJwtVerifier.create>;
 
-const getVerifier = () => {
-  if (verifier) return verifier;
+let idVerifier: CognitoVerifier | null = null;
+let accessVerifier: CognitoVerifier | null = null;
 
+const getVerifierConfig = () => {
   const userPoolId = process.env.COGNITO_USER_POOL_ID;
   const clientId = process.env.COGNITO_CLIENT_ID;
 
   if (!userPoolId || !clientId) {
-    throw new Error('COGNITO_USER_POOL_ID and COGNITO_CLIENT_ID are required when auth is enabled');
+    throw new ForbiddenError('Authentication is not configured');
   }
 
-  verifier = CognitoJwtVerifier.create({
+  return { userPoolId, clientId };
+};
+
+const getIdVerifier = () => {
+  if (idVerifier) return idVerifier;
+
+  const { userPoolId, clientId } = getVerifierConfig();
+  idVerifier = CognitoJwtVerifier.create({
     userPoolId,
     tokenUse: 'id',
     clientId,
   });
 
-  return verifier;
+  return idVerifier;
 };
+
+const getAccessVerifier = () => {
+  if (accessVerifier) return accessVerifier;
+
+  const { userPoolId, clientId } = getVerifierConfig();
+  accessVerifier = CognitoJwtVerifier.create({
+    userPoolId,
+    tokenUse: 'access',
+    clientId,
+  });
+
+  return accessVerifier;
+};
+
+const toAuthUser = (payload: { sub: string; email?: unknown }): AuthUser => ({
+  userId: payload.sub,
+  email: typeof payload.email === 'string' ? payload.email : undefined,
+});
 
 export const verifyAuthHeader = async (authorization?: string): Promise<AuthUser> => {
   if (isAuthDisabled()) {
@@ -37,16 +63,20 @@ export const verifyAuthHeader = async (authorization?: string): Promise<AuthUser
   }
 
   if (!authorization?.startsWith('Bearer ')) {
-    throw new Error('Unauthorized');
+    throw new ForbiddenError('Missing or invalid Authorization header');
   }
 
   const token = authorization.slice('Bearer '.length);
-  const payload = await getVerifier().verify(token);
 
-  return {
-    userId: payload.sub,
-    email: typeof payload.email === 'string' ? payload.email : undefined,
-  };
+  try {
+    return toAuthUser(await getIdVerifier().verify(token));
+  } catch (idError) {
+    try {
+      return toAuthUser(await getAccessVerifier().verify(token));
+    } catch {
+      throw idError;
+    }
+  }
 };
 
 export const authenticateRequest = async (
@@ -55,21 +85,27 @@ export const authenticateRequest = async (
 ): Promise<void> => {
   const path = request.url.split('?')[0] ?? request.url;
 
-  if (path === '/ping' || request.method === 'OPTIONS') {
+  if (path === '/ping' || path.startsWith('/docs') || request.method === 'OPTIONS') {
     return;
   }
 
   try {
     request.authUser = await verifyAuthHeader(request.headers.authorization);
   } catch (err) {
-    request.log.warn({ err }, 'Authentication failed');
-    return reply.status(401).send({ error: 'Unauthorized' });
+    const message =
+      err instanceof ForbiddenError
+        ? err.message
+        : err instanceof Error
+          ? err.message
+          : 'Authentication failed';
+    request.log.warn({ err, message }, 'Authentication failed');
+    return reply.status(403).send({ error: 'Forbidden', message });
   }
 };
 
 export const requireAuthUser = (request: FastifyRequest): AuthUser => {
   if (!request.authUser) {
-    throw new Error('Unauthorized');
+    throw new ForbiddenError('Authentication required');
   }
 
   return request.authUser;

@@ -1,6 +1,6 @@
 import type { BudgetDocumentFields } from '@kmedara/balance-domain';
 import type { EventDocumentInput } from '@kmedara/balance-domain';
-import { RRule } from '../src/budgets/rrule.utils.js';
+import { RRule } from '../events/rrule.utils.js';
 import { BUDGET_EVENT_TYPE, SEED_USER_ID } from './seed.constants.js';
 
 type BudgetDocumentInput = EventDocumentInput<BudgetDocumentFields>;

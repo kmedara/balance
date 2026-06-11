@@ -8,7 +8,9 @@ type EventCollectionDocument = EventDocument & { _id?: unknown };
 
 export type EventQueryFilter = {
   eventType?: string;
+  eventTypes?: string[];
   userId?: string;
+  includeRemoved?: boolean;
 };
 
 const toEventDocument = <T extends EventDocument>(doc: EventCollectionDocument): T => {
@@ -16,10 +18,24 @@ const toEventDocument = <T extends EventDocument>(doc: EventCollectionDocument):
   return event as T;
 };
 
+const buildEventTypeFilter = (
+  eventType?: string,
+  eventTypes?: string[],
+): Record<string, unknown> => {
+  if (eventTypes?.length === 1) return { eventType: eventTypes[0] };
+  if (eventTypes && eventTypes.length > 1) return { eventType: { $in: eventTypes } };
+  if (eventType !== undefined) return { eventType };
+  return {};
+};
+
 const buildFilter = (filter?: EventQueryFilter): Record<string, unknown> => {
-  const query: Record<string, unknown> = {};
-  if (filter?.eventType !== undefined) query.eventType = filter.eventType;
+  const query: Record<string, unknown> = {
+    ...buildEventTypeFilter(filter?.eventType, filter?.eventTypes),
+  };
+
   if (filter?.userId !== undefined) query.userId = filter.userId;
+  if (!filter?.includeRemoved) query.removed = { $ne: true };
+
   return query;
 };
 
@@ -29,6 +45,10 @@ export const ensureEventIndexes = async (db: Db): Promise<void> => {
   await events.createIndex({ userId: 1, eventType: 1 });
   await events.createIndex({ userId: 1 });
   await events.createIndex({ rrule: 1 });
+  await events.createIndex(
+    { plaidTransactionId: 1 },
+    { unique: true, sparse: true },
+  );
 };
 
 export const findEventsByResourceIds = async <T extends EventDocument = EventDocument>(
@@ -44,6 +64,18 @@ export const findEventsByResourceIds = async <T extends EventDocument = EventDoc
       ...buildFilter(filter),
       resourceId: { $in: resourceIds },
     } as Record<string, unknown>)
+    .toArray();
+
+  return docs.map(toEventDocument<T>);
+};
+
+export const findEvents = async <T extends EventDocument = EventDocument>(
+  db: Db,
+  filter?: EventQueryFilter,
+): Promise<T[]> => {
+  const docs = await db
+    .collection<EventCollectionDocument>(EVENTS_COLLECTION)
+    .find(buildFilter(filter) as Record<string, unknown>)
     .toArray();
 
   return docs.map(toEventDocument<T>);
@@ -72,4 +104,8 @@ export const findEventsOverlappingRange = async <T extends EventDocument = Event
 ): Promise<T[]> => {
   const events = await findRecurringEvents<T>(db, filter);
   return events.filter((event) => eventOccursInRange(event, rangeStart, rangeEnd));
+};
+
+export const insertEvent = async (db: Db, event: EventDocument): Promise<void> => {
+  await db.collection(EVENTS_COLLECTION).insertOne(event);
 };

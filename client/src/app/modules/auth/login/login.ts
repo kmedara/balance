@@ -9,8 +9,7 @@ import { AuthService } from '@core/auth/auth.service';
     <div class="min-h-screen flex items-center justify-center p-6">
       <div class="flex flex-col items-center gap-4">
         <h1 class="text-2xl font-semibold">Balance</h1>
-        <p class="text-sm text-muted-color">Sign in to manage your budget calendar.</p>
-        <p-button label="Sign in with Cognito" icon="pi pi-sign-in" (onClick)="login()" />
+        <p class="text-sm text-muted-color">Sign in to manage your budget calendar.</p>        <p-button label="Sign in with Cognito" icon="pi pi-sign-in" (onClick)="login()" />
       </div>
     </div>
   `,

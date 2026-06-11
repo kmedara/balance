@@ -54,10 +54,4 @@ export class Calendar {
     const day = date.getDay();
     return day === 0 || day === 6;
   };
-
-  showModal = async () => {
-
-    const { BudgetModal } = await import('@modules/budget/add-budget/add-budget');
-    this.modalService.open({ content: BudgetModal, header: 'Add budget' }, { a: 'b' });
-  };
 }

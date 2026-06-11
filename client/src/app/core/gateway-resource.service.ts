@@ -1,9 +1,8 @@
 import { inject, Injectable, resource } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { GATEWAY_HTTP_TOKEN } from './tokens/http.token';
-
+import { GATEWAY_HTTP_TOKEN } from './gateway.http';
 @Injectable({ providedIn: 'root' })
-export class DataService {
+export class GatewayResourceService {
   createGatewayResource<T>(params: () => string | undefined) {
     const gateway = inject(GATEWAY_HTTP_TOKEN);
     return resource<T | undefined, string | undefined>({

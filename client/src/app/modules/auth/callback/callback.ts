@@ -11,12 +11,17 @@ export class AuthCallback implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     if (environment.authDisabled) {
-      void this.router.navigateByUrl('/calendar');
+      await this.router.navigateByUrl('/calendar');
       return;
     }
 
-    void this.router.navigateByUrl('/calendar');
+    if (!this.auth.isAuthenticated()) {
+      await this.router.navigateByUrl('/login');
+      return;
+    }
+
+    await this.router.navigateByUrl('/calendar');
   }
 }

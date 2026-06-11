@@ -1,10 +1,10 @@
 import type { AccountBase, Transaction as PlaidTransaction } from 'plaid';
 import { randomUUID } from 'node:crypto';
-import type {
-  ClientPlaidTransaction,
-  PlaidAccountDocument,
-  PlaidTransactionDocument,
-} from './types.js';
+import type { PlaidAccountDocument } from './types.js';
+import { buildSingleOccurrenceRRule } from '../events/single-occurrence.utils.js';
+import { PLAID_TRANSACTION_EVENT_TYPE } from './constants.js';
+import type { PlaidTransactionEventDocument } from './event-document.js';
+import type { ClientPlaidTransaction } from './types.js';
 
 const parsePlaidDate = (date: string): Date => {
   const [year, month, day] = date.split('-').map(Number);
@@ -22,23 +22,23 @@ const formatDateOnly = (date: Date): string => {
 };
 
 export const toClientTransaction = (
-  doc: PlaidTransactionDocument,
+  doc: PlaidTransactionEventDocument,
 ): ClientPlaidTransaction => ({
   transaction_id: doc.plaidTransactionId,
   account_id: doc.plaidAccountId,
   amount: doc.amount,
-  date: formatDateOnly(doc.postedDate),
+  date: formatDateOnly(doc.dtstart ?? new Date()),
   name: doc.name,
   merchant_name: doc.merchantName,
   pending: doc.pending,
 });
 
-export const mapPlaidTransactionToDocument = (
+export const mapPlaidTransactionToEventDocument = (
   tx: PlaidTransaction,
   userId: string,
   plaidItemId: string,
   existingResourceId?: string,
-): PlaidTransactionDocument => {
+): PlaidTransactionEventDocument => {
   const category =
     tx.personal_finance_category?.primary != null
       ? [tx.personal_finance_category.primary, tx.personal_finance_category.detailed].filter(
@@ -46,28 +46,29 @@ export const mapPlaidTransactionToDocument = (
         )
       : (tx.category ?? []);
 
-  const location =
-    tx.location &&
-    Object.fromEntries(
-      Object.entries(tx.location).filter((entry): entry is [string, string] => entry[1] != null),
-    );
+  const postedDate = parsePlaidDate(tx.date);
+  const { rrule, dtstart } = buildSingleOccurrenceRRule(postedDate);
+  const title = tx.merchant_name?.trim() || tx.name;
+  const isExpense = tx.amount > 0;
 
   return {
-    resourceId: (existingResourceId ?? randomUUID()) as PlaidTransactionDocument['resourceId'],
+    resourceId: (existingResourceId ?? randomUUID()) as PlaidTransactionEventDocument['resourceId'],
     userId,
-    plaidTransactionId: tx.transaction_id,
-    plaidItemId,
-    plaidAccountId: tx.account_id,
+    eventType: PLAID_TRANSACTION_EVENT_TYPE,
+    title,
     name: tx.name,
     merchantName: tx.merchant_name,
     amount: tx.amount,
+    type: isExpense ? 'Expense' : 'Income',
+    category: category[0],
     currency: tx.iso_currency_code ?? tx.unofficial_currency_code ?? 'USD',
-    category,
-    categoryId: tx.category_id ?? tx.personal_finance_category?.primary ?? null,
     pending: tx.pending,
+    plaidTransactionId: tx.transaction_id,
+    plaidItemId,
+    plaidAccountId: tx.account_id,
     authorizedDate: tx.authorized_date ? parsePlaidDate(tx.authorized_date) : null,
-    postedDate: parsePlaidDate(tx.date),
-    location: location && Object.keys(location).length > 0 ? location : undefined,
+    rrule,
+    dtstart,
     removed: false,
   };
 };
@@ -78,7 +79,7 @@ export const mapPlaidAccountToDocument = (
   plaidItemId: string,
   existingResourceId?: string,
 ): PlaidAccountDocument => ({
-  resourceId: (existingResourceId ?? randomUUID()) as PlaidAccountDocument['resourceId'],
+  resourceId: (existingResourceId ?? randomUUID()) as `${string}-${string}-${string}-${string}-${string}`,
   userId,
   plaidItemId,
   plaidAccountId: account.account_id,

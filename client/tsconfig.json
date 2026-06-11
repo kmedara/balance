@@ -18,7 +18,7 @@
     "paths": {
       "@services/*" : ["src/app/services/*"],
       "@modals/*" : ["src/app/modules/modal/*"],
-      "@components/*" : ["src/app/components/*"],
+      "@components/*" : ["src/app/core/components/*"],
       "@modules/*" : ["src/app/modules/*"],
       "@resolvers/*" : ["src/app/core/resolvers/*"],
       "@guards/*" : ["src/app/core/guards/*"],

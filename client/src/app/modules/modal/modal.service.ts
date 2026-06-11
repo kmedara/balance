@@ -9,25 +9,24 @@ import {
   signal,
 } from '@angular/core';
 import { MODAL_CONFIG, MODAL_DATA, MODAL_ID } from './modal.token';
-import { ModalConfig } from './modal.context';
-import { ModalEvents } from './modal.events';
+import { ModalConfig, ModalData } from './modal.context';
 import { injectDispatch } from '@ngrx/signals/events';
-import { ModalStore } from './modal.store';
+import { ModalEvents, ModalStore } from './modal.store';
 
 /**
  * Tracks all modals, owns signals for “results” or lifecycle, knows nothing about DOM or components.
  */
 @Injectable({ providedIn: 'root' })
 export class ModalService {
-  /** Eagerly creates the store so event reducers subscribe to the dispatcher. */
+  /** Eagerly creates the store so event handlers subscribe to the dispatcher. */
   private readonly modalStore = inject(ModalStore);
   private readonly dispatch = injectDispatch(ModalEvents);
   private readonly rootEnvInjector = inject(EnvironmentInjector);
   private readonly appRef = inject(ApplicationRef);
 
-  async open<T = unknown>(
+  async open(
     config: ModalConfig,
-    data: unknown = null,
+    data: ModalData,
   ): Promise<string> {
     const id = crypto.randomUUID();
 
@@ -35,7 +34,7 @@ export class ModalService {
       [
         { provide: MODAL_ID, useValue: id },
         { provide: MODAL_CONFIG, useValue: config  },
-        { provide: MODAL_DATA, useValue: data ?? null },
+        { provide: MODAL_DATA, useValue: data },
       ],
       this.rootEnvInjector,
     );

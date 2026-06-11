@@ -92,6 +92,13 @@ export const buildMonthCalendarFromOccurrences = <T extends EventDocument>(
     resolveOccurrencesToEvents(getOccurrencesForDay(dayDate, occurrences), eventsById),
   );
 
+/** Build calendar from a per-day event resolver (budget, plaid, or merged). */
+export const buildMonthCalendarFromDayEvents = <T>(
+  year: number,
+  monthIndex: number,
+  eventsForDay: (dayDate: Date) => T[],
+): CalendarResponse => buildMonthGrid(year, monthIndex, eventsForDay);
+
 /** Build calendar by expanding rrules in memory (fallback). */
 export const buildMonthCalendar = <T extends EventDocument>(
   year: number,

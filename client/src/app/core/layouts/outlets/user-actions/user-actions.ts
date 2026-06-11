@@ -2,10 +2,11 @@ import { Component, inject, signal } from '@angular/core';
 import { Button } from 'primeng/button';
 import { Menu } from 'primeng/menu';
 import { ModalService } from '@modules/modal/modal.service';
-import { BudgetModal } from '@modules/budget/add-budget/add-budget';
 import { PlaidService } from 'src/app/modules/plaid/plaid.service';
 import { AuthService } from '@core/auth/auth.service';
 import { environment } from 'src/environments/environment';
+import { ModalData } from '@modals/modal.context';
+import { AddEventModal } from '@modals/add-event-modal/add-event-modal';
 
 @Component({
   selector: 'app-user-actions',
@@ -26,9 +27,11 @@ export class UserActions {
   //   document.body.appendChild(script);
   // }
 
-  actions = [];
-  add = () => {
-    this._service.open({content: BudgetModal, header: 'header'}, { a: 'b' });
+  addBudget = () => {
+    this._service.open(
+      { content: AddEventModal, header: 'Add budget' },
+      { action: 'createEvent', eventType: 'budget' },
+    );
   };
 
   fetchTransactions = () => {
@@ -53,7 +56,7 @@ export class UserActions {
     {
       icon: 'pi pi-plus',
       label: 'Add a budget',
-      action: this.add,
+      action: this.addBudget,
     },
     ...(environment.authDisabled
       ? []

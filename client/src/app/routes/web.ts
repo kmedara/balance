@@ -7,7 +7,7 @@ const outlets = [
     path: '',
     outlet: 'actions',
     loadComponent: () =>
-      import('../components/user-actions/user-actions').then((mod) => mod.UserActions),
+      import('../core/layouts/outlets/user-actions/user-actions').then((mod) => mod.UserActions),
   },
 ];
 

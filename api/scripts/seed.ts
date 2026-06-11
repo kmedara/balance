@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { MongoClient } from 'mongodb';
-import { materializeOccurrenceDocuments } from '@kmedara/balance-domain';
+import { materializeOccurrenceDocuments } from '../src/events/expand-occurrences.js';
 import { budgetSeeds, categorySeeds } from '../__data__/seed.data.js';
 import { BUDGET_EVENT_TYPE } from '../__data__/seed.constants.js';
 import { ensureEventIndexes, EVENTS_COLLECTION } from '../src/events/repository.js';

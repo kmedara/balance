@@ -19,8 +19,7 @@ export class AuthService {
       return;
     }
 
-    this.oauth.configure(this.buildAuthConfig());
-    this.oauth.setupAutomaticSilentRefresh();
+    this.oauth.configure(this.buildAuthConfig());    this.oauth.setupAutomaticSilentRefresh();
 
     await this.oauth.loadDiscoveryDocumentAndTryLogin();
 
@@ -54,6 +53,18 @@ export class AuthService {
     return this.oauth.getIdToken() || null;
   }
 
+  getAccessToken(): string | null {
+    if (environment.authDisabled) {
+      return null;
+    }
+
+    return this.oauth.getAccessToken() || null;
+  }
+
+  getBearerToken(): string | null {
+    return this.getIdToken() ?? this.getAccessToken();
+  }
+
   isReady(): boolean {
     return this.ready();
   }
@@ -68,6 +79,7 @@ export class AuthService {
       scope: environment.cognito.scope,
       showDebugInformation: environment.cognito.showDebugInformation,
       strictDiscoveryDocumentValidation: false,
+      requireHttps: false,
     };
   }
 

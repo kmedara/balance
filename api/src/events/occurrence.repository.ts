@@ -67,17 +67,31 @@ export const syncOccurrencesForEvents = async (
   return upsertOccurrences(db, inputs);
 };
 
+export const deleteOccurrencesForEventResourceIds = async (
+  db: Db,
+  eventResourceIds: string[],
+): Promise<number> => {
+  if (eventResourceIds.length === 0) return 0;
+
+  const result = await db.collection(OCCURRENCES_COLLECTION).deleteMany({
+    eventResourceId: { $in: eventResourceIds },
+  });
+
+  return result.deletedCount;
+};
+
 export const findOccurrencesInRange = async (
   db: Db,
   rangeStart: Date,
   rangeEnd: Date,
-  eventType?: string,
+  eventTypes?: string[],
   userId?: string,
 ): Promise<EventOccurrenceDocument[]> => {
   const filter: Record<string, unknown> = {
     date: { $gte: startOfDay(rangeStart), $lte: endOfDay(rangeEnd) },
   };
-  if (eventType !== undefined) filter.eventType = eventType;
+  if (eventTypes?.length === 1) filter.eventType = eventTypes[0];
+  else if (eventTypes && eventTypes.length > 1) filter.eventType = { $in: eventTypes };
   if (userId !== undefined) filter.userId = userId;
 
   const docs = await db

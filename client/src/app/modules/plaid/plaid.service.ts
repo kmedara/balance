@@ -1,8 +1,6 @@
 import type { PlaidError } from '@core/domain';
-import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { environment } from 'src/environments/environment';
-
+import { GATEWAY_HTTP_TOKEN } from '@core/gateway.http';
 export type PlaidTransaction = {
   transaction_id: string;
   account_id: string;
@@ -26,7 +24,7 @@ export type PlaidTransactionsSyncResponse = {
   providedIn: 'root',
 })
 export class PlaidService {
-  private http = inject(HttpClient);
+  private http = inject(GATEWAY_HTTP_TOKEN);
   readonly error = signal<PlaidError | null>(null);
   readonly linkedItems = signal<string[]>([]);
   readonly transactions = signal<PlaidTransaction[]>([]);
@@ -37,7 +35,7 @@ export class PlaidService {
     if (typeof window === 'undefined' || !(window as any).Plaid) {
       throw new Error('Plaid Link script not loaded');
     }
-    this.http.post<any>(`${environment.GATEWAY}/plaid/link-token`, {}).subscribe((res) => {
+    this.http.post<any>('/plaid/link-token', {}).subscribe((res) => {
       this.handler = (window as any).Plaid.create({
         token: res.link_token,
         appearance: {
@@ -48,7 +46,7 @@ export class PlaidService {
         },
         onSuccess: (public_token: string) => {
           this.http
-            .post<{ item_id: string }>(`${environment.GATEWAY}/plaid/exchange-token`, {
+            .post<{ item_id: string }>('/plaid/exchange-token', {
               public_token: public_token,
             })
             .subscribe({
@@ -70,7 +68,7 @@ export class PlaidService {
     this.error.set(null);
 
     this.http
-      .post<PlaidTransactionsSyncResponse>(`${environment.GATEWAY}/plaid/transactions/sync`, {
+      .post<PlaidTransactionsSyncResponse>('/plaid/transactions/sync', {
         item_id: itemId,
       })
       .subscribe({
