@@ -51,13 +51,27 @@ if (githubOrg && githubRepo) {
     ?.split(',')
     .map((branch) => branch.trim());
 
+  const githubEnvironments = (
+    app.node.tryGetContext('githubEnvironments') as string | undefined
+  )
+    ?.split(',')
+    .map((environment) => environment.trim())
+    .filter(Boolean);
+
+  const legacyGithubEnvironment = app.node.tryGetContext('githubEnvironment') as
+    | string
+    | undefined;
+
   new GitHubOidcStack(app, 'BalanceGitHubOidcStack', {
     env: stackEnv,
     githubOrg,
     githubRepo,
     githubBranches,
-    githubEnvironment:
-      (app.node.tryGetContext('githubEnvironment') as string | undefined) ?? 'production',
+    githubEnvironments: githubEnvironments?.length
+      ? githubEnvironments
+      : legacyGithubEnvironment
+        ? [legacyGithubEnvironment]
+        : ['development'],
   });
 }
 

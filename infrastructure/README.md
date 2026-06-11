@@ -59,15 +59,15 @@ This error means the **Configure AWS credentials** step had nothing to use. Fix 
 
    Copy output `DeployRoleArn` → GitHub secret `AWS_DEPLOY_ROLE_ARN`.
 
-3. **Trust policy must match the workflow.** The deploy job uses `environment: production`, so the IAM role trust policy must allow:
+3. **Trust policy must match the workflow.** The deploy job uses `environment: development`, so the IAM role trust policy must allow:
 
    ```
-   repo:OWNER/REPO:environment:production
+   repo:OWNER/REPO:environment:development
    ```
 
    `BalanceGitHubOidcStack` configures this automatically. If you created the role manually, add that subject (not only `ref:refs/heads/main`).
 
-4. **Secret scope:** If you use a GitHub Environment named `production`, add `AWS_DEPLOY_ROLE_ARN` under **Environment secrets** for `production`, not only repository secrets (environment secrets take precedence; an empty environment override blocks repo secrets).
+4. **Secret scope:** If you use a GitHub Environment named `development`, add `AWS_DEPLOY_ROLE_ARN` under **Environment secrets** for `development`, not only repository secrets (environment secrets take precedence; an empty environment override blocks repo secrets).
 
 **Fallback (not recommended):** Set repository secrets `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` instead of `AWS_DEPLOY_ROLE_ARN`. The workflow uses these only when the role ARN is unset.
 
@@ -77,7 +77,7 @@ The IAM role **trust policy `sub` claim** does not match what GitHub sends. Comm
 
 | GitHub sends | When |
 |---|---|
-| `repo:OWNER/REPO:environment:production` | Deploy job has `environment: production` |
+| `repo:OWNER/REPO:environment:development` | Deploy job has `environment: development` |
 | `repo:OWNER/REPO:ref:refs/heads/master` | Push to `master` (no environment on job) |
 
 **Fix:**
@@ -88,10 +88,10 @@ The IAM role **trust policy `sub` claim** does not match what GitHub sends. Comm
    ```
 2. **Redeploy the OIDC stack** after any trust policy change (updates the existing role):
    ```bash
-   npm run deploy:oidc -- -c githubOrg=YOUR_USER -c githubRepo=balance -c githubBranches=main,master,develop
+   npm run deploy:oidc -- -c githubOrg=YOUR_USER -c githubRepo=balance -c githubBranches=master -c githubEnvironments=development
    ```
 3. Ensure `AWS_DEPLOY_ROLE_ARN` is the **`DeployRoleArn`** output from that stack (same AWS account).
-4. Default allowed subjects include **`main`**, **`master`**, and **`environment:production`**. Custom branches:
+4. Default allowed subjects include **`main`**, **`master`**, and **`environment:development`**. Custom branches/environments:
    ```bash
    npm run deploy:oidc -c githubOrg=OWNER -c githubRepo=REPO -c githubBranches=main,master,develop
    ```
@@ -105,7 +105,7 @@ If you prefer not to use `BalanceGitHubOidcStack`:
 1. Bootstrap CDK (see above).
 2. Create IAM OIDC provider `token.actions.githubusercontent.com` with audience `sts.amazonaws.com`.
 3. Create a role with trust policy allowing:
-   - `repo:OWNER/REPO:environment:production`
+   - `repo:OWNER/REPO:environment:development`
    - `repo:OWNER/REPO:ref:refs/heads/main`
    - `repo:OWNER/REPO:ref:refs/heads/master`
 4. Attach scoped CDK + Cognito deploy permissions (see `lib/github-deploy-policy.ts`). Do **not** use `AdministratorAccess` on this role.
@@ -115,7 +115,7 @@ If you prefer not to use `BalanceGitHubOidcStack`:
 
 ### GitHub repository configuration
 
-Create a **GitHub Environment** named `production` (Settings → Environments) if you use deployment protection rules.
+Create a **GitHub Environment** named `development` (Settings → Environments) if you use deployment protection rules.
 
 | Type | Name | Example |
 |---|---|---|

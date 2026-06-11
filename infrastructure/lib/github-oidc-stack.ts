@@ -8,7 +8,9 @@ export type GitHubOidcStackProps = cdk.StackProps & {
   githubRepo: string;
   /** Branches allowed to assume the role (push / workflow_dispatch). */
   githubBranches?: string[];
-  /** GitHub Actions environment name when the deploy job uses `environment:`. */
+  /** GitHub Actions environment names allowed in OIDC trust (deploy job `environment:`). */
+  githubEnvironments?: string[];
+  /** @deprecated Use githubEnvironments */
   githubEnvironment?: string;
   /** CloudFormation stack name deployed by CI (default BalanceAuthStack). */
   deployStackName?: string;
@@ -25,7 +27,11 @@ export class GitHubOidcStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: GitHubOidcStackProps) {
     super(scope, id, props);
 
-    const githubEnvironment = props.githubEnvironment;
+    const githubEnvironments = props.githubEnvironments?.length
+      ? props.githubEnvironments
+      : props.githubEnvironment
+        ? [props.githubEnvironment]
+        : ['development'];
     const githubBranches = props.githubBranches?.length
       ? props.githubBranches
       : ['main', 'master'];
@@ -33,7 +39,9 @@ export class GitHubOidcStack extends cdk.Stack {
 
     const trustSubjects = [
       ...githubBranches.map((branch) => `repo:${repository}:ref:refs/heads/${branch}`),
-      `repo:${repository}:environment:${githubEnvironment}`,
+      ...githubEnvironments.map(
+        (environment) => `repo:${repository}:environment:${environment}`,
+      ),
     ];
 
     const provider = new iam.OpenIdConnectProvider(this, 'GitHubOidcProvider', {
@@ -61,7 +69,7 @@ export class GitHubOidcStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'DeployRoleArn', {
       value: this.deployRole.roleArn,
-      description: 'Set as GitHub secret AWS_DEPLOY_ROLE_ARN (repo or production environment)',
+      description: 'Set as GitHub secret AWS_DEPLOY_ROLE_ARN (repo or environment secret)',
       exportName: 'BalanceGitHubDeployRoleArn',
     });
 
