@@ -52,7 +52,7 @@
   },
   "devDependencies": {
     "@angular/animations": "^21.1.2",
-    "@angular/build": "^21.1.2",
+    "@angular/build": "^22.0.3",
     "@angular/cli": "^21.1.2",
     "@angular/compiler-cli": "^21.1.2",
     "@ngrx/signals": "^21.1.0",
