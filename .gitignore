@@ -1,7 +1,9 @@
 */dist
 */node_modules/
+packages/domain/lib
 */.angular/*
 .vscode/*
 */.angular
 *.env*
 *.vscode
+node_modules

@@ -5,7 +5,6 @@ import { ModalService } from '@modules/modal/modal.service';
 import { PlaidService } from 'src/app/modules/plaid/plaid.service';
 import { AuthService } from '@core/auth/auth.service';
 import { environment } from 'src/environments/environment';
-import { ModalData } from '@modals/modal.context';
 import { AddEventModal } from '@modals/add-event-modal/add-event-modal';
 
 @Component({

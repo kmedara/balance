@@ -12,7 +12,9 @@ export type GitHubOidcStackProps = cdk.StackProps & {
   githubEnvironments?: string[];
   /** @deprecated Use githubEnvironments */
   githubEnvironment?: string;
-  /** CloudFormation stack name deployed by CI (default BalanceAuthStack). */
+  /** CloudFormation stack names deployed by CI (default BalanceAuthStack + BalanceApiStack). */
+  deployStackNames?: string[];
+  /** @deprecated Use deployStackNames */
   deployStackName?: string;
 };
 
@@ -64,7 +66,8 @@ export class GitHubOidcStack extends cdk.Stack {
     });
 
     grantGitHubDeployPermissions(this, this.deployRole, {
-      deployStackName: props.deployStackName ?? 'BalanceAuthStack',
+      deployStackNames: props.deployStackNames,
+      deployStackName: props.deployStackName,
     });
 
     new cdk.CfnOutput(this, 'DeployRoleArn', {

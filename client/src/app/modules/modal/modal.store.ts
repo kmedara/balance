@@ -5,8 +5,10 @@ import { withDevtools, withGlitchTracking, withTrackedReducer } from '@angular-a
 import { EMPTY } from 'rxjs';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import { calendarStore } from '@modules/calendar/calendar.store';
-import type { ModalSubmitPayload } from './modal.context';
-import { getModalSubmitHandler } from './modal.handlers';
+import {
+  type ModalSubmitPayload,
+  getModalSubmitHandler,
+} from './modal.context';
 import { GATEWAY_HTTP_TOKEN } from '@core/gateway.http';
 
 export const ModalEvents = eventGroup({

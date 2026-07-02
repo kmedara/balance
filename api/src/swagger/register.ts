@@ -24,6 +24,7 @@ export const registerSwagger = fp(
         ],
         tags: [
           { name: 'Health', description: 'Liveness checks' },
+          { name: 'Auth', description: 'Session and Cognito OAuth' },
           { name: 'Events', description: 'Unified events and calendar' },
           { name: 'Categories', description: 'Budget categories' },
           { name: 'Plaid', description: 'Bank linking and transaction sync' },

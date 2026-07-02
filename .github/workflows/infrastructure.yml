@@ -4,12 +4,22 @@ on:
   pull_request:
     paths:
       - 'infrastructure/**'
+      - 'api/src/**'
+      - 'packages/domain/**'
+      - 'packages/schemas/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/infrastructure.yml'
   push:
     branches:
       - master
     paths:
       - 'infrastructure/**'
+      - 'api/src/**'
+      - 'packages/domain/**'
+      - 'packages/schemas/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/infrastructure.yml'
   workflow_dispatch:
     inputs:
@@ -32,16 +42,13 @@ permissions:
 env:
   AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
   CDK_DEFAULT_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
-  COGNITO_CALLBACK_URLS: ${{ inputs.callback_urls || vars.COGNITO_CALLBACK_URLS || '["http://localhost:4200/auth/callback"]' }}
+  COGNITO_CALLBACK_URLS: ${{ inputs.callback_urls || vars.COGNITO_CALLBACK_URLS || '["http://localhost:3000/auth/callback"]' }}
   COGNITO_LOGOUT_URLS: ${{ inputs.logout_urls || vars.COGNITO_LOGOUT_URLS || '["http://localhost:4200/"]' }}
 
 jobs:
   validate:
     name: Validate CDK
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: infrastructure
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,15 +58,17 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: infrastructure/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build
+        working-directory: infrastructure
         run: npm run build
 
       - name: Synth
+        working-directory: infrastructure
         run: npm run synth
 
   deploy:
@@ -71,9 +80,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    defaults:
-      run:
-        working-directory: infrastructure
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -102,12 +108,13 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: infrastructure/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build
+        working-directory: infrastructure
         run: npm run build
 
       - name: Configure AWS credentials (OIDC)
@@ -131,15 +138,18 @@ jobs:
           ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
           echo "CDK_DEFAULT_REGION=$AWS_REGION" >> "$GITHUB_ENV"
           echo "CDK_DEFAULT_ACCOUNT=$ACCOUNT" >> "$GITHUB_ENV"
-          echo "Deploying BalanceAuthStack to account $ACCOUNT in $AWS_REGION"
+          echo "Deploying BalanceAuthStack and BalanceApiStack to account $ACCOUNT in $AWS_REGION"
 
       - name: CDK bootstrap
+        working-directory: infrastructure
         run: npx cdk bootstrap "aws://${CDK_DEFAULT_ACCOUNT}/${CDK_DEFAULT_REGION}"
 
       - name: CDK diff
+        working-directory: infrastructure
         run: npm run diff
 
       - name: CDK deploy
+        working-directory: infrastructure
         run: npm run deploy:ci
 
       - name: Upload stack outputs
@@ -150,6 +160,7 @@ jobs:
           retention-days: 30
 
       - name: Print Cognito outputs
+        working-directory: infrastructure
         run: |
           echo "Cognito stack outputs:"
           cat cdk-outputs.json

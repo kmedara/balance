@@ -6,7 +6,7 @@ import { routes as WebRoutes } from './web';
  * @returns
  */
 const appRoutes = (): Routes => {
-  return false ? [] : WebRoutes;
+  return WebRoutes;
 };
 
 export { appRoutes };

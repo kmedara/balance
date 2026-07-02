@@ -1,25 +1,26 @@
-import type { BudgetDocumentFields } from '@kmedara/balance-domain';
-import type { EventDocumentInput } from '@kmedara/balance-domain';
-import { RRule } from '../events/rrule.utils.js';
+import type { BudgetDocumentFields } from '@balance/domain';
+import { RRule } from '../src/events/recurrence.utils.js';
 import { BUDGET_EVENT_TYPE, SEED_USER_ID } from './seed.constants.js';
+import type { StoredEventDocument } from '../src/data/types.js';
 
-type BudgetDocumentInput = EventDocumentInput<BudgetDocumentFields>;
+type BudgetSeedDocument = StoredEventDocument<BudgetDocumentFields>;
 
 const budgetSeed = (
-  fields: Omit<BudgetDocumentInput, 'userId' | 'eventType'>,
-): BudgetDocumentInput => ({
+  fields: Omit<BudgetSeedDocument, 'userId' | 'eventType'>,
+): BudgetSeedDocument & { _id: string } => ({
   ...fields,
   userId: SEED_USER_ID,
   eventType: BUDGET_EVENT_TYPE,
 });
-/** Stable ids so re-running the seed upserts instead of duplicating rows. */
+
+/** Stable ObjectIds so re-running the seed upserts instead of duplicating rows. */
 export const SEED_BUDGET_IDS = {
-  salary: '11111111-1111-4111-8111-111111111101',
-  freelance: '11111111-1111-4111-8111-111111111102',
-  rent: '22222222-2222-4222-8222-222222222201',
-  groceries: '22222222-2222-4222-8222-222222222202',
-  utilities: '22222222-2222-4222-8222-222222222203',
-  transport: '22222222-2222-4222-8222-222222222204',
+  salary: '6478f1f77bcf86cd79943901',
+  freelance: '6478f1f77bcf86cd79943902',
+  rent: '6478f1f77bcf86cd79943903',
+  groceries: '6478f1f77bcf86cd79943904',
+  utilities: '6478f1f77bcf86cd79943905',
+  transport: '6478f1f77bcf86cd79943906',
 } as const;
 
 export type CategorySeed = {
@@ -49,9 +50,9 @@ const daysFromToday = (offset: number): Date => {
   return d;
 };
 
-export const budgetSeeds: BudgetDocumentInput[] = [
+export const budgetSeeds: Array<BudgetSeedDocument & { _id: string }> = [
   budgetSeed({
-    resourceId: SEED_BUDGET_IDS.salary,
+    _id: SEED_BUDGET_IDS.salary,
     title: 'Salary',
     type: 'Income',
     category: 'Other',
@@ -61,9 +62,10 @@ export const budgetSeeds: BudgetDocumentInput[] = [
       dtstart: daysFromToday(-200),
     }).toString(),
     amount: 4500,
+    dtstart: daysFromToday(-200),
   }),
   budgetSeed({
-    resourceId: SEED_BUDGET_IDS.freelance,
+    _id: SEED_BUDGET_IDS.freelance,
     title: 'Freelance',
     description: 'Side project income',
     type: 'Income',
@@ -71,60 +73,65 @@ export const budgetSeeds: BudgetDocumentInput[] = [
     rrule: new RRule({
       freq: RRule.MONTHLY,
       interval: 1,
-      dtstart:daysFromToday(-75),
+      dtstart: daysFromToday(-75),
       until: daysFromToday(45),
     }).toString(),
     amount: 800,
+    dtstart: daysFromToday(-75),
   }),
   budgetSeed({
-    resourceId: SEED_BUDGET_IDS.rent,
+    _id: SEED_BUDGET_IDS.rent,
     title: 'Rent',
     type: 'Expense',
     category: 'Rent',
     rrule: new RRule({
       freq: RRule.MONTHLY,
       interval: 1,
-      dtstart:daysFromToday(-175),
+      dtstart: daysFromToday(-175),
     }).toString(),
     amount: 1650,
+    dtstart: daysFromToday(-175),
   }),
   budgetSeed({
-    resourceId: SEED_BUDGET_IDS.groceries,
+    _id: SEED_BUDGET_IDS.groceries,
     title: 'Groceries',
     type: 'Expense',
     category: 'Food',
     rrule: new RRule({
       freq: RRule.MONTHLY,
       interval: 1,
-      dtstart:daysFromToday(-21),
+      dtstart: daysFromToday(-21),
       until: daysFromToday(120),
     }).toString(),
     amount: 120,
+    dtstart: daysFromToday(-21),
   }),
   budgetSeed({
-    resourceId: SEED_BUDGET_IDS.utilities,
+    _id: SEED_BUDGET_IDS.utilities,
     title: 'Utilities',
     type: 'Expense',
     category: 'Utilities',
     rrule: new RRule({
       freq: RRule.MONTHLY,
       interval: 1,
-      dtstart:daysFromToday(-150),
+      dtstart: daysFromToday(-150),
       until: daysFromToday(-20),
     }).toString(),
     amount: 185,
+    dtstart: daysFromToday(-150),
   }),
   budgetSeed({
-    resourceId: SEED_BUDGET_IDS.transport,
+    _id: SEED_BUDGET_IDS.transport,
     title: 'Transit pass',
     type: 'Expense',
     category: 'Transportation',
     rrule: new RRule({
       freq: RRule.MONTHLY,
       interval: 1,
-      dtstart:daysFromToday(-10),
+      dtstart: daysFromToday(-10),
     }).toString(),
     amount: 95,
+    dtstart: daysFromToday(-10),
   }),
 ];
 

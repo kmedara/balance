@@ -2,11 +2,11 @@ import { CurrencyPipe, NgClass } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DataViewModule } from 'primeng/dataview';
-import { CalendarResponse } from '@core/domain';
+import { CalendarResponseWire } from '@core/domain';
 import { ModalService } from '@modules/modal/modal.service';
 import { CalendarEventItem } from './calendar-item/calendar-event-item';
 import { calendarStore } from './calendar.store';
-import { reviveCalendarResponse, summarizeMonth } from './calendar.utils';
+import { reviveCalendarResponse, summarizeMonth, buildEmptyMonthDays } from './calendar.utils';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
@@ -23,11 +23,17 @@ export class Calendar {
   weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   private calendar = computed(() => {
-    const value = this.store.calendarValue() as CalendarResponse | undefined;
+    const value = this.store.calendarValue() as CalendarResponseWire | undefined;
     return value ? reviveCalendarResponse(value) : undefined;
   });
 
-  days = computed(() => this.calendar()?.days ?? []);
+  days = computed(() => {
+    const loaded = this.calendar()?.days;
+    if (loaded?.length) return loaded;
+
+    const { month, year } = this.store.filter();
+    return buildEmptyMonthDays(year, month);
+  });
   monthLabel = computed(() => {
     const label = this.calendar()?.monthLabel;
     if (label) return label;

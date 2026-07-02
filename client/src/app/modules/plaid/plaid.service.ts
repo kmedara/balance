@@ -1,24 +1,29 @@
-import type { PlaidError } from '@core/domain';
+import type {
+  LinkTokenResponse,
+  PlaidError,
+  PlaidExchangeTokenResponse,
+  PlaidSyncResponse,
+  PlaidTransaction,
+} from '@core/domain';
 import { inject, Injectable, signal } from '@angular/core';
 import { GATEWAY_HTTP_TOKEN } from '@core/gateway.http';
-export type PlaidTransaction = {
-  transaction_id: string;
-  account_id: string;
-  amount: number;
-  date: string;
-  name: string;
-  merchant_name?: string | null;
-  pending: boolean;
+
+export type { PlaidTransaction };
+
+type PlaidLinkHandler = { open: () => void };
+
+type PlaidLinkOptions = {
+  token: string;
+  appearance?: Record<string, unknown>;
+  onSuccess: (publicToken: string) => void;
 };
 
-export type PlaidTransactionsSyncResponse = {
-  items: {
-    item_id: string;
-    added: PlaidTransaction[];
-    modified: PlaidTransaction[];
-    removed: { transaction_id: string }[];
-  }[];
-};
+type PlaidGlobal = { create: (options: PlaidLinkOptions) => PlaidLinkHandler };
+
+const getPlaidGlobal = (): PlaidGlobal | undefined =>
+  typeof window === 'undefined'
+    ? undefined
+    : (window as unknown as { Plaid?: PlaidGlobal }).Plaid;
 
 @Injectable({
   providedIn: 'root',
@@ -29,14 +34,15 @@ export class PlaidService {
   readonly linkedItems = signal<string[]>([]);
   readonly transactions = signal<PlaidTransaction[]>([]);
   readonly isFetchingTransactions = signal(false);
-  private handler?: any;
+  private handler?: PlaidLinkHandler;
 
   init = async () => {
-    if (typeof window === 'undefined' || !(window as any).Plaid) {
+    const plaid = getPlaidGlobal();
+    if (!plaid) {
       throw new Error('Plaid Link script not loaded');
     }
-    this.http.post<any>('/plaid/link-token', {}).subscribe((res) => {
-      this.handler = (window as any).Plaid.create({
+    this.http.post<LinkTokenResponse>('/plaid/link-token', {}).subscribe((res) => {
+      this.handler = plaid.create({
         token: res.link_token,
         appearance: {
           theme: 'default',
@@ -46,7 +52,7 @@ export class PlaidService {
         },
         onSuccess: (public_token: string) => {
           this.http
-            .post<{ item_id: string }>('/plaid/exchange-token', {
+            .post<PlaidExchangeTokenResponse>('/plaid/exchange-token', {
               public_token: public_token,
             })
             .subscribe({
@@ -68,7 +74,7 @@ export class PlaidService {
     this.error.set(null);
 
     this.http
-      .post<PlaidTransactionsSyncResponse>('/plaid/transactions/sync', {
+      .post<PlaidSyncResponse>('/plaid/transactions/sync', {
         item_id: itemId,
       })
       .subscribe({

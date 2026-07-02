@@ -1,6 +1,6 @@
-import { Component, computed, inject, OnInit, ViewChild } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, RouterOutlet } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { ToolbarModule } from 'primeng/toolbar';
 import { CardModule } from 'primeng/card';
@@ -20,6 +20,5 @@ export class Default {
 
   navigationInfo = computed(() => this.data()!['routes'] as NavigationItem[]);
 
-  onActivate(event: any) {
-  }
+  onActivate(_event: unknown) {}
 }

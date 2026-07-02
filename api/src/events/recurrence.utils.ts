@@ -1,16 +1,23 @@
-import type { EventDocument } from '@kmedara/balance-domain';
-import { RRule } from './rrule.utils.js';
+import type { EventDocument } from '@balance/domain';
+import rrule from 'rrule';
+import { endOfDay, startOfDay } from '../data/dates.js';
 
-const startOfDay = (date: Date): Date => {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
-};
+export const { RRule, rrulestr } = rrule as typeof import('rrule');
 
-const endOfDay = (date: Date): Date => {
-  const d = new Date(date);
-  d.setHours(23, 59, 59, 999);
-  return d;
+/** Builds an rrule that expands to exactly one calendar day. */
+export const buildSingleOccurrenceRRule = (
+  dtstart: Date,
+): { rrule: string; dtstart: Date } => {
+  const start = new Date(dtstart);
+  start.setHours(0, 0, 0, 0);
+
+  const rule = new RRule({
+    freq: RRule.DAILY,
+    count: 1,
+    dtstart: start,
+  });
+
+  return { rrule: rule.toString(), dtstart: start };
 };
 
 export const eventOccursOnDate = (

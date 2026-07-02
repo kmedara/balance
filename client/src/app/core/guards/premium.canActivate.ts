@@ -8,9 +8,11 @@ import {
 } from '@angular/router';
 
 @Injectable()
-class CanActivateTeam implements CanActivate {
-  constructor() {}
-  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): MaybeAsync<GuardResult> {
+export class CanActivateTeam implements CanActivate {
+  canActivate(
+    _route: ActivatedRouteSnapshot,
+    _state: RouterStateSnapshot,
+  ): MaybeAsync<GuardResult> {
     return true;
   }
 }

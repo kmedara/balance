@@ -1,42 +1,61 @@
-import type { Db } from 'mongodb';
-import { randomUUID } from 'node:crypto';
-import type { PlaidItem } from '@kmedara/balance-domain';
 import { decryptAccessToken, encryptAccessToken } from './crypto.js';
-import { PLAID_ITEMS_COLLECTION } from './constants.js';
 import type { PlaidItemDocument } from './types.js';
+import type { PlaidItemWithId, StoredPlaidItemDocument } from '../data/types.js';
+import { GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { getDocClient } from '../dynamo/client.js';
+import { buildPlaidItemRecord, toPlaidItemFromItem } from '../dynamo/entities.js';
+import { plaidSk, userPk } from '../dynamo/keys.js';
+import { serializeRecord } from '../dynamo/helpers.js';
+import { queryAll } from '../dynamo/query.js';
+import { getTableName } from '../dynamo/tables.js';
 
-type PlaidItemCollectionDocument = PlaidItemDocument & { _id?: unknown };
-
-const toPlaidItemDocument = (doc: PlaidItemCollectionDocument): PlaidItemDocument => {
-  const { _id, ...item } = doc;
-  return item;
-};
+const table = (): string => getTableName();
 
 export const findPlaidItemByPlaidItemId = async (
-  db: Db,
   plaidItemId: string,
-): Promise<PlaidItemDocument | null> => {
-  const doc = await db
-    .collection<PlaidItemCollectionDocument>(PLAID_ITEMS_COLLECTION)
-    .findOne({ plaidItemId });
+): Promise<PlaidItemWithId | undefined> => {
+  // PlaidItemIndex is KEYS_ONLY: it yields the base-table key only, which we
+  // use for a strongly consistent fetch of the full item.
+  const items = await queryAll<Record<string, unknown>>({
+    TableName: table(),
+    IndexName: 'PlaidItemIndex',
+    KeyConditionExpression: 'plaidItemId = :plaidItemId',
+    ExpressionAttributeValues: { ':plaidItemId': plaidItemId },
+    Limit: 1,
+  });
 
-  return doc ? toPlaidItemDocument(doc) : null;
+  const match = items[0];
+  if (typeof match?.PK !== 'string' || typeof match?.SK !== 'string') return undefined;
+
+  const result = await getDocClient().send(
+    new GetCommand({
+      TableName: table(),
+      Key: { PK: match.PK, SK: match.SK },
+      ConsistentRead: true,
+    }),
+  );
+
+  return result.Item ? toPlaidItemFromItem(result.Item) : undefined;
 };
 
 export const findActivePlaidItemsByUserId = async (
-  db: Db,
   userId: string,
-): Promise<PlaidItemDocument[]> => {
-  const docs = await db
-    .collection<PlaidItemCollectionDocument>(PLAID_ITEMS_COLLECTION)
-    .find({ userId, status: 'active' })
-    .toArray();
+): Promise<PlaidItemWithId[]> => {
+  const items = await queryAll<Record<string, unknown>>({
+    TableName: table(),
+    KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
+    ExpressionAttributeValues: {
+      ':pk': userPk(userId),
+      ':prefix': 'PLAID#',
+    },
+  });
 
-  return docs.map(toPlaidItemDocument);
+  return items
+    .filter((item) => item.status === 'active')
+    .map(toPlaidItemFromItem);
 };
 
 export const upsertPlaidItem = async (
-  db: Db,
   input: {
     userId: string;
     plaidItemId: string;
@@ -45,12 +64,11 @@ export const upsertPlaidItem = async (
     institutionName?: string;
   },
   now = new Date(),
-): Promise<PlaidItemDocument> => {
-  const existing = await findPlaidItemByPlaidItemId(db, input.plaidItemId);
-  const resourceId = existing?.resourceId ?? (randomUUID() as PlaidItem['resourceId']);
+): Promise<PlaidItemWithId> => {
+  const existing = await findPlaidItemByPlaidItemId(input.plaidItemId);
 
-  const document: PlaidItemDocument = {
-    resourceId,
+  const document: StoredPlaidItemDocument & { id: string; sync?: PlaidItemWithId['sync'] } = {
+    id: input.plaidItemId,
     userId: input.userId,
     plaidItemId: input.plaidItemId,
     accessTokenEncrypted: encryptAccessToken(input.accessToken),
@@ -61,40 +79,47 @@ export const upsertPlaidItem = async (
     lastSynced: existing?.lastSynced,
     lastWebhook: existing?.lastWebhook,
     revokedAt: undefined,
+    sync: existing?.sync,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
 
-  const { createdAt: _createdAt, ...documentFields } = document;
-
-  await db.collection<PlaidItemCollectionDocument>(PLAID_ITEMS_COLLECTION).updateOne(
-    { plaidItemId: input.plaidItemId },
-    {
-      $set: documentFields,
-      $setOnInsert: { createdAt: existing?.createdAt ?? now },
-    },
-    { upsert: true },
+  await getDocClient().send(
+    new PutCommand({
+      TableName: table(),
+      Item: buildPlaidItemRecord(document),
+    }),
   );
 
-  return document;
+  const saved = await findPlaidItemByPlaidItemId(input.plaidItemId);
+  if (!saved) {
+    throw new Error('Failed to load Plaid item after upsert');
+  }
+
+  return saved;
 };
 
 export const updatePlaidItemLastSync = async (
-  db: Db,
-  resourceId: string,
+  plaidItemId: string,
   now = new Date(),
 ): Promise<void> => {
-  await db.collection(PLAID_ITEMS_COLLECTION).updateOne(
-    { resourceId },
-    {
-      $set: {
-        lastSyncAt: now,
-        lastSynced: now,
-        updatedAt: now,
-      },
-    },
+  const item = await findPlaidItemByPlaidItemId(plaidItemId);
+  if (!item) return;
+
+  await getDocClient().send(
+    new UpdateCommand({
+      TableName: table(),
+      Key: { PK: userPk(item.userId), SK: plaidSk(plaidItemId) },
+      UpdateExpression:
+        'SET lastSyncAt = :lastSyncAt, lastSynced = :lastSynced, updatedAt = :updatedAt',
+      ExpressionAttributeValues: serializeRecord({
+        ':lastSyncAt': now,
+        ':lastSynced': now,
+        ':updatedAt': now,
+      }),
+    }),
   );
 };
 
-export const getAccessToken = (item: PlaidItemDocument): string =>
+export const getAccessToken = (item: PlaidItemDocument | PlaidItemWithId): string =>
   decryptAccessToken(item.accessTokenEncrypted);

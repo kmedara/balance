@@ -26,7 +26,6 @@ required_vars=(
   PLAID_CLIENT_NAME
   PLAID_REDIRECT_URI
   GATEWAY
-  MONGO_URL
   ACCESS_TOKEN_ENCRYPTION_KEY
   ACCESS_TOKEN_ENCRYPTION_ALGORITHM
   ACCESS_TOKEN_ENCRYPTION_KEY_VERSION
@@ -56,4 +55,5 @@ fi
 
 echo "Environment variables loaded from $SECRETS_FILE"
 
-docker compose up --build --watch
+docker compose build angular node
+docker compose up --watch

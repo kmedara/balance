@@ -1,0 +1,37 @@
+{
+  "name": "@balance/schemas",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared TypeBox schemas and wire types for Balance",
+  "license": "ISC",
+  "type": "module",
+  "types": "lib/index.d.ts",
+  "main": "lib/index.js",
+  "files": [
+    "lib"
+  ],
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/client.d.ts",
+      "import": "./lib/client.js"
+    },
+    "./*": {
+      "types": "./lib/*.d.ts",
+      "import": "./lib/*.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json",
+    "prepare": "npm run build"
+  },
+  "dependencies": {
+    "typebox": "^1.2.9"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

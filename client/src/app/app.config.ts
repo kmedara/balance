@@ -26,8 +26,6 @@ import { DefaultPreset } from '@core/theme.default';
 
 import { provideGatewayHttpClient } from '@core/gateway.http';
 
-import { provideOAuthClient } from 'angular-oauth2-oidc';
-
 import { AuthService } from '@core/auth/auth.service';
 
 
@@ -45,8 +43,6 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(withEventReplay()),
 
     provideAnimationsAsync(),
-
-    provideOAuthClient(),
 
     provideGatewayHttpClient(),
 

@@ -1,11 +1,21 @@
-@switch (eventType()) {
-  @case ('budget') {
-    <app-budget-calendar-item [event]="event()" />
+<div
+  class="calendar-event-item"
+  [class.calendar-event-item--editable]="isEditable()"
+  (click)="onClick($event)"
+  (keydown.enter)="onClick($event)"
+  (keydown.space)="onClick($event)"
+  [attr.role]="isEditable() ? 'button' : null"
+  [attr.tabindex]="isEditable() ? 0 : null"
+>
+  @switch (eventType()) {
+    @case ('budget') { 
+      <app-budget-calendar-item [event]="event()" />
+    }
+    @case ('plaid_transaction') {
+      <app-plaid-transaction-calendar-item [event]="event()" />
+    }
+    @default {
+      <app-default-calendar-item [event]="event()" />
+    }
   }
-  @case ('plaid_transaction') {
-    <app-plaid-transaction-calendar-item [event]="event()" />
-  }
-  @default {
-    <app-default-calendar-item [event]="event()" />
-  }
-}
+</div>

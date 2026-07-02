@@ -1,10 +1,10 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
 import { CountryCode, Products, type LinkTokenCreateRequest } from 'plaid';
-import { requireAuthUser } from '../auth/cognito.js';
 import {
   bearerSecurity,
-  errorResponseSchema,
+  problemDetailsSchema,
 } from '../swagger/schemas.js';
+import { BadGatewayError } from '../errors/http-error.js';
 import {
   exchangeTokenBodySchema,
   linkTokenResponseSchema,
@@ -12,7 +12,6 @@ import {
   plaidSyncResponseSchema,
   syncTransactionsBodySchema,
 } from './schemas.js';
-import { getDb } from './db.js';
 import { plaidClient } from './client.js';
 import {
   linkPlaidItem,
@@ -20,7 +19,7 @@ import {
   syncTransactionsForUser,
 } from './sync.service.js';
 
-export const plaidRoutes = async (app: FastifyInstance) => {
+export const plaidRoutes: FastifyPluginAsyncTypebox = async (app) => {
   app.post('/link-token', {
     schema: {
       tags: ['Plaid'],
@@ -28,24 +27,22 @@ export const plaidRoutes = async (app: FastifyInstance) => {
       security: bearerSecurity,
       response: {
         200: linkTokenResponseSchema,
-        403: errorResponseSchema,
+        403: problemDetailsSchema,
       },
     },
     handler: async (request) => {
-      const user = requireAuthUser(request);
-
       const linkRequest: LinkTokenCreateRequest = {
         language: 'en',
         country_codes: [CountryCode.Us],
         products: [Products.Transactions],
         client_name: 'Budget-Balance',
         user: {
-          client_user_id: user.userId,
+          client_user_id: request.user.userId,
         },
         redirect_uri: process.env.PLAID_REDIRECT_URI,
       };
 
-      return plaidClient.linkTokenCreate(linkRequest).then(({ data }) => data);
+      return await plaidClient.linkTokenCreate(linkRequest).then(({ data }) => data);
     },
   });
 
@@ -57,19 +54,18 @@ export const plaidRoutes = async (app: FastifyInstance) => {
       body: exchangeTokenBodySchema,
       response: {
         200: plaidExchangeTokenResponseSchema,
-        403: errorResponseSchema,
-        502: errorResponseSchema,
+        403: problemDetailsSchema,
+        502: problemDetailsSchema,
       },
     },
-    handler: async (request, reply) => {
-      const { public_token } = request.body as { public_token: string };
-      const db = getDb(app);
-      const user = requireAuthUser(request);
+    handler: async (request) => {
+      const { public_token } = request.body;
+      const user = request.user;
 
       try {
         const { data } = await plaidClient.itemPublicTokenExchange({ public_token });
 
-        await linkPlaidItem(db, {
+        await linkPlaidItem({
           userId: user.userId,
           plaidItemId: data.item_id,
           accessToken: data.access_token,
@@ -80,10 +76,9 @@ export const plaidRoutes = async (app: FastifyInstance) => {
           request_id: data.request_id,
         };
       } catch (err) {
-        request.log.error(err);
-        return reply.status(502).send({
-          error: err instanceof Error ? err.message : 'Failed to link bank account',
-        });
+        throw new BadGatewayError(
+          err instanceof Error ? err.message : 'Failed to link bank account',
+        );
       }
     },
   });
@@ -93,34 +88,22 @@ export const plaidRoutes = async (app: FastifyInstance) => {
       tags: ['Plaid'],
       summary: 'Sync Plaid transactions into events',
       description:
-        'Pulls transactions from Plaid and upserts them as plaid_transaction events with materialized occurrences.',
+        'Pulls transactions from Plaid and upserts them as plaid_transaction events.',
       security: bearerSecurity,
       body: syncTransactionsBodySchema,
       response: {
         200: plaidSyncResponseSchema,
-        400: errorResponseSchema,
-        403: errorResponseSchema,
-        404: errorResponseSchema,
+        400: problemDetailsSchema,
+        403: problemDetailsSchema,
+        404: problemDetailsSchema,
       },
     },
-    handler: async (request, reply) => {
-      const { item_id } = (request.body ?? {}) as { item_id?: string };
-      const db = getDb(app);
-      const user = requireAuthUser(request);
+    handler: async (request) => {
+      const { item_id } = request.body;
 
-      try {
-        if (item_id) {
-          const result = await syncTransactionsForPlaidItemId(db, item_id, user.userId);
-          return { items: [result] };
-        }
-
-        const items = await syncTransactionsForUser(db, user.userId);
-        return { items };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Transaction sync failed';
-        const status = message.includes('No linked') ? 400 : 404;
-        return reply.status(status).send({ error: message });
-      }
+      return item_id ? 
+      { items: [await syncTransactionsForPlaidItemId(item_id, request.user.userId)] } : 
+      { items: await syncTransactionsForUser(request.user.userId) };
     },
   });
 };

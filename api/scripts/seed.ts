@@ -1,95 +1,118 @@
 import 'dotenv/config';
-import { MongoClient } from 'mongodb';
-import { materializeOccurrenceDocuments } from '../src/events/expand-occurrences.js';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DeleteCommand, DynamoDBDocumentClient, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { env } from 'process';
 import { budgetSeeds, categorySeeds } from '../__data__/seed.data.js';
-import { BUDGET_EVENT_TYPE } from '../__data__/seed.constants.js';
-import { ensureEventIndexes, EVENTS_COLLECTION } from '../src/events/repository.js';
-import {
-  ensureOccurrenceIndexes,
-  OCCURRENCES_COLLECTION,
-  upsertOccurrences,
-} from '../src/events/occurrence.repository.js';
+import { buildCategoriesConfigItem, buildEventItem } from '../src/dynamo/entities.js';
+import { userPk } from '../src/dynamo/keys.js';
+import { LOCAL_TABLE_NAME } from '../src/dynamo/tables.js';
+import { applyLocalTableEnv, ensureLocalTables } from './create-tables.js';
 
-const DEFAULT_URL = 'mongodb://localhost:27017/balance';
-const DB_NAME = process.env.MONGO_DB ?? 'balance';
+const createDocClient = (): DynamoDBDocumentClient => {
+  const endpoint = env.DYNAMODB_ENDPOINT?.trim();
 
-async function seed(): Promise<void> {
-  const url = process.env.MONGO_URL ?? DEFAULT_URL;
-  const drop = process.env.SEED_DROP === 'true' || process.argv.includes('--reset');
+  const client = new DynamoDBClient({
+    region: env.AWS_REGION ?? env.AWS_DEFAULT_REGION ?? 'us-east-1',
+    maxAttempts: 3,
+    requestHandler: {
+      connectionTimeout: 1_000,
+      requestTimeout: 5_000,
+    },
+    ...(endpoint
+      ? {
+          endpoint,
+          credentials: {
+            accessKeyId: env.AWS_ACCESS_KEY_ID ?? 'local',
+            secretAccessKey: env.AWS_SECRET_ACCESS_KEY ?? 'local',
+          },
+        }
+      : {}),
+  });
 
-  const client = new MongoClient(url);
-  await client.connect();
+  return DynamoDBDocumentClient.from(client, {
+    marshallOptions: { removeUndefinedValues: true },
+  });
+};
 
-  try {
-    const db = client.db(DB_NAME);
-    const events = db.collection(EVENTS_COLLECTION);
-    const categories = db.collection('categories');
-    const occurrences = db.collection(OCCURRENCES_COLLECTION);
+const deleteUserEvents = async (
+  client: DynamoDBDocumentClient,
+  tableName: string,
+  userId: string,
+): Promise<void> => {
+  let exclusiveStartKey: Record<string, unknown> | undefined;
 
-    if (drop) {
-      await Promise.all([
-        events.deleteMany({ eventType: BUDGET_EVENT_TYPE }),
-        occurrences.deleteMany({ eventType: BUDGET_EVENT_TYPE }),
-        categories.deleteMany({}),
-      ]);
-      console.log('Cleared events, event_occurrences, and categories.');
-    }
-
-    const now = new Date();
-
-    for (const category of categorySeeds) {
-      await categories.updateOne(
-        { name: category.name },
-        {
-          $set: { ...category, updatedAt: now },
-          $setOnInsert: { createdAt: now },
+  do {
+    const result = await client.send(
+      new QueryCommand({
+        TableName: tableName,
+        KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
+        ExpressionAttributeValues: {
+          ':pk': userPk(userId),
+          ':prefix': 'EVT#',
         },
-        { upsert: true },
-      );
-    }
-
-    for (const budget of budgetSeeds) {
-      const { ...fields } = budget;
-      await events.updateOne(
-        { resourceId: budget.resourceId },
-        { $set: { ...fields, updatedAt: now }, $setOnInsert: { createdAt: now } },
-        { upsert: true },
-      );
-    }
-
-    const occurrenceInputs = budgetSeeds.flatMap((budget) =>
-      materializeOccurrenceDocuments({
-        eventResourceId: budget.resourceId,
-        userId: budget.userId,
-        eventType: budget.eventType,
-        rrule: budget.rrule,
-        dtstart: budget.dtstart,
+        ExclusiveStartKey: exclusiveStartKey,
       }),
     );
 
-    if (drop) {
-      await occurrences.deleteMany({ eventType: BUDGET_EVENT_TYPE });
-    }
+    await Promise.all(
+      (result.Items ?? []).map((item) =>
+        client.send(
+          new DeleteCommand({
+            TableName: tableName,
+            Key: { PK: item.PK, SK: item.SK },
+          }),
+        ),
+      ),
+    );
 
-    const occurrenceCount = await upsertOccurrences(db, occurrenceInputs, now);
+    exclusiveStartKey = result.LastEvaluatedKey;
+  } while (exclusiveStartKey);
+};
 
-    await categories.createIndex({ name: 1 }, { unique: true });
-    await ensureEventIndexes(db);
-    await ensureOccurrenceIndexes(db);
+async function seed(): Promise<void> {
+  const drop = process.env.SEED_DROP === 'true' || process.argv.includes('--reset');
 
-    const [eventCount, categoryCount, totalOccurrences] = await Promise.all([
-      events.countDocuments({ eventType: BUDGET_EVENT_TYPE }),
-      categories.countDocuments(),
-      occurrences.countDocuments({ eventType: BUDGET_EVENT_TYPE }),
-    ]);
+  applyLocalTableEnv();
+  await ensureLocalTables();
 
-    console.log(`Seeded ${DB_NAME} at ${url}`);
-    console.log(`  categories: ${categoryCount}`);
-    console.log(`  events (budget): ${eventCount}`);
-    console.log(`  event_occurrences (budget): ${totalOccurrences} (${occurrenceCount} upserted this run)`);
-  } finally {
-    await client.close();
+  const client = createDocClient();
+  const tableName = env.BALANCE_TABLE ?? LOCAL_TABLE_NAME;
+  const now = new Date();
+
+  if (drop && budgetSeeds.length > 0) {
+    await deleteUserEvents(client, tableName, budgetSeeds[0]!.userId);
+    console.log('Cleared budget events for seed user.');
   }
+
+  await client.send(
+    new PutCommand({
+      TableName: tableName,
+      Item: buildCategoriesConfigItem(categorySeeds, now),
+    }),
+  );
+
+  for (const budget of budgetSeeds) {
+    const { _id, ...fields } = budget;
+
+    await client.send(
+      new PutCommand({
+        TableName: tableName,
+        Item: buildEventItem(
+          {
+            ...fields,
+            id: _id,
+            createdAt: now,
+            updatedAt: now,
+          },
+          'active',
+        ),
+      }),
+    );
+  }
+
+  console.log(`Seeded DynamoDB table ${tableName} at ${env.DYNAMODB_ENDPOINT}`);
+  console.log(`  categories: ${categorySeeds.length}`);
+  console.log(`  events (budget): ${budgetSeeds.length}`);
 }
 
 seed().catch((err) => {

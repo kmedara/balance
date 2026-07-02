@@ -1,5 +1,5 @@
 import { patchState, signalStore, withMethods, withProps, withState } from '@ngrx/signals';
-import { CalendarResponse } from '@core/domain';
+import { CalendarResponseWire } from '@core/domain';
 import { withDevtools, withGlitchTracking, withResource } from '@angular-architects/ngrx-toolkit';
 import {  GatewayResourceService } from '@core/gateway-resource.service';
 import { inject } from '@angular/core';
@@ -48,12 +48,12 @@ const buildCalendarUrl = ({ month, year, eventTypes }: CalendarFilter): string =
 export const calendarStore = signalStore(
     { providedIn: 'root' },
     withState(initialState),
-    withProps((store) => ({
+    withProps(() => ({
         dataService: inject(GatewayResourceService),
     })),
     withDevtools('Calendar', withGlitchTracking()),
     withResource(({ filter, dataService }) => ({
-        calendar:  dataService.createGatewayResource<CalendarResponse>(() =>
+        calendar:  dataService.createGatewayResource<CalendarResponseWire>(() =>
             buildCalendarUrl(filter()),
         ),
     })),

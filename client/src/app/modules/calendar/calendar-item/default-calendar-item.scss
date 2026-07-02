@@ -1,0 +1,22 @@
+@use './calendar-item-styles';
+
+.calendar-item--default {
+  --item-accent: var(--p-surface-500);
+  --item-bg: var(--p-surface-50);
+  --item-border: var(--p-surface-200);
+  --item-text: var(--p-text-color);
+
+  background: var(--item-bg);
+  border-color: var(--item-border);
+  color: var(--item-text);
+
+  .calendar-item__accent {
+    background: var(--item-accent);
+  }
+
+  &:hover {
+    background: var(--p-surface-100);
+    border-color: var(--p-surface-300);
+    box-shadow: 0 1px 2px rgb(15 23 42 / 6%);
+  }
+}

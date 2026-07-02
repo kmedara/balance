@@ -2,14 +2,17 @@ import {
   ApplicationRef,
   EnvironmentInjector,
   Injectable,
-  Type,
   createComponent,
   createEnvironmentInjector,
   inject,
-  signal,
 } from '@angular/core';
-import { MODAL_CONFIG, MODAL_DATA, MODAL_ID } from './modal.token';
-import { ModalConfig, ModalData } from './modal.context';
+import {
+  MODAL_CONFIG,
+  MODAL_DATA,
+  MODAL_ID,
+  ModalConfig,
+  ModalData,
+} from './modal.context';
 import { injectDispatch } from '@ngrx/signals/events';
 import { ModalEvents, ModalStore } from './modal.store';
 

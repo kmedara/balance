@@ -17,11 +17,6 @@ export const routes: Routes = [
     loadComponent: () => import('../core/auth/login').then((mod) => mod.Login),
   },
   {
-    path: 'auth/callback',
-    loadComponent: () =>
-      import('../core/auth/callback').then((mod) => mod.AuthCallback),
-  },
-  {
     path: '',
     redirectTo: 'calendar',
     pathMatch: 'full',

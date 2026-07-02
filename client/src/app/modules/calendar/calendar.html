@@ -111,7 +111,7 @@
               </div>
 
               <div class="day-events">
-                @for (event of item.events; track event.resourceId) {
+                @for (event of item.events; track event.id) {
                   <app-calendar-event-item [event]="event" />
                 }
               </div>

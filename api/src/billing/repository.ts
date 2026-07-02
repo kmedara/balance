@@ -1,67 +1,94 @@
-import type { Db } from 'mongodb';
-import {
-  USERS_COLLECTION,
-  type UserDocument,
-  type UserSubscription,
-} from '../auth/user.repository.js';
+import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import type { UserDocument, UserSubscription } from '../auth/user.repository.js';
+import { getDocClient } from '../dynamo/client.js';
+import { toUserDocument } from '../dynamo/entities.js';
+import { profileSk, userPk, userRef } from '../dynamo/keys.js';
+import { serializeRecord } from '../dynamo/helpers.js';
+import { queryAll } from '../dynamo/query.js';
+import { getTableName } from '../dynamo/tables.js';
+import { NotFoundError } from '../errors/http-error.js';
 
-type UserCollectionDocument = UserDocument & { _id?: unknown };
-
-const toUserDocument = (doc: UserCollectionDocument): UserDocument => {
-  const { _id, ...user } = doc;
-  return user;
-};
+const table = (): string => getTableName();
 
 export const findUserByStripeCustomerId = async (
-  db: Db,
   stripeCustomerId: string,
-): Promise<UserDocument | null> => {
-  const doc = await db
-    .collection<UserCollectionDocument>(USERS_COLLECTION)
-    .findOne({ stripeCustomerId });
+): Promise<UserDocument | undefined> => {
+  // StripeCustomerIndex is KEYS_ONLY: it returns only the base-table key
+  // (PK/SK) and index keys, which is all we need to fetch the authoritative
+  // profile with a strongly consistent read.
+  const items = await queryAll<Record<string, unknown>>({
+    TableName: table(),
+    IndexName: 'StripeCustomerIndex',
+    KeyConditionExpression: 'stripeCustomerId = :stripeCustomerId',
+    ExpressionAttributeValues: { ':stripeCustomerId': stripeCustomerId },
+    Limit: 1,
+  });
 
-  return doc ? toUserDocument(doc) : null;
+  const match = items[0];
+  if (typeof match?.PK !== 'string' || typeof match?.SK !== 'string') return undefined;
+
+  const result = await getDocClient().send(
+    new GetCommand({
+      TableName: table(),
+      Key: { PK: match.PK, SK: match.SK },
+      ConsistentRead: true,
+    }),
+  );
+
+  return result.Item ? toUserDocument(result.Item) : undefined;
 };
 
 export const setStripeCustomerId = async (
-  db: Db,
   cognitoSub: string,
   stripeCustomerId: string,
   now = new Date(),
 ): Promise<void> => {
-  await db.collection(USERS_COLLECTION).updateOne(
-    { cognitoSub },
-    { $set: { stripeCustomerId, updatedAt: now } },
+  await getDocClient().send(
+    new UpdateCommand({
+      TableName: table(),
+      Key: { PK: userPk(cognitoSub), SK: profileSk() },
+      UpdateExpression:
+        'SET stripeCustomerId = :stripeCustomerId, userRef = :userRef, updatedAt = :updatedAt',
+      ExpressionAttributeValues: serializeRecord({
+        ':stripeCustomerId': stripeCustomerId,
+        ':userRef': userRef(cognitoSub),
+        ':updatedAt': now,
+      }),
+    }),
   );
 };
 
 export const updateUserSubscription = async (
-  db: Db,
   cognitoSub: string,
   subscription: UserSubscription,
   now = new Date(),
 ): Promise<void> => {
-  await db.collection(USERS_COLLECTION).updateOne(
-    { cognitoSub },
-    { $set: { subscription, updatedAt: now } },
+  await getDocClient().send(
+    new UpdateCommand({
+      TableName: table(),
+      Key: { PK: userPk(cognitoSub), SK: profileSk() },
+      UpdateExpression: 'SET subscription = :subscription, updatedAt = :updatedAt',
+      ExpressionAttributeValues: serializeRecord({
+        ':subscription': subscription,
+        ':updatedAt': now,
+      }),
+    }),
   );
 };
 
-/** Called from Stripe webhook handlers once implemented. */
 export const updateSubscriptionByStripeCustomerId = async (
-  db: Db,
   stripeCustomerId: string,
   subscription: UserSubscription,
   now = new Date(),
-): Promise<UserDocument | null> => {
-  const result = await db.collection<UserCollectionDocument>(USERS_COLLECTION).findOneAndUpdate(
-    { stripeCustomerId },
-    { $set: { subscription, updatedAt: now } },
-    { returnDocument: 'after' },
-  );
+): Promise<UserDocument> => {
+  const user = await findUserByStripeCustomerId(stripeCustomerId);
+  if (!user) throw new NotFoundError('User not found');
 
-  if (!result) return null;
+  await updateUserSubscription(user.cognitoSub, subscription, now);
 
-  const { _id, ...user } = result;
-  return user;
+  return {
+    ...user,
+    subscription,
+    updatedAt: now,
+  };
 };

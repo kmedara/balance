@@ -1,4 +1,3 @@
-import type { Db } from 'mongodb';
 import type Stripe from 'stripe';
 import {
   findUserByStripeCustomerId,
@@ -31,19 +30,16 @@ const subscriptionIdFromInvoice = (invoice: Stripe.Invoice): string | undefined 
 };
 
 const applySubscription = async (
-  db: Db,
   stripeCustomerId: string,
   subscription: Stripe.Subscription,
 ): Promise<void> => {
   await updateSubscriptionByStripeCustomerId(
-    db,
     stripeCustomerId,
     subscriptionFromStripe(subscription),
   );
 };
 
 export const handleStripeWebhookEvent = async (
-  db: Db,
   event: Stripe.Event,
 ): Promise<void> => {
   switch (event.type) {
@@ -54,12 +50,12 @@ export const handleStripeWebhookEvent = async (
       const subscriptionId = subscriptionIdFromCheckout(session);
 
       if (cognitoSub && stripeCustomerId) {
-        await setStripeCustomerId(db, cognitoSub, stripeCustomerId);
+        await setStripeCustomerId(cognitoSub, stripeCustomerId);
       }
 
       if (stripeCustomerId && subscriptionId) {
         const subscription = await retrieveSubscription(subscriptionId);
-        await applySubscription(db, stripeCustomerId, subscription);
+        await applySubscription(stripeCustomerId, subscription);
       }
       return;
     }
@@ -72,7 +68,7 @@ export const handleStripeWebhookEvent = async (
           ? subscription.customer
           : subscription.customer.id;
 
-      await applySubscription(db, stripeCustomerId, subscription);
+      await applySubscription(stripeCustomerId, subscription);
       return;
     }
 
@@ -83,7 +79,7 @@ export const handleStripeWebhookEvent = async (
           ? subscription.customer
           : subscription.customer.id;
 
-      await updateSubscriptionByStripeCustomerId(db, stripeCustomerId, canceledSubscription());
+      await updateSubscriptionByStripeCustomerId(stripeCustomerId, canceledSubscription());
       return;
     }
 
@@ -98,13 +94,13 @@ export const handleStripeWebhookEvent = async (
 
       if (subscriptionId) {
         const subscription = await retrieveSubscription(subscriptionId);
-        await applySubscription(db, stripeCustomerId, subscription);
+        await applySubscription(stripeCustomerId, subscription);
         return;
       }
 
-      const user = await findUserByStripeCustomerId(db, stripeCustomerId);
+      const user = await findUserByStripeCustomerId(stripeCustomerId);
       if (user) {
-        await updateUserSubscription(db, user.cognitoSub, {
+        await updateUserSubscription(user.cognitoSub, {
           ...user.subscription,
           status: 'past_due',
         });

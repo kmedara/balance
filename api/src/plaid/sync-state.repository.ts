@@ -1,27 +1,38 @@
-import type { Db } from 'mongodb';
-import { PLAID_SYNC_STATE_COLLECTION } from './constants.js';
 import type { PlaidSyncStateDocument } from './types.js';
+import { findPlaidItemByPlaidItemId } from './item.repository.js';
+import { UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { getDocClient } from '../dynamo/client.js';
+import type { PlaidSyncFields } from '../dynamo/entities.js';
+import { toPlaidSyncState } from '../dynamo/entities.js';
+import { plaidSk, userPk } from '../dynamo/keys.js';
+import { serializeRecord } from '../dynamo/helpers.js';
+import { getTableName } from '../dynamo/tables.js';
 
-type SyncStateCollectionDocument = PlaidSyncStateDocument & { _id?: unknown };
+const table = (): string => getTableName();
 
-const toSyncStateDocument = (doc: SyncStateCollectionDocument): PlaidSyncStateDocument => {
-  const { _id, ...state } = doc;
-  return state;
+const getItemKey = async (
+  itemId: string,
+): Promise<{ PK: string; SK: string; userId: string } | undefined> => {
+  const item = await findPlaidItemByPlaidItemId(itemId);
+  if (!item) return undefined;
+
+  return {
+    PK: userPk(item.userId),
+    SK: plaidSk(item.plaidItemId),
+    userId: item.userId,
+  };
 };
 
-export const findSyncStateByItemResourceId = async (
-  db: Db,
-  itemResourceId: string,
-): Promise<PlaidSyncStateDocument | null> => {
-  const doc = await db
-    .collection<SyncStateCollectionDocument>(PLAID_SYNC_STATE_COLLECTION)
-    .findOne({ itemId: itemResourceId });
+export const findSyncStateByItemId = async (
+  itemId: string,
+): Promise<PlaidSyncStateDocument | undefined> => {
+  const item = await findPlaidItemByPlaidItemId(itemId);
+  if (!item) return undefined;
 
-  return doc ? toSyncStateDocument(doc) : null;
+  return toPlaidSyncState(item);
 };
 
 export const ensureSyncState = async (
-  db: Db,
   input: {
     itemId: string;
     userId: string;
@@ -29,84 +40,103 @@ export const ensureSyncState = async (
   },
   now = new Date(),
 ): Promise<PlaidSyncStateDocument> => {
-  const existing = await findSyncStateByItemResourceId(db, input.itemId);
+  const existing = await findSyncStateByItemId(input.plaidItemId);
+  const key = await getItemKey(input.plaidItemId);
 
-  const document: PlaidSyncStateDocument = {
-    itemId: input.itemId,
-    userId: input.userId,
-    plaidItemId: input.plaidItemId,
+  const sync: PlaidSyncFields = {
     transactionCursor: existing?.transactionCursor,
     lastSuccessfulSync: existing?.lastSuccessfulSync ?? now,
     lastAttemptedSync: now,
     status: existing?.status ?? 'idle',
+  };
+
+  if (key) {
+    await getDocClient().send(
+      new UpdateCommand({
+        TableName: table(),
+        Key: { PK: key.PK, SK: key.SK },
+        UpdateExpression: 'SET sync = :sync, updatedAt = :updatedAt',
+        ExpressionAttributeValues: serializeRecord({
+          ':sync': sync,
+          ':updatedAt': now,
+        }),
+      }),
+    );
+  }
+
+  return {
+    itemId: input.plaidItemId,
+    userId: input.userId,
+    plaidItemId: input.plaidItemId,
+    transactionCursor: sync.transactionCursor,
+    lastSuccessfulSync: sync.lastSuccessfulSync ?? now,
+    lastAttemptedSync: sync.lastAttemptedSync ?? now,
+    status: sync.status ?? 'idle',
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
+};
 
-  const { createdAt: _createdAt, ...documentFields } = document;
+const updateSync = async (
+  plaidItemId: string,
+  sync: Partial<PlaidSyncFields>,
+  now: Date,
+): Promise<void> => {
+  const key = await getItemKey(plaidItemId);
+  if (!key) return;
 
-  await db.collection<SyncStateCollectionDocument>(PLAID_SYNC_STATE_COLLECTION).updateOne(
-    { itemId: input.itemId },
-    {
-      $set: documentFields,
-      $setOnInsert: { createdAt: existing?.createdAt ?? now },
-    },
-    { upsert: true },
+  const existing = await findSyncStateByItemId(plaidItemId);
+  const merged: PlaidSyncFields = {
+    transactionCursor: existing?.transactionCursor,
+    lastSuccessfulSync: existing?.lastSuccessfulSync ?? now,
+    lastAttemptedSync: existing?.lastAttemptedSync ?? now,
+    status: existing?.status ?? 'idle',
+    ...sync,
+  };
+
+  await getDocClient().send(
+    new UpdateCommand({
+      TableName: table(),
+      Key: { PK: key.PK, SK: key.SK },
+      UpdateExpression: 'SET sync = :sync, updatedAt = :updatedAt',
+      ExpressionAttributeValues: serializeRecord({
+        ':sync': merged,
+        ':updatedAt': now,
+      }),
+    }),
   );
-
-  return document;
 };
 
 export const markSyncStateSyncing = async (
-  db: Db,
-  itemResourceId: string,
+  plaidItemId: string,
   now = new Date(),
 ): Promise<void> => {
-  await db.collection(PLAID_SYNC_STATE_COLLECTION).updateOne(
-    { itemId: itemResourceId },
-    {
-      $set: {
-        status: 'syncing',
-        lastAttemptedSync: now,
-        updatedAt: now,
-      },
-    },
-  );
+  await updateSync(plaidItemId, { status: 'syncing', lastAttemptedSync: now }, now);
 };
 
 export const completeSyncState = async (
-  db: Db,
-  itemResourceId: string,
+  plaidItemId: string,
   cursor: string,
   now = new Date(),
 ): Promise<void> => {
-  await db.collection(PLAID_SYNC_STATE_COLLECTION).updateOne(
-    { itemId: itemResourceId },
+  await updateSync(
+    plaidItemId,
     {
-      $set: {
-        transactionCursor: cursor,
-        lastSuccessfulSync: now,
-        lastAttemptedSync: now,
-        status: 'idle',
-        updatedAt: now,
-      },
+      transactionCursor: cursor,
+      lastSuccessfulSync: now,
+      lastAttemptedSync: now,
+      status: 'idle',
     },
+    now,
   );
 };
 
 export const failSyncState = async (
-  db: Db,
-  itemResourceId: string,
+  plaidItemId: string,
   now = new Date(),
 ): Promise<void> => {
-  await db.collection(PLAID_SYNC_STATE_COLLECTION).updateOne(
-    { itemId: itemResourceId },
-    {
-      $set: {
-        status: 'error',
-        lastAttemptedSync: now,
-        updatedAt: now,
-      },
-    },
-  );
+  await updateSync(plaidItemId, { status: 'error', lastAttemptedSync: now }, now);
 };
+
+/** @deprecated Use findSyncStateByItemId with plaidItemId */
+export const findSyncStateByItemResourceId = findSyncStateByItemId;

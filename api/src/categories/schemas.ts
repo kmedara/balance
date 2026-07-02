@@ -1,4 +1,1 @@
-export const categoryListResponseSchema = {
-  type: 'array',
-  items: { type: 'string' },
-} as const;
+export { categoryListResponseSchema } from '@balance/schemas/categories';

@@ -1,24 +1,21 @@
-import type { CalendarDay, CalendarResponse } from '@kmedara/balance-domain';
-import type { EventDocument } from '@kmedara/balance-domain/data/event-document';
-import type { EventOccurrenceDocument } from '@kmedara/balance-domain';
+import type { CalendarDay, CalendarResponse } from '@balance/domain';
+import type { CalendarResponseWire } from '@balance/schemas/events';
+import type { EventWithId } from '../data/types.js';
+import { toDate, formatDateKey, isSameCalendarDay } from '../data/dates.js';
+import { PLAID_TRANSACTION_EVENT_TYPE } from '../plaid/constants.js';
 import { eventOccursOnDate } from './recurrence.utils.js';
-import { formatLocalDateOnly, isSameCalendarDay } from './calendar-date.utils.js';
 
-export const getEventsForDay = <T extends EventDocument>(date: Date, events: T[]): T[] =>
-  events.filter((b) => eventOccursOnDate(b, date));
-
-export const getOccurrencesForDay = (
-  date: Date,
-  occurrences: EventOccurrenceDocument[],
-): EventOccurrenceDocument[] => occurrences.filter((o) => isSameCalendarDay(o.date, date));
-
-export const resolveOccurrencesToEvents = <T extends EventDocument>(
-  dayOccurrences: EventOccurrenceDocument[],
-  eventsById: ReadonlyMap<string, T>,
-): T[] =>
-  dayOccurrences
-    .map((occurrence) => eventsById.get(occurrence.eventResourceId))
-    .filter((event): event is T => event !== undefined);
+/**
+ * Plaid transactions are single-occurrence and date-anchored, so they match a
+ * day by comparing `dtstart` directly — no rrule parsing. Recurring events
+ * (budgets) expand from their stored rule.
+ */
+export const getEventsForDay = <T extends EventWithId>(date: Date, events: T[]): T[] =>
+  events.filter((event) =>
+    event.eventType === PLAID_TRANSACTION_EVENT_TYPE
+      ? event.dtstart !== undefined && isSameCalendarDay(toDate(event.dtstart), date)
+      : eventOccursOnDate(event, date),
+  );
 
 const buildMonthGrid = <T>(
   year: number,
@@ -81,17 +78,6 @@ const buildMonthGrid = <T>(
   };
 };
 
-/** Build calendar from persisted occurrences joined to parent events. */
-export const buildMonthCalendarFromOccurrences = <T extends EventDocument>(
-  year: number,
-  monthIndex: number,
-  occurrences: EventOccurrenceDocument[],
-  eventsById: ReadonlyMap<string, T>,
-): CalendarResponse =>
-  buildMonthGrid(year, monthIndex, (dayDate) =>
-    resolveOccurrencesToEvents(getOccurrencesForDay(dayDate, occurrences), eventsById),
-  );
-
 /** Build calendar from a per-day event resolver (budget, plaid, or merged). */
 export const buildMonthCalendarFromDayEvents = <T>(
   year: number,
@@ -100,7 +86,7 @@ export const buildMonthCalendarFromDayEvents = <T>(
 ): CalendarResponse => buildMonthGrid(year, monthIndex, eventsForDay);
 
 /** Build calendar by expanding rrules in memory (fallback). */
-export const buildMonthCalendar = <T extends EventDocument>(
+export const buildMonthCalendar = <T extends EventWithId>(
   year: number,
   monthIndex: number,
   events: T[],
@@ -120,13 +106,14 @@ export const gridDateRange = (
 };
 
 /** Serialize calendar day dates as `YYYY-MM-DD` to avoid UTC JSON shifts on clients. */
-export const toJsonCalendarResponse = (response: CalendarResponse) => ({
+export const toJsonCalendarResponse = (response: CalendarResponse): CalendarResponseWire => ({
   ...response,
   days: response.days.map(toJsonCalendarDay),
   weeks: response.weeks.map((week) => week.map(toJsonCalendarDay)),
 });
 
-const toJsonCalendarDay = (day: CalendarDay) => ({
+const toJsonCalendarDay = (day: CalendarDay): CalendarResponseWire['days'][number] => ({
   ...day,
-  date: formatLocalDateOnly(day.date),
+  date: formatDateKey(day.date),
+  events: day.events as CalendarResponseWire['days'][number]['events'],
 });

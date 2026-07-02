@@ -1,11 +1,32 @@
 FROM node:24.12.0-alpine
 WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY packages/domain/package.json packages/domain/
+COPY packages/schemas/package.json packages/schemas/
+COPY api/package.json api/
+
+RUN --mount=type=cache,target=/root/.npm npm ci --ignore-scripts
+
+COPY packages/domain packages/domain
+COPY packages/schemas packages/schemas
+COPY api/tsconfig.json api/
+COPY api/src api/src
+COPY scripts/install-native-deps.mjs scripts/install-native-deps.mjs
+COPY scripts/docker-entrypoint.sh scripts/docker-entrypoint.sh
+
+RUN npm run build -w @balance/schemas \
+    && npm run build -w @balance/domain \
+    && node scripts/install-native-deps.mjs -w node \
+    && sed -i 's/\r$//' scripts/docker-entrypoint.sh \
+    && chmod +x scripts/docker-entrypoint.sh
+
+ENV NATIVE_DEPS_WORKSPACE=node
+ENV APP_WORKDIR=/app/api
 ENV NODE_ENV=development
-COPY package*.json ./
-RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
-    --mount=type=cache,target=/root/.npm \
-    npm i
-COPY tsconfig.json ./
-COPY src ./src
+WORKDIR /app/api
+
 EXPOSE 3000
+
+ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
 CMD ["npm", "run", "dev"]

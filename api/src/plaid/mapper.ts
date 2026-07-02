@@ -1,10 +1,10 @@
 import type { AccountBase, Transaction as PlaidTransaction } from 'plaid';
-import { randomUUID } from 'node:crypto';
-import type { PlaidAccountDocument } from './types.js';
-import { buildSingleOccurrenceRRule } from '../events/single-occurrence.utils.js';
+import type { ClientPlaidTransaction, PlaidAccountDocument, PlaidTransactionEventWithId } from './types.js';
+import { buildSingleOccurrenceRRule } from '../events/recurrence.utils.js';
 import { PLAID_TRANSACTION_EVENT_TYPE } from './constants.js';
-import type { PlaidTransactionEventDocument } from './event-document.js';
-import type { ClientPlaidTransaction } from './types.js';
+import type { PlaidTransactionEventFields } from './event-document.js';
+
+import type { StoredEventDocument } from '../data/types.js';
 
 const parsePlaidDate = (date: string): Date => {
   const [year, month, day] = date.split('-').map(Number);
@@ -22,7 +22,7 @@ const formatDateOnly = (date: Date): string => {
 };
 
 export const toClientTransaction = (
-  doc: PlaidTransactionEventDocument,
+  doc: PlaidTransactionEventWithId,
 ): ClientPlaidTransaction => ({
   transaction_id: doc.plaidTransactionId,
   account_id: doc.plaidAccountId,
@@ -37,8 +37,7 @@ export const mapPlaidTransactionToEventDocument = (
   tx: PlaidTransaction,
   userId: string,
   plaidItemId: string,
-  existingResourceId?: string,
-): PlaidTransactionEventDocument => {
+): StoredEventDocument<PlaidTransactionEventFields> => {
   const category =
     tx.personal_finance_category?.primary != null
       ? [tx.personal_finance_category.primary, tx.personal_finance_category.detailed].filter(
@@ -52,7 +51,6 @@ export const mapPlaidTransactionToEventDocument = (
   const isExpense = tx.amount > 0;
 
   return {
-    resourceId: (existingResourceId ?? randomUUID()) as PlaidTransactionEventDocument['resourceId'],
     userId,
     eventType: PLAID_TRANSACTION_EVENT_TYPE,
     title,
@@ -77,9 +75,7 @@ export const mapPlaidAccountToDocument = (
   account: AccountBase,
   userId: string,
   plaidItemId: string,
-  existingResourceId?: string,
 ): PlaidAccountDocument => ({
-  resourceId: (existingResourceId ?? randomUUID()) as `${string}-${string}-${string}-${string}-${string}`,
   userId,
   plaidItemId,
   plaidAccountId: account.account_id,

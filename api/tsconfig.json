@@ -5,7 +5,11 @@
     "outDir": "./dist",
     "paths": {
       "@src/*": ["./src/*"],
-      "@plaid/*": ["./src/plaid/*"]
+      "@plaid/*": ["./src/plaid/*"],
+      "@balance/domain": ["../packages/domain/src/index.ts"],
+      "@balance/domain/*": ["../packages/domain/src/*"],
+      "@balance/schemas": ["../packages/schemas/src/index.ts"],
+      "@balance/schemas/*": ["../packages/schemas/src/*"]
     },
 
     // Environment Settings

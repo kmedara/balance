@@ -7,18 +7,28 @@
   },
   "scripts": {
     "build": "tsc",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "cdk": "cdk",
-    "deploy": "cdk deploy BalanceAuthStack --require-approval never",
-    "deploy:ci": "cdk deploy BalanceAuthStack --require-approval never --outputs-file cdk-outputs.json",
+    "deploy": "cdk deploy BalanceAuthStack BalanceApiStack --require-approval never",
+    "deploy:ci": "cdk deploy BalanceAuthStack BalanceApiStack --require-approval never --outputs-file cdk-outputs.json",
     "deploy:oidc": "cdk deploy BalanceGitHubOidcStack --require-approval never",
+    "deploy:api": "cdk deploy BalanceApiStack --require-approval never",
+    "deploy:database": "cdk deploy BalanceDatabaseStack --require-approval never --outputs-file cdk-outputs.database.json",
+    "deploy:client": "cdk deploy BalanceClientStack --require-approval never --outputs-file cdk-outputs.client.json",
     "synth": "cdk synth",
-    "diff": "cdk diff BalanceAuthStack"
+    "diff": "cdk diff BalanceAuthStack BalanceApiStack"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^25.2.0",
     "aws-cdk": "^2.1100.0",
+    "eslint": "^10.6.0",
+    "eslint-config-prettier": "^10.1.8",
+    "jiti": "^2.7.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.62.1"
   },
   "dependencies": {
     "aws-cdk-lib": "^2.220.0",

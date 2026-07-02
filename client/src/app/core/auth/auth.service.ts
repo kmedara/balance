@@ -1,10 +1,12 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { AuthConfig, OAuthService } from 'angular-oauth2-oidc';
+import { firstValueFrom } from 'rxjs';
+import type { AuthUser } from '@core/domain';
+import { GATEWAY_HTTP_TOKEN } from '@core/gateway.http';
 import { environment } from 'src/environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly oauth = inject(OAuthService);
+  private readonly http = inject(GATEWAY_HTTP_TOKEN);
   private readonly ready = signal(false);
 
   readonly isAuthenticated = signal(false);
@@ -15,16 +17,18 @@ export class AuthService {
     if (environment.authDisabled) {
       this.isAuthenticated.set(true);
       this.userId.set('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+      this.email.set('dev@localhost');
       this.ready.set(true);
       return;
     }
 
-    this.oauth.configure(this.buildAuthConfig());    this.oauth.setupAutomaticSilentRefresh();
+    try {
+      const user = await firstValueFrom(this.http.get<AuthUser>('/auth/me'));
+      this.applyUser(user);
+    } catch {
+      this.clearUser();
+    }
 
-    await this.oauth.loadDiscoveryDocumentAndTryLogin();
-
-    this.syncSession();
-    this.oauth.events.subscribe(() => this.syncSession());
     this.ready.set(true);
   }
 
@@ -33,62 +37,38 @@ export class AuthService {
       return;
     }
 
-    this.oauth.initCodeFlow();
+    const returnTo = encodeURIComponent(`${window.location.origin}/calendar`);
+    window.location.href = `${environment.GATEWAY}/auth/login?returnTo=${returnTo}`;
   }
 
   logout(): void {
     if (environment.authDisabled) {
+      this.clearUser();
       return;
     }
 
-    this.oauth.logOut();
-    this.syncSession();
-  }
-
-  getIdToken(): string | null {
-    if (environment.authDisabled) {
-      return null;
-    }
-
-    return this.oauth.getIdToken() || null;
-  }
-
-  getAccessToken(): string | null {
-    if (environment.authDisabled) {
-      return null;
-    }
-
-    return this.oauth.getAccessToken() || null;
-  }
-
-  getBearerToken(): string | null {
-    return this.getIdToken() ?? this.getAccessToken();
+    const returnTo = encodeURIComponent(`${window.location.origin}/login`);
+    window.location.href = `${environment.GATEWAY}/auth/logout?returnTo=${returnTo}`;
   }
 
   isReady(): boolean {
     return this.ready();
   }
 
-  private buildAuthConfig(): AuthConfig {
-    return {
-      issuer: environment.cognito.authority,
-      clientId: environment.cognito.clientId,
-      redirectUri: environment.cognito.redirectUri,
-      postLogoutRedirectUri: environment.cognito.postLogoutRedirectUri,
-      responseType: environment.cognito.responseType,
-      scope: environment.cognito.scope,
-      showDebugInformation: environment.cognito.showDebugInformation,
-      strictDiscoveryDocumentValidation: false,
-      requireHttps: false,
-    };
+  private applyUser(user: AuthUser): void {
+    if (!user.userId) {
+      this.clearUser();
+      return;
+    }
+
+    this.isAuthenticated.set(true);
+    this.userId.set(user.userId);
+    this.email.set(user.email);
   }
 
-  private syncSession(): void {
-    const authenticated = this.oauth.hasValidAccessToken();
-    this.isAuthenticated.set(environment.authDisabled || authenticated);
-
-    const claims = this.oauth.getIdentityClaims() as Record<string, unknown> | null;
-    this.userId.set(typeof claims?.['sub'] === 'string' ? claims['sub'] : undefined);
-    this.email.set(typeof claims?.['email'] === 'string' ? claims['email'] : undefined);
+  private clearUser(): void {
+    this.isAuthenticated.set(false);
+    this.userId.set(undefined);
+    this.email.set(undefined);
   }
 }

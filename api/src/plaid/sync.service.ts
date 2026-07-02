@@ -1,9 +1,8 @@
-import type { Db } from 'mongodb';
 import { CountryCode } from 'plaid';
 import { plaidClient } from './client.js';
 import { getAccessToken, updatePlaidItemLastSync } from './item.repository.js';
 import { mapPlaidAccountToDocument } from './mapper.js';
-import { upsertPlaidAccounts, findPlaidAccountResourceId } from './account.repository.js';
+import { upsertPlaidAccounts } from './account.repository.js';
 import {
   markPlaidTransactionsRemoved,
   toClientTransactions,
@@ -14,7 +13,7 @@ import {
   completeSyncState,
   ensureSyncState,
   failSyncState,
-  findSyncStateByItemResourceId,
+  findSyncStateByItemId,
   markSyncStateSyncing,
 } from './sync-state.repository.js';
 import {
@@ -22,16 +21,15 @@ import {
   findPlaidItemByPlaidItemId,
   upsertPlaidItem,
 } from './item.repository.js';
-import type { ItemTransactionsSyncResult, PlaidItemDocument } from './types.js';
+import type { ItemTransactionsSyncResult } from './types.js';
+import type { PlaidItemWithId } from '../data/types.js';
+import { BadRequestError, NotFoundError } from '../errors/http-error.js';
 
-export const linkPlaidItem = async (
-  db: Db,
-  input: {
-    userId: string;
-    plaidItemId: string;
-    accessToken: string;
-  },
-): Promise<PlaidItemDocument> => {
+export const linkPlaidItem = async (input: {
+  userId: string;
+  plaidItemId: string;
+  accessToken: string;
+}): Promise<PlaidItemWithId> => {
   const { data: itemData } = await plaidClient.itemGet({
     access_token: input.accessToken,
   });
@@ -51,7 +49,7 @@ export const linkPlaidItem = async (
     }
   }
 
-  const item = await upsertPlaidItem(db, {
+  const item = await upsertPlaidItem({
     userId: input.userId,
     plaidItemId: input.plaidItemId,
     accessToken: input.accessToken,
@@ -59,8 +57,8 @@ export const linkPlaidItem = async (
     institutionName,
   });
 
-  await ensureSyncState(db, {
-    itemId: item.resourceId,
+  await ensureSyncState({
+    itemId: item.plaidItemId,
     userId: input.userId,
     plaidItemId: input.plaidItemId,
   });
@@ -69,36 +67,27 @@ export const linkPlaidItem = async (
     access_token: input.accessToken,
   });
 
-  const accounts = await Promise.all(
-    accountsData.accounts.map(async (account) => {
-      const existingResourceId = await findPlaidAccountResourceId(db, account.account_id);
-      return mapPlaidAccountToDocument(
-        account,
-        input.userId,
-        input.plaidItemId,
-        existingResourceId ?? undefined,
-      );
-    }),
+  const accounts = accountsData.accounts.map((account) =>
+    mapPlaidAccountToDocument(account, input.userId, input.plaidItemId),
   );
 
-  await upsertPlaidAccounts(db, accounts);
+  await upsertPlaidAccounts(accounts);
 
   return item;
 };
 
 const syncPlaidItemTransactions = async (
-  db: Db,
-  item: PlaidItemDocument,
+  item: PlaidItemWithId,
 ): Promise<ItemTransactionsSyncResult> => {
   const syncState =
-    (await findSyncStateByItemResourceId(db, item.resourceId)) ??
-    (await ensureSyncState(db, {
-      itemId: item.resourceId,
+    (await findSyncStateByItemId(item.plaidItemId)) ??
+    (await ensureSyncState({
+      itemId: item.plaidItemId,
       userId: item.userId,
       plaidItemId: item.plaidItemId,
     }));
 
-  await markSyncStateSyncing(db, item.resourceId);
+  await markSyncStateSyncing(item.plaidItemId);
 
   const accessToken = getAccessToken(item);
   const addedDocs = [];
@@ -116,13 +105,11 @@ const syncPlaidItemTransactions = async (
       });
 
       const added = await upsertPlaidTransactions(
-        db,
         data.added,
         item.userId,
         item.plaidItemId,
       );
       const modified = await upsertPlaidTransactions(
-        db,
         data.modified,
         item.userId,
         item.plaidItemId,
@@ -132,7 +119,7 @@ const syncPlaidItemTransactions = async (
       modifiedDocs.push(...modified);
 
       if (data.removed.length > 0) {
-        await markPlaidTransactionsRemoved(db, data.removed);
+        await markPlaidTransactionsRemoved(data.removed);
         removed.push(...toRemovedClientTransactions(data.removed));
       }
 
@@ -140,8 +127,8 @@ const syncPlaidItemTransactions = async (
       hasMore = data.has_more;
     }
 
-    await completeSyncState(db, item.resourceId, cursor);
-    await updatePlaidItemLastSync(db, item.resourceId);
+    await completeSyncState(item.plaidItemId, cursor);
+    await updatePlaidItemLastSync(item.plaidItemId);
 
     return {
       item_id: item.plaidItemId,
@@ -150,34 +137,32 @@ const syncPlaidItemTransactions = async (
       removed,
     };
   } catch (err) {
-    await failSyncState(db, item.resourceId);
+    await failSyncState(item.plaidItemId);
     throw err;
   }
 };
 
 export const syncTransactionsForPlaidItemId = async (
-  db: Db,
   plaidItemId: string,
   userId: string,
 ): Promise<ItemTransactionsSyncResult> => {
-  const item = await findPlaidItemByPlaidItemId(db, plaidItemId);
+  const item = await findPlaidItemByPlaidItemId(plaidItemId);
 
   if (!item || item.userId !== userId || item.status !== 'active') {
-    throw new Error(`No linked Plaid item found for item_id: ${plaidItemId}`);
+    throw new NotFoundError(`No linked Plaid item found for item_id: ${plaidItemId}`);
   }
 
-  return syncPlaidItemTransactions(db, item);
+  return syncPlaidItemTransactions(item);
 };
 
 export const syncTransactionsForUser = async (
-  db: Db,
   userId: string,
 ): Promise<ItemTransactionsSyncResult[]> => {
-  const items = await findActivePlaidItemsByUserId(db, userId);
+  const items = await findActivePlaidItemsByUserId(userId);
 
   if (items.length === 0) {
-    throw new Error('No linked bank accounts. Connect a bank account first.');
+    throw new BadRequestError('No linked bank accounts. Connect a bank account first.');
   }
 
-  return Promise.all(items.map((item) => syncPlaidItemTransactions(db, item)));
+  return Promise.all(items.map((item) => syncPlaidItemTransactions(item)));
 };

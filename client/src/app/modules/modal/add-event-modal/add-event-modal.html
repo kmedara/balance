@@ -1,4 +1,7 @@
 <form [formGroup]="form" class="flex min-w-0 flex-col gap-4 p-5" (ngSubmit)="submit()">
+  @if (loading()) {
+    <p class="py-8 text-center text-sm text-surface-500">Loading…</p>
+  } @else {
 
   <div class="flex flex-col gap-1">
 
@@ -232,18 +235,19 @@
 
 
 
-  <p class="min-h-5 text-sm text-red-500" role="alert">{{ errorMessage }}</p>
-
-
+  @if (errorMessage(); as message) {
+    <p class="min-h-5 text-sm text-red-500" role="alert">{{ message }}</p>
+  } @else {
+    <p class="min-h-5" aria-hidden="true"></p>
+  }
 
   <div class="flex justify-end gap-2 pt-2">
+    <p-button size="large"type="button" label="Cancel" severity="secondary" (click)="cancel()" [disabled]="submitting() || loading()" />
 
-    <p-button type="button" label="Cancel" severity="secondary" (click)="cancel()" [disabled]="submitting" />
-
-    <p-button type="button" label="Save {{ eventType }}" icon="pi pi-check" [loading]="submitting" (click)="submit()" />
+    <p-button size="large" type="button" [label]="isEdit ? 'Save changes' : 'Save ' + eventType" icon="pi pi-check" [loading]="submitting()" (click)="submit()" />
 
   </div>
-
+  }
 </form>
 
 

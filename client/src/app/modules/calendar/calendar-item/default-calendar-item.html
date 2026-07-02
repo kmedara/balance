@@ -1,0 +1,10 @@
+<div
+  class="calendar-item calendar-item--default"
+  [pTooltip]="event()?.title ?? event()?.id"
+  tooltipPosition="top"
+  appendTo="body"
+  tooltipStyleClass="calendar-item-tooltip calendar-item-tooltip--neutral"
+>
+  <span class="calendar-item__accent" aria-hidden="true"></span>
+  <span class="calendar-item__title">{{ event()?.title }}</span>
+</div>

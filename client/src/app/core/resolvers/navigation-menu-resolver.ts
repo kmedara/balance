@@ -1,4 +1,4 @@
-import { ResolveFn, Routes } from '@angular/router';
+import { ResolveFn } from '@angular/router';
 import { of } from 'rxjs';
 import { appRoutes } from '@routes/app';
 export type NavigationItem = {
@@ -7,10 +7,7 @@ export type NavigationItem = {
 };
 
 //get routes for navigation
-export const navigationMenuResolver: ResolveFn<NavigationItem[]> = (route, state) => {
-  //@ts-ignore
-
-  //return navigationBuilder(appRoutes()).getLayoutChildrenWithDataNames();
+export const navigationMenuResolver: ResolveFn<NavigationItem[]> = (_route, _state) => {
   const items: NavigationItem[] = appRoutes()
     .find((el) => el.data && el.data['name'] === 'Layout')!
     .children!.filter((el) => el.data && el.data['name'])

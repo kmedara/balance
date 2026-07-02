@@ -6,7 +6,7 @@ import {
   type CipherGCM,
   type DecipherGCM,
 } from 'node:crypto';
-import type { EncryptedValue } from '@kmedara/balance-domain';
+import type { EncryptedValue } from '@balance/domain';
 
 type EncryptionConfig = {
   algorithm: string;

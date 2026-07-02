@@ -1,9 +1,8 @@
-import type { FastifyReply, FastifyRequest } from 'fastify';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
+import { isAuthDisabled } from './config.js';
 import { ForbiddenError, type AuthUser } from './types.js';
-import './types.js';
-
-const isAuthDisabled = (): boolean => process.env.AUTH_DISABLED === 'true';
+import { env} from 'process'
+import { ServiceUnavailableError } from '@src/errors/http-error.js';
 
 const DEV_AUTH_USER: AuthUser = {
   userId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
@@ -16,16 +15,17 @@ let idVerifier: CognitoVerifier | null = null;
 let accessVerifier: CognitoVerifier | null = null;
 
 const getVerifierConfig = () => {
-  const userPoolId = process.env.COGNITO_USER_POOL_ID;
-  const clientId = process.env.COGNITO_CLIENT_ID;
+  const userPoolId = env.COGNITO_USER_POOL_ID;
+  const clientId = env.COGNITO_CLIENT_ID;
 
   if (!userPoolId || !clientId) {
-    throw new ForbiddenError('Authentication is not configured');
+    throw new ServiceUnavailableError('Environment is not configured');
   }
 
   return { userPoolId, clientId };
 };
 
+// ID token: carries user identity claims (e.g. email) and is audience-bound to clientId.
 const getIdVerifier = () => {
   if (idVerifier) return idVerifier;
 
@@ -39,6 +39,7 @@ const getIdVerifier = () => {
   return idVerifier;
 };
 
+// Access token: authorizes API calls (scopes/groups), and typically has no email claim.
 const getAccessVerifier = () => {
   if (accessVerifier) return accessVerifier;
 
@@ -57,63 +58,24 @@ const toAuthUser = (payload: { sub: string; email?: unknown }): AuthUser => ({
   email: typeof payload.email === 'string' ? payload.email : undefined,
 });
 
+export const verifyIdToken = async (token: string): Promise<AuthUser> =>
+  toAuthUser(await getIdVerifier().verify(token));
+
+// Resolves an AuthUser from a raw `Authorization` header value.
+// Business endpoints authorize via the access token only. The ID token is
+// consumed exclusively by the OAuth callback (`verifyIdToken`) to bootstrap
+// the session, keeping the authentication (ID) and authorization (access)
+// concerns separate.
 export const verifyAuthHeader = async (authorization?: string): Promise<AuthUser> => {
+  // Local/dev short-circuit: skip token verification and use a fixed user.
   if (isAuthDisabled()) {
     return DEV_AUTH_USER;
   }
 
+  // Require a bearer token; reject anything else.
   if (!authorization?.startsWith('Bearer ')) {
     throw new ForbiddenError('Missing or invalid Authorization header');
   }
 
-  const token = authorization.slice('Bearer '.length);
-
-  try {
-    return toAuthUser(await getIdVerifier().verify(token));
-  } catch (idError) {
-    try {
-      return toAuthUser(await getAccessVerifier().verify(token));
-    } catch {
-      throw idError;
-    }
-  }
+  return await getAccessVerifier().verify(authorization.slice('Bearer '.length)).then(toAuthUser);
 };
-
-export const authenticateRequest = async (
-  request: FastifyRequest,
-  reply: FastifyReply,
-): Promise<void> => {
-  const path = request.url.split('?')[0] ?? request.url;
-
-  if (
-    path === '/ping' ||
-    path.startsWith('/docs') ||
-    path === '/billing/webhooks/stripe' ||
-    request.method === 'OPTIONS'
-  ) {
-    return;
-  }
-
-  try {
-    request.authUser = await verifyAuthHeader(request.headers.authorization);
-  } catch (err) {
-    const message =
-      err instanceof ForbiddenError
-        ? err.message
-        : err instanceof Error
-          ? err.message
-          : 'Authentication failed';
-    request.log.warn({ err, message }, 'Authentication failed');
-    return reply.status(403).send({ error: 'Forbidden', message });
-  }
-};
-
-export const requireAuthUser = (request: FastifyRequest): AuthUser => {
-  if (!request.authUser) {
-    throw new ForbiddenError('Authentication required');
-  }
-
-  return request.authUser;
-};
-
-export const isAuthenticationEnabled = (): boolean => !isAuthDisabled();

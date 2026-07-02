@@ -8,18 +8,19 @@ import type {
 
   SyncState,
 
-} from '@kmedara/balance-domain';
+} from '@balance/domain';
 
-import type { PlaidTransactionEventDocument } from './event-document.js';
+import type { EventWithId } from '../data/types.js';
+import type { PlaidTransactionEventFields } from './event-document.js';
 
 
 
 
-export type PlaidItemDocument = PlaidItem & MongoTimestamps;
+export type PlaidItemDocument = Omit<PlaidItem, 'resourceId'> & MongoTimestamps;
 
 export type PlaidSyncStateDocument = SyncState & MongoTimestamps;
 
-export type PlaidAccountDocument = PlaidAccount & MongoTimestamps;
+export type PlaidAccountDocument = Omit<PlaidAccount, 'resourceId'> & MongoTimestamps;
 
 
 export type ClientPlaidTransaction = {
@@ -55,3 +56,4 @@ export type ItemTransactionsSyncResult = {
 };
 
 
+export type PlaidTransactionEventWithId = EventWithId<PlaidTransactionEventFields>;

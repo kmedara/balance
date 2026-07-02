@@ -36,6 +36,10 @@
       (onClick)="login()"
     />
 
+    @if (errorMessage(); as message) {
+      <p class="login-card__error" role="alert">{{ message }}</p>
+    }
+
     <p class="login-card__footnote">
       We never store your bank password or sell your data.
     </p>

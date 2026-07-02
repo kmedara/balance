@@ -17,9 +17,11 @@ import {
   MODAL_CONTEXT,
   MODAL_DATA,
   MODAL_ID,
-} from '@modals/modal.token';
+  CreateEventFormPayload,
+  ModalContext,
+  ModalData,
+} from '@modals/modal.context';
 import { Dispatcher } from '@ngrx/signals/events';
-import { CreateEventFormPayload, ModalContext, ModalData } from '@modals/modal.context';
 import { ModalEvents, ModalStore } from '@modals/modal.store';
 
 @Component({
@@ -29,7 +31,7 @@ import { ModalEvents, ModalStore } from '@modals/modal.store';
   styleUrl: './modal-shell.scss',
   standalone: true,
 })
-export class ModalShell {
+export class ModalShell implements AfterViewInit {
   private readonly modalStore = inject(ModalStore);
   private readonly dispatcher = inject(Dispatcher);
 
@@ -49,7 +51,7 @@ export class ModalShell {
     return typeof this.config.header === 'string' ? this.config.header : null;
   }
 
-  get headerComponent(): Type<unknown> | null {
+  get headerComponent(): Type<unknown> | null{
     return typeof this.config.header === 'function' ? this.config.header : null;
   }
 

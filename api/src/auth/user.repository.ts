@@ -1,8 +1,10 @@
-import type { Db } from 'mongodb';
-import { randomUUID } from 'node:crypto';
+import { GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import type { AuthUser } from './types.js';
-
-export const USERS_COLLECTION = 'users';
+import { getDocClient } from '../dynamo/client.js';
+import { buildProfileItem, toUserDocument } from '../dynamo/entities.js';
+import { profileSk, userPk } from '../dynamo/keys.js';
+import { serializeRecord } from '../dynamo/helpers.js';
+import { getTableName } from '../dynamo/tables.js';
 
 export type SubscriptionTier = 'free' | 'plus' | 'pro';
 
@@ -27,7 +29,6 @@ export const DEFAULT_SUBSCRIPTION: UserSubscription = {
 };
 
 export type UserDocument = {
-  resourceId: `${string}-${string}-${string}-${string}-${string}`;
   cognitoSub: string;
   email?: string;
   stripeCustomerId?: string;
@@ -36,53 +37,36 @@ export type UserDocument = {
   updatedAt: Date;
 };
 
-type UserCollectionDocument = UserDocument & { _id?: unknown };
-
 const normalizeSubscription = (subscription?: UserSubscription): UserSubscription => ({
   ...DEFAULT_SUBSCRIPTION,
   ...subscription,
 });
 
-export const ensureUserIndexes = async (db: Db): Promise<void> => {
-  await db.collection(USERS_COLLECTION).createIndex({ cognitoSub: 1 }, { unique: true });
-  await db.collection(USERS_COLLECTION).createIndex({ resourceId: 1 }, { unique: true });
-  await db.collection(USERS_COLLECTION).createIndex({ stripeCustomerId: 1 }, { sparse: true });
-  await db.collection(
-    USERS_COLLECTION,
-  ).createIndex({ 'subscription.stripeSubscriptionId': 1 }, { sparse: true });
-  if (process.env.AUTH_DISABLED !== 'true') {
-    await db.collection(USERS_COLLECTION).createIndex({ email: 1 }, { sparse: true });
-  }
-};
+const table = (): string => getTableName();
 
 export const findUserByCognitoSub = async (
-  db: Db,
   cognitoSub: string,
-): Promise<UserDocument | null> => {
-  const doc = await db
-    .collection<UserCollectionDocument>(USERS_COLLECTION)
-    .findOne({ cognitoSub });
+): Promise<UserDocument | undefined> => {
+  const result = await getDocClient().send(
+    new GetCommand({
+      TableName: table(),
+      Key: { PK: userPk(cognitoSub), SK: profileSk() },
+      // Auth runs on every request and may read right after upsert; a consistent
+      // read avoids a stale profile / missing subscription on first calls.
+      ConsistentRead: true,
+    }),
+  );
 
-  if (!doc) return null;
-
-  const { _id, subscription, ...user } = doc;
-  return { ...user, subscription: normalizeSubscription(subscription) };
+  return result.Item ? toUserDocument(result.Item) : undefined;
 };
 
 export const upsertUserFromAuth = async (
-  db: Db,
   authUser: AuthUser,
   now = new Date(),
 ): Promise<UserDocument> => {
-  const existing = await db
-    .collection<UserCollectionDocument>(USERS_COLLECTION)
-    .findOne({ cognitoSub: authUser.userId });
-
-  const resourceId =
-    existing?.resourceId ?? (randomUUID() as UserDocument['resourceId']);
+  const existing = await findUserByCognitoSub(authUser.userId);
 
   const document: UserDocument = {
-    resourceId,
     cognitoSub: authUser.userId,
     email: authUser.email,
     stripeCustomerId: existing?.stripeCustomerId,
@@ -91,22 +75,27 @@ export const upsertUserFromAuth = async (
     updatedAt: now,
   };
 
-  await db.collection<UserCollectionDocument>(USERS_COLLECTION).updateOne(
-    { cognitoSub: authUser.userId },
-    {
-      $set: {
-        email: document.email,
-        updatedAt: now,
-      },
-      $setOnInsert: {
-        resourceId: document.resourceId,
-        cognitoSub: document.cognitoSub,
-        subscription: DEFAULT_SUBSCRIPTION,
-        createdAt: now,
-      },
-    },
-    { upsert: true },
-  );
+  if (existing) {
+    await getDocClient().send(
+      new UpdateCommand({
+        TableName: table(),
+        Key: { PK: userPk(authUser.userId), SK: profileSk() },
+        UpdateExpression: 'SET email = :email, updatedAt = :updatedAt',
+        ExpressionAttributeValues: serializeRecord({
+          ':email': document.email,
+          ':updatedAt': now,
+        }),
+      }),
+    );
+  } else {
+    await getDocClient().send(
+      new PutCommand({
+        TableName: table(),
+        Item: buildProfileItem(document),
+        ConditionExpression: 'attribute_not_exists(PK)',
+      }),
+    );
+  }
 
   return document;
 };

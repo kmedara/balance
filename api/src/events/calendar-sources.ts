@@ -1,18 +1,13 @@
-import type { EventDocument } from '@kmedara/balance-domain/data/event-document';
-import type { EventOccurrenceDocument } from '@kmedara/balance-domain';
+import type { EventWithId } from '../data/types.js';
 import { isPlaidTransactionEvent, toPlaidCalendarEvent } from '../plaid/calendar.mapper.js';
-import {
-  getOccurrencesForDay,
-  resolveOccurrencesToEvents,
-} from './calendar.utils.js';
+import { getEventsForDay } from './calendar.utils.js';
 
-export type CalendarDayEvent = EventDocument;
+export type CalendarDayEvent = EventWithId;
 
 export const resolveDayCalendarEvents = (
   dayDate: Date,
-  occurrences: EventOccurrenceDocument[],
-  eventsById: ReadonlyMap<string, EventDocument>,
+  events: EventWithId[],
 ): CalendarDayEvent[] =>
-  resolveOccurrencesToEvents(getOccurrencesForDay(dayDate, occurrences), eventsById).map(
-    (event) => (isPlaidTransactionEvent(event) ? toPlaidCalendarEvent(event) : event),
+  getEventsForDay(dayDate, events).map((event) =>
+    isPlaidTransactionEvent(event) ? toPlaidCalendarEvent(event) : event,
   );

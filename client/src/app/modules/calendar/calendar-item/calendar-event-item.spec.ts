@@ -14,7 +14,7 @@ describe('CalendarEventItem', () => {
     fixture = TestBed.createComponent(CalendarEventItem);
     component = fixture.componentInstance;
     fixture.componentRef.setInput('event', {
-      resourceId: 'test-id',
+      id: '507f1f77bcf86cd799439011',
       eventType: 'budget',
       title: 'Test',
       amount: 100,

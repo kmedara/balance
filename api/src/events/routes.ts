@@ -1,47 +1,50 @@
-import type { FastifyInstance } from 'fastify';
-import type { EventDocument } from '@kmedara/balance-domain';
-import { requireAuthUser } from '../auth/cognito.js';
-import {
-  bearerSecurity,
-  errorResponseSchema,
-} from '../swagger/schemas.js';
+import type { FastifyPluginAsyncTypebox, TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
+
+import { bearerSecurity, problemDetailsSchema } from "../swagger/schemas.js";
+
+import { BadRequestError, NotFoundError } from "../errors/http-error.js";
+
 import {
   calendarQuerySchema,
   calendarResponseSchema,
   createEventBodySchema,
   createEventResponseSchema,
-} from './schemas.js';
+  eventIdParamSchema,
+  eventResponseSchema,
+  patchEventBodySchema,
+} from "./schemas.js";
+
 import {
   buildMonthCalendarFromDayEvents,
   gridDateRange,
   toJsonCalendarResponse,
-} from './calendar.utils.js';
-import { resolveDayCalendarEvents } from './calendar-sources.js';
-import { createEventForUser, validateCreateEventBody } from './create-event.js';
-import { findEventsByResourceIds } from './repository.js';
-import { findOccurrencesInRange } from './occurrence.repository.js';
+} from "./calendar.utils.js";
 
-const parseMonthQuery = (value: unknown): number | null => {
-  const month = Number(value);
-  if (!Number.isInteger(month) || month < 1 || month > 12) return null;
-  return month - 1;
-};
+import { resolveDayCalendarEvents } from "./calendar-sources.js";
 
-const parseYearQuery = (value: unknown): number | null => {
-  const year = Number(value);
-  if (!Number.isInteger(year) || year < 1970 || year > 3000) return null;
-  return year;
-};
+import { createEventForUser } from "./create-event.js";
+
+import { updateEventForUser } from "./update-event.js";
+
+import { findActiveEventsForCalendar, findEventById } from "./repository.js";
+
+import type { EventWithId } from "../data/types.js";
+
+import { isValidId } from "../data/id.js";
 
 const parseEventTypes = (value: unknown): string[] | undefined => {
   if (value === undefined) return undefined;
 
   const raw = Array.isArray(value) ? value : [value];
+
   const eventTypes = [
     ...new Set(
       raw
-        .flatMap((entry) => String(entry).split(','))
+
+        .flatMap((entry) => String(entry).split(","))
+
         .map((entry) => entry.trim())
+
         .filter(Boolean),
     ),
   ];
@@ -49,111 +52,202 @@ const parseEventTypes = (value: unknown): string[] | undefined => {
   return eventTypes.length > 0 ? eventTypes : undefined;
 };
 
-const isRemovedEvent = (event: EventDocument): boolean =>
-  'removed' in event && Boolean((event as { removed?: boolean }).removed);
+const isRemovedEvent = (event: EventWithId): boolean =>
+  "removed" in event && Boolean((event as { removed?: boolean }).removed);
 
-const toCreateEventResponse = (event: EventDocument) => ({
-  resourceId: event.resourceId,
-  eventType: event.eventType,
-  rrule: event.rrule,
-  dtstart: event.dtstart,
+const formatEventDtstart = (value: EventWithId["dtstart"]): string => {
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  if (value !== undefined) {
+    return String(value);
+  }
+
+  throw new Error("Event missing dtstart");
+};
+
+const toCreateEventResponse = (event: EventWithId) => ({
   ...Object.fromEntries(
     Object.entries(event).filter(
       ([key]) =>
-        !['resourceId', 'eventType', 'rrule', 'dtstart', 'userId', 'createdAt', 'updatedAt'].includes(
-          key,
-        ),
+        ![
+          "id",
+          "eventType",
+          "rrule",
+          "dtstart",
+          "userId",
+          "createdAt",
+          "updatedAt",
+        ].includes(key),
     ),
   ),
+  id: event.id,
+  eventType: event.eventType,
+  rrule: event.rrule,
+  dtstart: formatEventDtstart(event.dtstart),
 });
 
-export const eventRoutes = async (app: FastifyInstance) => {
-  app.post('/', {
+export const eventRoutes: FastifyPluginAsyncTypebox = async (app) => {
+  app.withTypeProvider<TypeBoxTypeProvider>().post("/", {
     schema: {
-      tags: ['Events'],
-      summary: 'Create a recurring event',
+      tags: ["Events"],
+
+      summary: "Create a recurring event",
+
       description:
-        'Creates an event in the events collection and materializes occurrences. Budget events require title, type, amount, and category.',
+        "Creates an event. Budget events require title, type, amount, and category.",
+
       security: bearerSecurity,
+
       body: createEventBodySchema,
+
       response: {
         201: createEventResponseSchema,
-        400: errorResponseSchema,
-        403: errorResponseSchema,
+
+        400: problemDetailsSchema,
+
+        403: problemDetailsSchema,
       },
     },
+
     handler: async (request, reply) => {
-      const parsed = validateCreateEventBody(request.body);
-      if ('error' in parsed) {
-        return reply.status(400).send({ error: parsed.error });
+      const body = request.body;
+
+      if (!body.rrule?.trim() && !body.frequency) {
+        throw new BadRequestError("Provide rrule or frequency for recurring events");
       }
 
-      const user = requireAuthUser(request);
-      const db = app.mongo.db ?? app.mongo.client.db('balance');
-      const event = await createEventForUser(db, user.userId, parsed);
+      const event = await createEventForUser(request.user.userId, body);
 
       return reply.status(201).send(toCreateEventResponse(event));
     },
   });
 
-  app.get('/calendar', {
+  app.withTypeProvider<TypeBoxTypeProvider>().get("/calendar", {
     schema: {
-      tags: ['Events'],
-      summary: 'Month calendar grid',
-      description: 'Returns a padded month grid with events resolved from event_occurrences.',
+      tags: ["Events"],
+
+      summary: "Month calendar grid",
+
+      description:
+        "Returns a padded month grid with events expanded from stored recurrence rules.",
+
       security: bearerSecurity,
+
       querystring: calendarQuerySchema,
+
       response: {
         200: calendarResponseSchema,
-        400: errorResponseSchema,
-        403: errorResponseSchema,
+
+        400: problemDetailsSchema,
+
+        403: problemDetailsSchema,
       },
     },
-    handler: async (req, reply) => {
-      const query = req.query as {
-        year?: string;
-        month?: string;
-        eventType?: string | string[];
-        eventTypes?: string | string[];
-      };
+
+    handler: async (request) => {
       const now = new Date();
-      const year = parseYearQuery(query.year) ?? now.getFullYear();
-      const monthIndex = parseMonthQuery(query.month) ?? now.getMonth();
-      const eventTypes = parseEventTypes(query.eventTypes ?? query.eventType);
 
-      if (query.year !== undefined && parseYearQuery(query.year) === null) {
-        return reply.status(400).send({ error: 'Invalid year query param' });
-      }
-      if (query.month !== undefined && parseMonthQuery(query.month) === null) {
-        return reply.status(400).send({ error: 'Invalid month query param (use 1–12)' });
-      }
+      const year = request.query.year ?? now.getFullYear();
 
-      const user = requireAuthUser(req);
-      const db = app.mongo.db ?? app.mongo.client.db('balance');
+      const monthIndex = (request.query.month ?? now.getMonth() + 1) - 1;
+
+      const eventTypes = parseEventTypes(request.query.eventType);
+
       const { gridStart, gridEnd } = gridDateRange(year, monthIndex);
 
-      const occurrences = await findOccurrencesInRange(
-        db,
+      const events = await findActiveEventsForCalendar(
+        request.user.userId,
         gridStart,
         gridEnd,
         eventTypes,
-        user.userId,
-      );
-
-      const eventIds = [...new Set(occurrences.map((o) => o.eventResourceId))];
-      const events = await findEventsByResourceIds<EventDocument>(db, eventIds, {
-        userId: user.userId,
-        ...(eventTypes !== undefined ? { eventTypes } : {}),
-      });
-      const eventsById = new Map(
-        events.filter((event) => !isRemovedEvent(event)).map((event) => [event.resourceId, event]),
       );
 
       return toJsonCalendarResponse(
         buildMonthCalendarFromDayEvents(year, monthIndex, (dayDate) =>
-          resolveDayCalendarEvents(dayDate, occurrences, eventsById),
+          resolveDayCalendarEvents(dayDate, events),
         ),
       );
+    },
+  });
+
+  app.get("/:id", {
+    schema: {
+      tags: ["Events"],
+
+      summary: "Get event by id",
+
+      description: "Returns a single event owned by the authenticated user.",
+
+      security: bearerSecurity,
+
+      params: eventIdParamSchema,
+
+      response: {
+        200: eventResponseSchema,
+
+        400: problemDetailsSchema,
+
+        403: problemDetailsSchema,
+
+        404: problemDetailsSchema,
+      },
+    },
+
+    handler: async (request) => {
+      const { id } = request.params;
+
+      if (!isValidId(id)) {
+        throw new BadRequestError("Invalid event id");
+      }
+
+      const event = await findEventById(id, { userId: request.user.userId });
+
+      if (isRemovedEvent(event)) {
+        throw new NotFoundError("Event not found");
+      }
+
+      return toCreateEventResponse(event);
+    },
+  });
+
+  app.patch("/:id", {
+    schema: {
+      tags: ["Events"],
+
+      summary: "Update event by id",
+
+      description:
+        'Updates a budget event. Plaid events cannot be updated.',
+
+      security: bearerSecurity,
+
+      params: eventIdParamSchema,
+
+      body: patchEventBodySchema,
+
+      response: {
+        200: eventResponseSchema,
+
+        400: problemDetailsSchema,
+
+        403: problemDetailsSchema,
+
+        404: problemDetailsSchema,
+      },
+    },
+
+    handler: async (request) => {
+      const { id } = request.params;
+
+      if (!isValidId(id)) {
+        throw new BadRequestError("Invalid event id");
+      }
+
+      const result = await updateEventForUser(request.user.userId, id, request.body);
+
+      return toCreateEventResponse(result);
     },
   });
 };

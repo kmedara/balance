@@ -1,0 +1,272 @@
+// item base
+:host {
+  display: block;
+  width: 100%;
+}
+
+.calendar-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.375rem;
+  width: 100%;
+  min-height: 1.5rem;
+  padding: 0.125rem 0.375rem 0.125rem 0.25rem;
+  border: 1px solid transparent;
+  border-radius: var(--bar-radius, 6px);
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  cursor: default;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.calendar-item__accent {
+  width: 3px;
+  height: 0.75rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.calendar-item__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.calendar-item__amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+// item income
+.calendar-item--income {
+  --item-accent: var(--income-color);
+  --item-bg: color-mix(in srgb, var(--income-color) 10%, var(--p-surface-0));
+  --item-border: color-mix(in srgb, var(--income-color) 24%, transparent);
+  --item-text: var(--p-text-color);
+  --item-amount: color-mix(in srgb, var(--income-color) 78%, var(--p-text-color));
+
+  background: var(--item-bg);
+  border-color: var(--item-border);
+  color: var(--item-text);
+
+  .calendar-item__accent {
+    background: var(--item-accent);
+  }
+
+  .calendar-item__amount::before {
+    content: '+';
+    margin-right: 1px;
+    color: var(--income-color);
+    font-weight: 600;
+  }
+
+  .calendar-item__amount {
+    color: var(--item-amount);
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--income-color) 16%, var(--p-surface-0));
+    border-color: color-mix(in srgb, var(--income-color) 38%, transparent);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--income-color) 18%, transparent);
+  }
+}
+
+// item expense
+.calendar-item--expense {
+  --item-accent: var(--expense-color);
+  --item-bg: color-mix(in srgb, var(--expense-color) 10%, var(--p-surface-0));
+  --item-border: color-mix(in srgb, var(--expense-color) 24%, transparent);
+  --item-text: var(--p-text-color);
+  --item-amount: color-mix(in srgb, var(--expense-color) 78%, var(--p-text-color));
+
+  background: var(--item-bg);
+  border-color: var(--item-border);
+  color: var(--item-text);
+
+  .calendar-item__accent {
+    background: var(--item-accent);
+  }
+
+  .calendar-item__amount::before {
+    content: '−';
+    margin-right: 1px;
+    color: var(--expense-color);
+    font-weight: 600;
+  }
+
+  .calendar-item__amount {
+    color: var(--item-amount);
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--expense-color) 16%, var(--p-surface-0));
+    border-color: color-mix(in srgb, var(--expense-color) 38%, transparent);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--expense-color) 18%, transparent);
+  }
+}
+
+// item neutral
+.calendar-item--neutral {
+  --item-accent: var(--p-surface-500);
+  --item-bg: var(--p-surface-50);
+  --item-border: var(--p-surface-200);
+  --item-text: var(--p-text-color);
+  --item-amount: var(--p-text-muted-color);
+
+  background: var(--item-bg);
+  border-color: var(--item-border);
+  color: var(--item-text);
+
+  .calendar-item__accent {
+    background: var(--item-accent);
+  }
+
+  .calendar-item__amount {
+    color: var(--item-amount);
+  }
+
+  &:hover {
+    background: var(--p-surface-100);
+    border-color: var(--p-surface-300);
+    box-shadow: 0 1px 2px rgb(15 23 42 / 6%);
+  }
+}
+
+// tooltip base
+.calendar-item__tooltip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 10rem;
+  max-width: 14rem;
+}
+
+.calendar-item__tooltip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.calendar-item__tooltip-type {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.375rem;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.calendar-item__tooltip-amount {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.calendar-item__tooltip-title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.calendar-item__tooltip-description {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--p-text-muted-color);
+}
+
+.calendar-item__tooltip-category {
+  align-self: flex-start;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+:host ::ng-deep .calendar-item-tooltip.p-tooltip .p-tooltip-text {
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--p-surface-0);
+  color: var(--p-text-color);
+  box-shadow:
+    0 4px 6px -1px rgb(15 23 42 / 8%),
+    0 2px 4px -2px rgb(15 23 42 / 6%);
+}
+
+// tooltip income
+.calendar-item__tooltip--income {
+  .calendar-item__tooltip-type {
+    color: var(--income-color);
+    background: color-mix(in srgb, var(--income-color) 14%, transparent);
+  }
+
+  .calendar-item__tooltip-amount {
+    color: var(--income-color);
+  }
+
+  .calendar-item__tooltip-category {
+    background: color-mix(in srgb, var(--income-color) 10%, var(--p-surface-0));
+    color: color-mix(in srgb, var(--income-color) 70%, var(--p-text-color));
+  }
+}
+
+:host ::ng-deep .calendar-item-tooltip--income.p-tooltip .p-tooltip-text {
+  border: 1px solid color-mix(in srgb, var(--income-color) 22%, var(--p-surface-200));
+  border-left: 3px solid var(--income-color);
+}
+
+// tooltip expense
+.calendar-item__tooltip--expense {
+  .calendar-item__tooltip-type {
+    color: var(--expense-color);
+    background: color-mix(in srgb, var(--expense-color) 14%, transparent);
+  }
+
+  .calendar-item__tooltip-amount {
+    color: var(--expense-color);
+  }
+
+  .calendar-item__tooltip-category {
+    background: color-mix(in srgb, var(--expense-color) 10%, var(--p-surface-0));
+    color: color-mix(in srgb, var(--expense-color) 70%, var(--p-text-color));
+  }
+}
+
+:host ::ng-deep .calendar-item-tooltip--expense.p-tooltip .p-tooltip-text {
+  border: 1px solid color-mix(in srgb, var(--expense-color) 22%, var(--p-surface-200));
+  border-left: 3px solid var(--expense-color);
+}
+
+// tooltip neutral
+.calendar-item__tooltip--neutral {
+  .calendar-item__tooltip-type {
+    color: var(--p-text-muted-color);
+    background: var(--p-surface-100);
+  }
+
+  .calendar-item__tooltip-amount {
+    color: var(--p-text-color);
+  }
+
+  .calendar-item__tooltip-category {
+    background: var(--p-surface-100);
+    color: var(--p-text-muted-color);
+  }
+}
+
+:host ::ng-deep .calendar-item-tooltip--neutral.p-tooltip .p-tooltip-text {
+  border: 1px solid var(--p-surface-200);
+  border-left: 3px solid var(--p-surface-400);
+}

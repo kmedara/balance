@@ -1,0 +1,29 @@
+# Dependencies and build output
+**/node_modules
+**/dist
+**/.angular
+**/out-tsc
+**/.cache
+**/.tmp
+**/coverage
+
+# Environment and logs
+**/*.env*
+!**/*.env.production
+**/*.log
+
+# IDE and OS files
+**/.vscode
+**/.idea
+**/.DS_Store
+**/Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Docker (not needed in build context)
+**/Dockerfile
+**/Dockerfile.*
+**/.dockerignore
+**/docker-compose*.yml

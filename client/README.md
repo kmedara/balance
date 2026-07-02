@@ -1,76 +1,188 @@
-- [Balance](#balance)
-  - [Development server](#development-server)
-  - [Code scaffolding](#code-scaffolding)
-  - [Building](#building)
-  - [Running unit tests](#running-unit-tests)
-  - [Running end-to-end tests](#running-end-to-end-tests)
-  - [Additional Resources](#additional-resources)
-  - [Docker](#docker)
+# Balance Client
 
-# Balance
+Angular 21 single-page app for the Balance calendar. Talks to the API over HTTP with credentials (session cookies). No direct Cognito or Plaid server configuration — auth and Link token creation happen on the API.
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.7.
+## Stack
 
-## Development server
+- **Angular 21** with standalone components, signals, and SSR
+- **PrimeNG** + **Tailwind CSS** for UI
+- **NgRx Signals** for calendar state
+- **Vitest** for unit tests
+- **Shared types:** [`@balance/domain`](../packages/domain) via [`@core/domain`](src/app/core/domain.ts)
 
-To start a local development server, run:
+## Local setup
 
-```bash
-ng serve
-```
+### With Docker (recommended)
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+From the repo root:
 
 ```bash
-ng generate component component-name
+npm install
+./deploy.sh
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+The client container serves at http://localhost:4200 with file sync for `client/` and `packages/domain/`.
+
+### On the host
 
 ```bash
-ng generate --help
+# from repo root
+npm install
+npm run build:domain
+
+cd client
+export GATEWAY=http://localhost:3000
+export AUTH_DISABLED=true
+npm start
 ```
+
+`prestart` runs [`scripts/write-environment.mjs`](scripts/write-environment.mjs), which generates the active environment file from env vars.
+
+## Environment configuration
+
+The client reads **two env vars** at build/start time:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GATEWAY` | `http://localhost:3000` | API base URL baked into the app |
+| `AUTH_DISABLED` | `false` in prod; from env in dev | When `true`, skips redirect to API login |
+
+Generated files (do not edit by hand):
+
+- **Development:** `src/environments/environment.development.ts`
+- **Production:** `src/environments/environment.production.ts`
+
+Type definition: [`src/environments/environment.types.ts`](src/environments/environment.types.ts).
+
+### Docker / deploy.sh
+
+Docker Compose passes [`.env.local.secrets`](../.env.local.secrets) to the client container. Ensure `GATEWAY` points at the API (`http://localhost:3000` locally).
+
+### Production builds
+
+`GATEWAY` is **required** when `BUILD_CONFIGURATION=production`:
+
+```bash
+GATEWAY=https://api.example.com npm run build -- --configuration production
+```
+
+## NPM scripts
+
+Run from repo root with `-w balance`, or from `client/`:
+
+| Script | Description |
+|--------|-------------|
+| `npm start` | Dev server on port 4200 (`prestart` writes environment) |
+| `npm run build` | Production build → `dist/balance/` |
+| `npm run watch` | Dev build in watch mode |
+| `npm run lint` | ESLint (Angular + TypeScript) |
+| `npm run test` | Vitest unit tests |
+| `npm run serve:ssr:angular` | Run SSR server from build output |
+
+## Shared domain types
+
+Import calendar/budget types from `@core/domain`, not directly from `@balance/domain`:
+
+```typescript
+import type { CalendarEvent, Budget } from '@core/domain';
+```
+
+`@core/domain` re-exports the client-safe entry that avoids pulling rrule runtime into the bundle.
+
+After editing [`packages/domain`](../packages/domain):
+
+```bash
+npm run build:domain
+```
+
+## Testing
+
+Unit tests use **Vitest** with jsdom. Config: [`vitest.config.ts`](vitest.config.ts).
+
+```bash
+npm run test -w balance          # run once
+npm run test -w balance -- --ui # Vitest UI (if installed)
+```
+
+Test files: `**/*.spec.ts` under `src/`.
+
+```bash
+npm run lint -w balance
+npm run build -w balance
+```
+
+There is no e2e suite configured yet.
 
 ## Building
 
-To build the project run:
-
 ```bash
-ng build
+# development (default)
+npm run build -w balance
+
+# production
+cd client
+BUILD_CONFIGURATION=production GATEWAY=https://api.example.com npm run build -- --configuration production
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Output: `client/dist/balance/browser/` (static assets) and `client/dist/balance/server/` (SSR).
 
-### Docker
+## Deployment
 
-https://docs.docker.com/guides/angular/containerize/#step-2-configure-the-dockerfile
+Production hosting is **S3 + CloudFront**, provisioned by CDK (`BalanceClientStack`). The built SPA is uploaded by GitHub Actions — the CDK stack does not embed build artifacts.
 
-## Running unit tests
+### CI workflow
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+[`.github/workflows/client.yml`](../.github/workflows/client.yml):
+
+| Trigger | Action |
+|---------|--------|
+| Push to `master` (client/domain changes) | Build production client, deploy stack, sync to S3, invalidate CloudFront |
+| Manual `workflow_dispatch` | Same, with optional `api_base_url` input |
+
+**Required GitHub configuration:**
+
+| Type | Name | Description |
+|------|------|-------------|
+| Secret | `AWS_DEPLOY_ROLE_ARN` | OIDC deploy role from `BalanceGitHubOidcStack` |
+| Variable | `API_BASE_URL` | Production API URL baked into `GATEWAY` |
+| Variable | `AWS_REGION` | Deploy region (default `us-east-1`) |
+
+Environment: **`development`** (must match OIDC trust policy).
+
+### Manual deploy
 
 ```bash
-ng test
+# from repo root
+npm ci
+BUILD_CONFIGURATION=production GATEWAY=https://api.example.com npm run build -w balance
+
+cd infrastructure
+npm run deploy:client
+# sync dist/balance/browser to the stack's S3 bucket + invalidate CloudFront
 ```
 
-## Running end-to-end tests
+See [`infrastructure/README.md`](../infrastructure/README.md) for stack outputs (`BucketName`, `DistributionId`).
 
-For end-to-end (e2e) testing, run:
+### Docker production image
+
+[`Dockerfile.prod`](Dockerfile.prod) builds the Angular app and serves static files with nginx on port 8080. Build context is the **repo root** (monorepo workspace).
 
 ```bash
-ng e2e
+docker build -f client/Dockerfile.prod -t balance-client .
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## Project structure
 
-## Additional Resources
+| Path | Purpose |
+|------|---------|
+| `src/app/core/` | Auth, gateway HTTP, guards, layout |
+| `src/app/modules/calendar/` | Calendar view and event items |
+| `src/app/modules/modal/` | Add/edit event modals |
+| `src/app/modules/plaid/` | Plaid Link integration |
+| `src/app/routes/` | Route definitions |
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Additional resources
 
-## Docker
-
-https://docs.docker.com/guides/angular/containerize/
+- [Angular CLI documentation](https://angular.dev/tools/cli)
+- [Root README](../readme.md) — monorepo setup and secrets
+- [API README](../api/README.md) — auth flow and API routes

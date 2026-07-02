@@ -24,6 +24,12 @@
       "@guards/*" : ["src/app/core/guards/*"],
       "@routes/*" : ["src/app/routes/*"],
       "@core/*" : ["src/app/core/*"],
+      "@balance/domain": ["../packages/domain/src/index.ts"],
+      "@balance/domain/*": ["../packages/domain/src/*"],
+      "@balance/domain/client": ["../packages/domain/src/client.ts"],
+      "@balance/schemas": ["../packages/schemas/src/index.ts"],
+      "@balance/schemas/*": ["../packages/schemas/src/*"],
+      "@balance/schemas/client": ["../packages/schemas/src/client.ts"],
     }
   },
   "angularCompilerOptions": {

@@ -1,7 +1,7 @@
-import type { Db } from 'mongodb';
 import Stripe from 'stripe';
-import { getStripeEnv, assertKnownPriceId } from './env.helper.js';
+import { getStripeEnv, assertKnownPriceId } from './constants.js';
 import { setStripeCustomerId } from './repository.js';
+import { ServiceUnavailableError } from '@src/errors/http-error.js';
 
 let stripeClient: Stripe | null = null;
 
@@ -23,7 +23,6 @@ export type CheckoutSessionInput = {
 };
 
 export const ensureStripeCustomer = async (
-  db: Db,
   input: Pick<CheckoutSessionInput, 'cognitoSub' | 'email' | 'stripeCustomerId'>,
 ): Promise<string> => {
   if (input.stripeCustomerId) return input.stripeCustomerId;
@@ -34,19 +33,18 @@ export const ensureStripeCustomer = async (
     metadata: { cognitoSub: input.cognitoSub },
   });
 
-  await setStripeCustomerId(db, input.cognitoSub, customer.id);
+  await setStripeCustomerId(input.cognitoSub, customer.id);
   return customer.id;
 };
 
 export const createCheckoutSession = async (
-  db: Db,
   input: CheckoutSessionInput,
 ): Promise<{ url: string }> => {
   assertKnownPriceId(input.priceId);
 
   const stripe = getStripeClient();
   const env = getStripeEnv();
-  const customerId = await ensureStripeCustomer(db, input);
+  const customerId = await ensureStripeCustomer(input);
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
@@ -63,7 +61,7 @@ export const createCheckoutSession = async (
   });
 
   if (!session.url) {
-    throw new Error('Stripe Checkout session did not return a URL');
+    throw new ServiceUnavailableError('Stripe Checkout session did not return a URL, please try again later');
   }
 
   return { url: session.url };

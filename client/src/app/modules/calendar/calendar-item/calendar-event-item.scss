@@ -1,0 +1,18 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.calendar-event-item--editable {
+  cursor: pointer;
+  border-radius: var(--bar-radius, 6px);
+}
+
+.calendar-event-item--editable:focus-visible {
+  outline: 2px solid var(--p-primary-color);
+  outline-offset: 1px;
+}
+
+.calendar-event-item--editable ::ng-deep .calendar-item {
+  cursor: pointer;
+}

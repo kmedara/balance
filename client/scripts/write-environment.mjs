@@ -3,28 +3,25 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const target = path.join(__dirname, '../src/environments/environment.development.ts');
+const environmentsDir = path.join(__dirname, '../src/environments');
 
-const authDisabled = process.env.AUTH_DISABLED === 'true';
+const configuration = process.env.BUILD_CONFIGURATION ?? 'development';
+const isProduction = configuration === 'production';
 
-if (!authDisabled && (!process.env.COGNITO_AUTHORITY || !process.env.COGNITO_CLIENT_ID)) {
-  console.warn(
-    'AUTH_DISABLED is false but COGNITO_AUTHORITY or COGNITO_CLIENT_ID is missing — OAuth will not work',
-  );
+// Production replaces environment.ts (see angular.json production fileReplacements);
+// development overwrites the generated environment.development.ts.
+const target = path.join(
+  environmentsDir,
+  isProduction ? 'environment.production.ts' : 'environment.development.ts',
+);
+
+if (isProduction && !process.env.GATEWAY) {
+  throw new Error('GATEWAY must be set for a production environment build');
 }
 
 const environment = {
   GATEWAY: process.env.GATEWAY ?? 'http://localhost:3000',
-  authDisabled,
-  cognito: {
-    authority: process.env.COGNITO_AUTHORITY ?? '',
-    clientId: process.env.COGNITO_CLIENT_ID ?? '',
-    redirectUri: process.env.COGNITO_REDIRECT_URI ?? 'http://localhost:4200/auth/callback',
-    postLogoutRedirectUri: process.env.COGNITO_LOGOUT_URI ?? 'http://localhost:4200/',
-    scope: 'openid email profile',
-    responseType: 'code',
-    showDebugInformation: true,
-  },
+  authDisabled: isProduction ? false : process.env.AUTH_DISABLED === 'true',
 };
 
 const contents = `import type { Environment } from './environment.types';
@@ -33,4 +30,6 @@ export const environment: Environment = ${JSON.stringify(environment, null, 2)};
 `;
 
 fs.writeFileSync(target, contents);
-console.log(`Wrote ${target} (authDisabled=${authDisabled})`);
+console.log(
+  `Wrote ${target} (configuration=${configuration}, authDisabled=${environment.authDisabled})`,
+);

@@ -1,4 +1,4 @@
-import type { EventDocument } from '@kmedara/balance-domain/data/event-document';
+import type { EventDocument } from '@balance/domain';
 
 export type PlaidTransactionEventFields = {
   title: string;

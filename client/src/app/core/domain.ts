@@ -1,9 +1,39 @@
 /**
- * Client-safe re-exports from balance-domain.
- * Avoids the main entry, which pulls in rrule expansion (default import incompatible with ESM).
+ * Wire types from @balance/schemas and runtime helpers from @balance/domain.
  */
-export type { Budget, BudgetFrequency, BudgetType } from '@kmedara/balance-domain/domain/budget/budget';
-export type { CalendarDay, CalendarResponse, Week } from '@kmedara/balance-domain/domain/calendar/calendar';
-export { budgetTypes, frequencies } from '@kmedara/balance-domain/domain/constants';
-export { isBudget } from '@kmedara/balance-domain/domain/budget/guards';
-export type { PlaidError } from '@kmedara/balance-domain/domain/plaid/plaid';
+export type {
+  AuthUser,
+  BudgetFields,
+  BudgetType,
+  CalendarDayWire,
+  CalendarEventWire,
+  CalendarResponseWire,
+  CreateEventBody,
+  EventResponse,
+  PatchEventBody,
+  LinkTokenResponse,
+  PlaidError,
+  PlaidExchangeTokenResponse,
+  PlaidSyncResponse,
+  PlaidTransaction,
+  RecurrenceFrequency,
+} from '@balance/schemas/client';
+
+export { budgetTypes, recurrenceFrequencies } from '@balance/schemas/client';
+
+export type { CalendarEvent } from '@balance/domain/client';
+export { isBudget } from '@balance/domain/client';
+
+import type { CalendarDayWire, CalendarResponseWire } from '@balance/schemas/client';
+
+/** Calendar day after JSON date strings are revived to local midnight. */
+export type CalendarDay = Omit<CalendarDayWire, 'date'> & { date: Date };
+
+/** Calendar month grid with revived local dates. */
+export type CalendarResponse = Omit<CalendarResponseWire, 'days' | 'weeks'> & {
+  days: CalendarDay[];
+  weeks: CalendarDay[][];
+};
+
+/** Budget fields shown on a calendar event tile. */
+export type Budget = import('@balance/schemas/client').BudgetFields;
