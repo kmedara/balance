@@ -154,11 +154,14 @@ There is **no** generic paged `GET /events` list. Use the calendar endpoint for 
 | `GET` | `/auth/callback` | OAuth callback; sets session cookie |
 | `GET` | `/auth/me` | Current user |
 | `GET` | `/auth/logout` | Clear session and Cognito logout |
+| `GET` | `/profile` | Get profile (protected) |
+| `POST` | `/profile` | Create profile (protected; 409 if exists) |
+| `PATCH` | `/profile` | Update email / displayName (protected; syncs Cognito email) |
 | `POST` | `/events` | Create budget event |
 | `GET` | `/events/calendar` | Month grid with expanded recurrence |
 | `GET` | `/events/:id` | Single event by id |
 | `PATCH` | `/events/:id` | Update budget event |
-| `DELETE` | `/events/:id` | Soft-delete budget (`removed` + TTL); Plaid txns rejected |
+| `DELETE` | `/events/:id` | Hard-delete budget event (HP1); Plaid txns rejected |
 | `GET` | `/categories` | Category display names from config item |
 | `POST` | `/plaid/link-token` | Create Plaid Link token |
 | `POST` | `/plaid/exchange-token` | Exchange public token; persist item |
@@ -167,6 +170,7 @@ There is **no** generic paged `GET /events` list. Use the calendar endpoint for 
 | `POST` | `/billing/checkout` | Stripe Checkout session |
 | `POST` | `/billing/portal` | Stripe Customer Portal |
 | `POST` | `/billing/webhooks/stripe` | Stripe webhooks (public; signature-verified) |
+| `DELETE` | `/account` | Hard-delete account (HP1; external cleanup stubs until P1/P3) |
 
 Protected routes accept the `balance_session` cookie **or** `Authorization: Bearer <Cognito access token>`.
 
