@@ -2,7 +2,7 @@ import type { CalendarDay, CalendarResponse } from '@balance/domain';
 import type { CalendarResponseWire } from '@balance/schemas/events';
 import type { EventWithId } from '../data/types.js';
 import { toDate, formatDateKey, isSameCalendarDay } from '../data/dates.js';
-import { PLAID_TRANSACTION_EVENT_TYPE } from '../plaid/constants.js';
+import { PLAID_TRANSACTION_EVENT_TYPE } from '@balance/schemas/constants';
 import { eventOccursOnDate } from './recurrence.utils.js';
 
 /**
