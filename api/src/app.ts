@@ -11,13 +11,14 @@ import { plaidRoutes } from './plaid/routes.js';
 import { registerErrorHandling } from './errors/http-error.js';
 import { registerAuth } from './auth/plugin.js';
 import { registerAuthGuard } from './auth/protected.js';
+import { profileRoutes } from './profile/routes.js';
 import cors from '@fastify/cors';
 import { cateogoryRoutes } from './categories/routes.js';
 import { eventRoutes } from './events/routes.js';
-import { billingRoutes } from './billing/routes.js';
-import { billingWebhookRoutes } from './billing/webhook.routes.js';
+import { billingRoutes, billingWebhookRoutes } from './billing/routes.js';
+import { accountRoutes } from './account/routes.js';
 import { registerSwagger, registerSwaggerUi } from './swagger/register.js';
-import { pingResponseSchema, publicRouteSecurity } from './swagger/schemas.js';
+import { pingResponseSchema, publicRouteSecurity } from '@balance/schemas/common';
 import { getClientOrigins } from './auth/config.js';
 
 export const buildApp = async (): Promise<FastifyInstance> => {
@@ -71,10 +72,12 @@ export const buildApp = async (): Promise<FastifyInstance> => {
   await server.register(async (protectedScope) => {
     registerAuthGuard(protectedScope);
 
+    await protectedScope.register(profileRoutes, { prefix: '/profile' });
     await protectedScope.register(plaidRoutes, { prefix: '/plaid' });
     await protectedScope.register(cateogoryRoutes, { prefix: '/categories' });
     await protectedScope.register(eventRoutes, { prefix: '/events' });
     await protectedScope.register(billingRoutes, { prefix: '/billing' });
+    await protectedScope.register(accountRoutes, { prefix: '/account' });
   });
 
   await server.register(registerSwaggerUi);
