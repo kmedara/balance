@@ -20,4 +20,4 @@ export type {
   RecurrenceFrequency,
 } from './index.js';
 
-export { budgetTypes, recurrenceFrequencies } from './constants.js';
+export { budgetTypes, recurrenceFrequencies, BUDGET_EVENT_TYPE, PLAID_TRANSACTION_EVENT_TYPE } from './constants.js';

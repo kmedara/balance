@@ -13,11 +13,17 @@ export {
   authLoginQuerySchema,
   authLogoutQuerySchema,
   authMeResponseSchema,
+  createProfileBodySchema,
+  patchProfileBodySchema,
+  profileResponseSchema,
   unauthorizedResponseSchema,
   type AuthCallbackQuery,
   type AuthLoginQuery,
   type AuthLogoutQuery,
   type AuthUser,
+  type CreateProfileBody,
+  type PatchProfileBody,
+  type ProfileResponse,
   type UnauthorizedResponse,
 } from './auth.js';
 
@@ -34,7 +40,7 @@ export {
 
 export { categoryListResponseSchema, type CategoryListResponse } from './categories.js';
 
-export { budgetTypes, recurrenceFrequencies } from './constants.js';
+export { budgetTypes, recurrenceFrequencies, BUDGET_EVENT_TYPE, PLAID_TRANSACTION_EVENT_TYPE } from './constants.js';
 
 export {
   budgetFieldsSchema,

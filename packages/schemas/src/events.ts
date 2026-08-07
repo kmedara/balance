@@ -1,4 +1,5 @@
 import { Type, type Static } from './typebox.js';
+import { BUDGET_EVENT_TYPE } from './constants.js';
 
 export const recurrenceFrequencySchema = Type.Union([
   Type.Literal('DAILY'),
@@ -24,7 +25,7 @@ const recurrenceProps = {
 
 const budgetCreateBodySchema = Type.Object(
   {
-    eventType: Type.Literal('budget', { description: 'Budget event discriminator' }),
+    eventType: Type.Literal(BUDGET_EVENT_TYPE, { description: 'Budget event discriminator' }),
     ...recurrenceProps,
     title: Type.String({ minLength: 1 }),
     type: budgetTypeSchema,
