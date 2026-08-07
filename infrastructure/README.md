@@ -254,7 +254,7 @@ Cognito is **regional**. Check the account and region from the deploy log:
 
 ### Lambda bundling / monorepo
 
-`BalanceApiStack` bundles from the **repo root** lockfile so workspace packages (`@balance/domain`) resolve correctly. Entry: [`api/src/lambda.ts`](../api/src/lambda.ts).
+`BalanceApiStack` bundles from the **repo root** lockfile so workspace packages (`@balance/schemas`, `@balance/domain`) resolve correctly. Entry: [`api/src/lambda.ts`](../api/src/lambda.ts).
 
 ## Adding resources
 

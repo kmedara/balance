@@ -66,6 +66,7 @@ From the repo root:
 
 ```bash
 npm install
+npm run build:schemas
 npm run build:domain
 ```
 
@@ -108,7 +109,8 @@ Docker Compose passes it to the API and client containers. `deploy.sh` also `sou
 | `GATEWAY` | API base URL the client calls (e.g. `http://localhost:3000`) |
 | `PLAID_*` | Plaid client id, secret, env, host, products, country codes, client name, redirect URI |
 | `ACCESS_TOKEN_ENCRYPTION_*` | AES-GCM settings for encrypted Plaid access tokens |
-| `MONGO_URL` | Required by `deploy.sh` validation only (legacy; API uses DynamoDB) |
+
+`deploy.sh` also requires Cognito vars when `AUTH_DISABLED` is not `true` — see [Authentication](#authentication).
 
 ### Authentication
 
@@ -140,16 +142,23 @@ Stripe variables are documented in [`api/.env.stripe.example`](api/.env.stripe.e
 stripe listen --forward-to localhost:3000/billing/webhooks/stripe
 ```
 
-## Shared types
+## Shared packages
 
-HTTP wire shapes live in [`packages/schemas`](packages/schemas) (`@balance/schemas`). Persistence models and recurrence utilities live in [`packages/domain`](packages/domain) (`@balance/domain`).
+| Package | Role |
+|---------|------|
+| [`@balance/schemas`](packages/schemas/) | TypeBox schemas and HTTP wire types (API + client) |
+| [`@balance/domain`](packages/domain/) | Persistence models, guards, and client-safe helpers |
 
 ```bash
-npm run build:schemas   # rebuild after editing packages/schemas/src
-npm run build:domain    # rebuild after editing packages/domain/src
+npm run build:schemas   # after editing packages/schemas/src
+npm run build:domain    # after editing packages/domain/src
 ```
 
-Client code should import wire types from `@core/domain`, which re-exports `@balance/schemas/client` and runtime helpers from `@balance/domain/client`.
+Docker Compose watch syncs `packages/domain` into the containers. Schema changes need a rebuild (`npm run build:schemas`) — they are not live-synced.
+
+Client code should import from `@core/domain`, which re-exports `@balance/schemas/client` and `@balance/domain/client`.
+
+See [`packages/schemas/README.md`](packages/schemas/README.md) and [`packages/domain/README.md`](packages/domain/README.md) for package details.
 
 ## Deployment
 

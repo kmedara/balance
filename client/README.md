@@ -8,7 +8,7 @@ Angular 21 single-page app for the Balance calendar. Talks to the API over HTTP 
 - **PrimeNG** + **Tailwind CSS** for UI
 - **NgRx Signals** for calendar state
 - **Vitest** for unit tests
-- **Shared types:** [`@balance/domain`](../packages/domain) via [`@core/domain`](src/app/core/domain.ts)
+- **Shared types:** [`@core/domain`](src/app/core/domain.ts) re-exports `@balance/schemas/client` + `@balance/domain/client`
 
 ## Local setup
 
@@ -21,13 +21,14 @@ npm install
 ./deploy.sh
 ```
 
-The client container serves at http://localhost:4200 with file sync for `client/` and `packages/domain/`.
+The client container serves at http://localhost:4200 with file sync for `client/` and `packages/domain/`. Schema package changes are not live-synced — rebuild with `npm run build:schemas` after editing [`packages/schemas`](../packages/schemas).
 
 ### On the host
 
 ```bash
 # from repo root
 npm install
+npm run build:schemas
 npm run build:domain
 
 cd client
@@ -79,22 +80,26 @@ Run from repo root with `-w balance`, or from `client/`:
 | `npm run test` | Vitest unit tests |
 | `npm run serve:ssr:angular` | Run SSR server from build output |
 
-## Shared domain types
+## Shared types
 
-Import calendar/budget types from `@core/domain`, not directly from `@balance/domain`:
+Import wire types and helpers from `@core/domain`, not directly from the workspace packages:
 
 ```typescript
-import type { CalendarEvent, Budget } from '@core/domain';
+import type { CalendarEvent, Budget, CreateEventBody } from '@core/domain';
+import { isBudget, budgetTypes } from '@core/domain';
 ```
 
-`@core/domain` re-exports the client-safe entry that avoids pulling rrule runtime into the bundle.
+[`@core/domain`](src/app/core/domain.ts) re-exports:
 
-After editing [`packages/domain`](../packages/domain):
+- **Wire types / constants** from `@balance/schemas/client` (TypeBox-derived shapes for HTTP)
+- **Client-safe helpers** from `@balance/domain/client` (avoids pulling rrule into the Angular bundle)
+
+After editing shared packages:
 
 ```bash
-npm run build:domain
+npm run build:schemas   # packages/schemas
+npm run build:domain    # packages/domain
 ```
-
 ## Testing
 
 Unit tests use **Vitest** with jsdom. Config: [`vitest.config.ts`](vitest.config.ts).

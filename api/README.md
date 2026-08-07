@@ -9,7 +9,7 @@ Fastify 5 API for the Balance app. Handles authentication (Cognito BFF + session
 - **Database:** DynamoDB (single-table design; local dev uses DynamoDB Local)
 - **Auth:** Cognito OAuth via API routes; `AUTH_DISABLED=true` for local bypass
 - **Integrations:** Plaid, Stripe
-- **Shared types:** [`@balance/domain`](../packages/domain)
+- **Shared packages:** [`@balance/schemas`](../packages/schemas) (wire types), [`@balance/domain`](../packages/domain) (persistence models)
 
 ## Local setup
 
@@ -26,6 +26,7 @@ From the repo root, use [`deploy.sh`](../deploy.sh) — see the [root README](..
 ```bash
 # from repo root
 npm install
+npm run build:schemas
 npm run build:domain
 
 cd api
@@ -144,13 +145,30 @@ docker compose exec node npm run db:seed
 
 ## API routes (overview)
 
-| Area | Prefix | Notes |
-|------|--------|-------|
-| Auth | `/auth/*` | Login, callback, logout, session |
-| Events | `/events/*` | Budget and calendar events |
-| Categories | `/categories/*` | User categories |
-| Plaid | `/plaid/*` | Link, sync, accounts |
-| Billing | `/billing/*` | Stripe checkout, portal, webhooks |
+There is **no** generic paged `GET /events` list. Use the calendar endpoint for month views and `GET /events/:id` for a single budget.
+
+| Method | Path | Notes |
+|--------|------|-------|
+| `GET` | `/ping` | Health check (public) |
+| `GET` | `/auth/login` | Start Cognito sign-in (or redirect when `AUTH_DISABLED`) |
+| `GET` | `/auth/callback` | OAuth callback; sets session cookie |
+| `GET` | `/auth/me` | Current user |
+| `GET` | `/auth/logout` | Clear session and Cognito logout |
+| `POST` | `/events` | Create budget event |
+| `GET` | `/events/calendar` | Month grid with expanded recurrence |
+| `GET` | `/events/:id` | Single event by id |
+| `PATCH` | `/events/:id` | Update budget event |
+| `DELETE` | `/events/:id` | Soft-delete budget (`removed` + TTL); Plaid txns rejected |
+| `GET` | `/categories` | Category display names from config item |
+| `POST` | `/plaid/link-token` | Create Plaid Link token |
+| `POST` | `/plaid/exchange-token` | Exchange public token; persist item |
+| `POST` | `/plaid/transactions/sync` | Sync transactions → dated events |
+| `GET` | `/billing/subscription` | Current subscription |
+| `POST` | `/billing/checkout` | Stripe Checkout session |
+| `POST` | `/billing/portal` | Stripe Customer Portal |
+| `POST` | `/billing/webhooks/stripe` | Stripe webhooks (public; signature-verified) |
+
+Protected routes accept the `balance_session` cookie **or** `Authorization: Bearer <Cognito access token>`.
 
 Full request/response schemas: http://localhost:3000/docs
 
@@ -163,8 +181,8 @@ npm run build -w node
 
 There is no API unit/integration test suite yet. Manual checks:
 
-1. Seed the database and call `/events` with auth disabled
-2. Exercise flows in Swagger UI
+1. Seed the database (`npm run db:seed -w node`) with auth disabled
+2. Hit `GET /events/calendar`, `POST /events`, `GET|PATCH|DELETE /events/:id` in Swagger UI
 3. Run Plaid Link against sandbox credentials
 4. Forward Stripe webhooks with the Stripe CLI
 
