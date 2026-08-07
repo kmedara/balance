@@ -7,3 +7,5 @@ packages/domain/lib
 *.env*
 *.vscode
 node_modules
+packages/domain/lib/*
+packages/schemas/lib/*
