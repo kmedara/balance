@@ -1,6 +1,7 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, computed, input } from '@angular/core';
 import type { CalendarEventWire } from '@core/domain';
+import { BUDGET_EVENT_TYPE, PLAID_TRANSACTION_EVENT_TYPE } from '@core/domain';
 import {
   CalendarItemShell,
   type CalendarItemTypeClass,
@@ -22,8 +23,8 @@ export class CalendarEventItem {
 
   readonly eventType = computed(() => this.event()?.eventType);
 
-  private readonly isBudget = computed(() => this.eventType() === 'budget');
-  private readonly isPlaid = computed(() => this.eventType() === 'plaid_transaction');
+  private readonly isBudget = computed(() => this.eventType() === BUDGET_EVENT_TYPE);
+  private readonly isPlaid = computed(() => this.eventType() === PLAID_TRANSACTION_EVENT_TYPE);
   private readonly isDefault = computed(() => !this.isBudget() && !this.isPlaid());
 
   readonly pending = computed(() => (this.isPlaid() ? !!this.event()?.pending : false));

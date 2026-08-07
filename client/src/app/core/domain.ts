@@ -19,7 +19,7 @@ export type {
   RecurrenceFrequency,
 } from '@balance/schemas/client';
 
-export { budgetTypes, recurrenceFrequencies } from '@balance/schemas/client';
+export { budgetTypes, recurrenceFrequencies, BUDGET_EVENT_TYPE, PLAID_TRANSACTION_EVENT_TYPE } from '@balance/schemas/client';
 
 export type { CalendarEvent } from '@balance/domain/client';
 export { isBudget } from '@balance/domain/client';

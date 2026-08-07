@@ -1,3 +1,4 @@
+import { BUDGET_EVENT_TYPE } from '@core/domain';
 import { Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -23,7 +24,7 @@ export class UserActions {
   addBudget = () => {
     this._service.open(
       { content: AddEventModal, header: 'Add budget' },
-      { action: 'createEvent', eventType: 'budget' },
+      { action: 'createEvent', eventType: BUDGET_EVENT_TYPE },
     );
   };
 

@@ -2,6 +2,7 @@ import { InjectionToken, Type } from '@angular/core';
 import type { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { BUDGET_EVENT_TYPE } from '@core/domain';
 import { calendarStore } from '@modules/calendar/calendar.store';
 import { toEventWriteRequest } from './event-form.utils';
 
@@ -19,7 +20,7 @@ export type ModalAction = 'createEvent' | 'updateEvent';
 
 export type ModalData = {
   action: ModalAction;
-  eventType: 'budget' | 'placeholder';
+  eventType: typeof BUDGET_EVENT_TYPE | 'placeholder';
   eventId?: string;
 };
 

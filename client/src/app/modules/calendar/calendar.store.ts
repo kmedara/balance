@@ -1,5 +1,5 @@
 import { patchState, signalStore, withMethods, withProps, withState } from '@ngrx/signals';
-import { CalendarResponseWire } from '@core/domain';
+import { BUDGET_EVENT_TYPE, CalendarResponseWire, PLAID_TRANSACTION_EVENT_TYPE } from '@core/domain';
 import { withDevtools, withGlitchTracking, withResource } from '@angular-architects/ngrx-toolkit';
 import {  GatewayResourceService } from '@core/gateway-resource.service';
 import { inject } from '@angular/core';
@@ -21,7 +21,7 @@ const initialState: CalendarState = {
     filter: {
         month: today.getMonth() + 1,
         year: today.getFullYear(),
-        eventTypes: ['budget', 'plaid_transaction'],
+        eventTypes: [BUDGET_EVENT_TYPE, PLAID_TRANSACTION_EVENT_TYPE],
     },
 };
 
