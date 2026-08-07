@@ -25,10 +25,12 @@ export const registerSwagger = fp(
         tags: [
           { name: 'Health', description: 'Liveness checks' },
           { name: 'Auth', description: 'Session and Cognito OAuth' },
+          { name: 'Profile', description: 'User profile create and update' },
           { name: 'Events', description: 'Unified events and calendar' },
           { name: 'Categories', description: 'Budget categories' },
           { name: 'Plaid', description: 'Bank linking and transaction sync' },
           { name: 'Billing', description: 'Stripe subscriptions and entitlements' },
+          { name: 'Account', description: 'Account deletion (HP1 hard purge)' },
         ],
         components: {
           securitySchemes: {
