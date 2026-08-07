@@ -1,5 +1,5 @@
 import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
-import type { UserDocument, UserSubscription } from '../auth/user.repository.js';
+import type { UserDocument, UserSubscription } from '../profile/repository.js';
 import { getDocClient } from '../dynamo/client.js';
 import { toUserDocument } from '../dynamo/entities.js';
 import { profileSk, userPk, userRef } from '../dynamo/keys.js';

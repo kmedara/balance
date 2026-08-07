@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { getStripeEnv, assertKnownPriceId } from './constants.js';
+import { getStripeEnv, assertKnownPriceId } from './utils.js';
 import { setStripeCustomerId } from './repository.js';
 import { ServiceUnavailableError } from '@src/errors/http-error.js';
 

@@ -1,4 +1,4 @@
-import type { SubscriptionTier } from '../auth/user.repository.js';
+import type { SubscriptionTier } from '../profile/repository.js';
 import type { StripeEnv } from './types.js';
 import { env } from 'process';
 
