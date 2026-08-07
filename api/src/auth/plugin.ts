@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 import { authRoutes } from './routes.js';
 import { registerSession } from './session.js';
+import './types.js';
 
 const authPlugin = async (app: FastifyInstance): Promise<void> => {
   // Session support is global so both the public /auth routes and the protected

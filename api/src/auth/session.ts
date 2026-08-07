@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fastifyCookie from '@fastify/cookie';
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
-import type { AuthUser } from './types.js';
+import type { AuthUser } from '@balance/schemas/auth';
 import { getSessionKey } from './config.js';
 
 export type SessionPayload = {

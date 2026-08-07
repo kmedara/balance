@@ -1,8 +1,8 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
-import type { AuthUser } from './types.js';
+import type { AuthUser } from '@balance/schemas/auth';
 import { readSessionUser } from './session.js';
 import { verifyAuthHeader } from './cognito.js';
-import { upsertUserFromAuth } from './user.repository.js';
+import { ensureUserExists } from '../profile/repository.js';
 
 /**
  * Registers the auth guard on an encapsulated Fastify scope. Every route
@@ -21,20 +21,17 @@ export const registerAuthGuard = (app: FastifyInstance): void => {
   });
 
   app.addHook('onRequest', async (request) => {
-    // CORS preflight carries no credentials; let @fastify/cors handle it.
     if (request.method === 'OPTIONS') {
-      console.log('CORS preflight');
       return;
     }
 
     // Primary: encrypted httpOnly session cookie (web SPA). Fallback: Cognito
-    // access token via Authorization header (non-browser clients). Throws
-    // ForbiddenError when neither is present/valid, which the error handler
-    // maps to a 403 before the route handler runs.
-    const user = readSessionUser(request) ?? (await verifyAuthHeader(request.headers.authorization));
-    console.log('user', user);
+    // access token via Authorization header (non-browser clients).
+    const user =
+      readSessionUser(request) ?? (await verifyAuthHeader(request.headers.authorization));
     request.user = user;
-    await upsertUserFromAuth(user);
-    console.log('request.user', request.user);
+    // Create profile on first protected request if login upsert was skipped
+    // (e.g. bearer-only clients). Does not rewrite email on every request.
+    await ensureUserExists(user);
   });
 };

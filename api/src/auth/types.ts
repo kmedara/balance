@@ -1,7 +1,3 @@
-export type { AuthUser } from '@balance/schemas/auth';
-
-export { ForbiddenError } from '../errors/http-error.js';
-
 import type { AuthUser } from '@balance/schemas/auth';
 
 declare module 'fastify' {

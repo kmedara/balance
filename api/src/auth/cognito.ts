@@ -1,8 +1,12 @@
+import type { AuthUser } from '@balance/schemas/auth';
+import {
+  AdminUpdateUserAttributesCommand,
+  CognitoIdentityProviderClient,
+} from '@aws-sdk/client-cognito-identity-provider';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
+import { env } from 'process';
+import { BadRequestError, ForbiddenError, ServiceUnavailableError } from '../errors/http-error.js';
 import { isAuthDisabled } from './config.js';
-import { ForbiddenError, type AuthUser } from './types.js';
-import { env} from 'process'
-import { ServiceUnavailableError } from '@src/errors/http-error.js';
 
 const DEV_AUTH_USER: AuthUser = {
   userId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
@@ -13,6 +17,7 @@ type CognitoVerifier = ReturnType<typeof CognitoJwtVerifier.create>;
 
 let idVerifier: CognitoVerifier | null = null;
 let accessVerifier: CognitoVerifier | null = null;
+let cognitoClient: CognitoIdentityProviderClient | null = null;
 
 const getVerifierConfig = () => {
   const userPoolId = env.COGNITO_USER_POOL_ID;
@@ -25,7 +30,13 @@ const getVerifierConfig = () => {
   return { userPoolId, clientId };
 };
 
-// ID token: carries user identity claims (e.g. email) and is audience-bound to clientId.
+const getCognitoClient = (): CognitoIdentityProviderClient => {
+  if (cognitoClient) return cognitoClient;
+  const region = env.COGNITO_REGION ?? 'us-east-1';
+  cognitoClient = new CognitoIdentityProviderClient({ region });
+  return cognitoClient;
+};
+
 const getIdVerifier = () => {
   if (idVerifier) return idVerifier;
 
@@ -39,7 +50,6 @@ const getIdVerifier = () => {
   return idVerifier;
 };
 
-// Access token: authorizes API calls (scopes/groups), and typically has no email claim.
 const getAccessVerifier = () => {
   if (accessVerifier) return accessVerifier;
 
@@ -61,21 +71,41 @@ const toAuthUser = (payload: { sub: string; email?: unknown }): AuthUser => ({
 export const verifyIdToken = async (token: string): Promise<AuthUser> =>
   toAuthUser(await getIdVerifier().verify(token));
 
-// Resolves an AuthUser from a raw `Authorization` header value.
-// Business endpoints authorize via the access token only. The ID token is
-// consumed exclusively by the OAuth callback (`verifyIdToken`) to bootstrap
-// the session, keeping the authentication (ID) and authorization (access)
-// concerns separate.
 export const verifyAuthHeader = async (authorization?: string): Promise<AuthUser> => {
-  // Local/dev short-circuit: skip token verification and use a fixed user.
   if (isAuthDisabled()) {
     return DEV_AUTH_USER;
   }
 
-  // Require a bearer token; reject anything else.
   if (!authorization?.startsWith('Bearer ')) {
     throw new ForbiddenError('Missing or invalid Authorization header');
   }
 
   return await getAccessVerifier().verify(authorization.slice('Bearer '.length)).then(toAuthUser);
+};
+
+/**
+ * Updates the Cognito user's email via AdminUpdateUserAttributes.
+ * Uses the Cognito `sub` as Username (UUID username pools / federated users).
+ * Skipped when AUTH_DISABLED=true.
+ */
+export const updateCognitoEmail = async (userId: string, email: string): Promise<void> => {
+  if (isAuthDisabled()) return;
+
+  const { userPoolId } = getVerifierConfig();
+
+  try {
+    await getCognitoClient().send(
+      new AdminUpdateUserAttributesCommand({
+        UserPoolId: userPoolId,
+        Username: userId,
+        UserAttributes: [
+          { Name: 'email', Value: email },
+          { Name: 'email_verified', Value: 'true' },
+        ],
+      }),
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Cognito email update failed';
+    throw new BadRequestError(message);
+  }
 };

@@ -1,28 +1,29 @@
 import type { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
 import {
+  authCallbackQuerySchema,
+  authLoginQuerySchema,
+  authLogoutQuerySchema,
+  authMeResponseSchema,
+  unauthorizedResponseSchema,
+} from '@balance/schemas/auth';
+import { publicRouteSecurity } from '@balance/schemas/common';
+import {
   getPrimaryClientOrigin,
   isAuthDisabled,
   resolveCognitoLogoutUri,
   resolveReturnTo,
   sanitizeReturnTo,
 } from './config.js';
+import { verifyIdToken } from './cognito.js';
+import { clearAuthSession, readSessionUser } from './session.js';
 import {
   buildAuthorizeUrl,
   buildLogoutUrl,
   exchangeAuthorizationCode,
   generateOAuthState,
   generatePkcePair,
-} from './oauth.js';
-import { clearAuthSession, readSessionUser } from './session.js';
-import { verifyIdToken } from './cognito.js';
-import { publicRouteSecurity } from '../swagger/schemas.js';
-import {
-  authCallbackQuerySchema,
-  authLoginQuerySchema,
-  authLogoutQuerySchema,
-  authMeResponseSchema,
-  unauthorizedResponseSchema,
-} from './schemas.js';
+} from './service.js';
+import { upsertUserFromAuth } from '../profile/repository.js';
 
 const DEV_ME_RESPONSE = {
   userId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
@@ -79,9 +80,6 @@ export const authRoutes: FastifyPluginAsyncTypebox = async (app) => {
       const verifier = request.session.get('pkceVerifier');
       const returnTo = resolveReturnTo(request.session.get('returnTo'));
 
-      // `returnTo` was allowlist-validated at /login, so its origin is the
-      // client that started sign-in. Send all outcomes back there instead of a
-      // list-order-dependent primary origin.
       const clientOrigin = new URL(returnTo).origin;
 
       request.session.set('oauthState', undefined);
@@ -92,13 +90,20 @@ export const authRoutes: FastifyPluginAsyncTypebox = async (app) => {
         return reply.redirect(`${clientOrigin}/login?error=${encodeURIComponent(error)}`);
       }
 
-      if (!code || !state || !expectedState || state !== expectedState || typeof verifier !== 'string') {
+      if (
+        !code ||
+        !state ||
+        !expectedState ||
+        state !== expectedState ||
+        typeof verifier !== 'string'
+      ) {
         return reply.redirect(`${clientOrigin}/login?error=invalid_state`);
       }
 
       try {
         const tokens = await exchangeAuthorizationCode({ code, verifier });
         const authUser = await verifyIdToken(tokens.idToken);
+        await upsertUserFromAuth(authUser);
         request.session.set('authUser', authUser);
         return reply.redirect(returnTo);
       } catch (err) {

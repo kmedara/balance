@@ -195,7 +195,8 @@ export const TABLE_PK = 'PK' as const;
 export const TABLE_SK = 'SK' as const;
 
 /**
- * Item `status` for events (`active` | `removed`). Soft-delete flag used with
- * calendar queries; avoids rewriting SK on Plaid transaction removal.
+ * Item `status` for events. New writes use `active` only; user-initiated and
+ * Plaid removals hard-delete rows (HP1). `removed` may still appear on legacy
+ * items until they are purged or TTL-reaped.
  */
 export type EventStatus = 'active' | 'removed';

@@ -1,6 +1,6 @@
+import { ForbiddenError } from '../errors/http-error.js';
 import { createHash, randomBytes } from 'node:crypto';
 import { getAuthCallbackUrl, getCognitoOAuthConfig } from './config.js';
-import { ForbiddenError } from './types.js';
 
 export type OAuthTokens = {
   idToken: string;
@@ -46,7 +46,6 @@ export const buildLogoutUrl = (logoutUri: string): string => {
 
   const params = new URLSearchParams({
     client_id: config.clientId,
-    // Must exactly match a registered Cognito app client sign-out URL.
     logout_uri: logoutUri,
   });
 

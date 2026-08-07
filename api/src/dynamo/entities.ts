@@ -5,9 +5,9 @@ import type {
   StoredPlaidItemDocument,
 } from '../data/types.js';
 import type { PlaidSyncStateDocument } from '../plaid/types.js';
-import type { UserDocument, UserSubscription } from '../auth/user.repository.js';
+import type { UserDocument, UserSubscription } from '../profile/repository.js';
 import { toDate } from '../data/dates.js';
-import { PLAID_TRANSACTION_EVENT_TYPE } from '../plaid/constants.js';
+import { PLAID_TRANSACTION_EVENT_TYPE } from '@balance/schemas/constants';
 import {
   accountSk,
   categoriesSk,
@@ -34,11 +34,13 @@ export type PlaidSyncFields = {
 
 export const toUserDocument = (item: TableItem): UserDocument => {
   const parsed = deserializeDates(item);
-  const { cognitoSub, email, stripeCustomerId, subscription, createdAt, updatedAt } = parsed;
+  const { cognitoSub, email, displayName, stripeCustomerId, subscription, createdAt, updatedAt } =
+    parsed;
 
   return {
     cognitoSub: cognitoSub as string,
     email: email as string | undefined,
+    displayName: displayName as string | undefined,
     stripeCustomerId: stripeCustomerId as string | undefined,
     subscription: subscription as UserSubscription,
     createdAt: createdAt as Date,
@@ -46,15 +48,14 @@ export const toUserDocument = (item: TableItem): UserDocument => {
   };
 };
 
-export const buildProfileItem = (
-  user: UserDocument,
-): TableItem =>
+export const buildProfileItem = (user: UserDocument): TableItem =>
   serializeRecord({
     PK: userPk(user.cognitoSub),
     SK: profileSk(),
     entityType: 'user',
     cognitoSub: user.cognitoSub,
     email: user.email,
+    displayName: user.displayName,
     stripeCustomerId: user.stripeCustomerId,
     subscription: user.subscription,
     createdAt: user.createdAt,
