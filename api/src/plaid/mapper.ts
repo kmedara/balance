@@ -1,7 +1,7 @@
 import type { AccountBase, Transaction as PlaidTransaction } from 'plaid';
 import type { ClientPlaidTransaction, PlaidAccountDocument, PlaidTransactionEventWithId } from './types.js';
 import { buildSingleOccurrenceRRule } from '../events/recurrence.utils.js';
-import { PLAID_TRANSACTION_EVENT_TYPE } from './constants.js';
+import { PLAID_TRANSACTION_EVENT_TYPE } from '@balance/schemas/constants';
 import type { PlaidTransactionEventFields } from './event-document.js';
 
 import type { StoredEventDocument } from '../data/types.js';

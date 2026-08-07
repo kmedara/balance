@@ -1,26 +1,23 @@
 import { CountryCode } from 'plaid';
 import { plaidClient } from './client.js';
-import { getAccessToken, updatePlaidItemLastSync } from './item.repository.js';
 import { mapPlaidAccountToDocument } from './mapper.js';
-import { upsertPlaidAccounts } from './account.repository.js';
-import {
-  markPlaidTransactionsRemoved,
-  toClientTransactions,
-  toRemovedClientTransactions,
-  upsertPlaidTransactions,
-} from './transaction.repository.js';
 import {
   completeSyncState,
   ensureSyncState,
   failSyncState,
-  findSyncStateByItemId,
-  markSyncStateSyncing,
-} from './sync-state.repository.js';
-import {
   findActivePlaidItemsByUserId,
   findPlaidItemByPlaidItemId,
+  findSyncStateByItemId,
+  getAccessToken,
+  markPlaidTransactionsRemoved,
+  markSyncStateSyncing,
+  toClientTransactions,
+  toRemovedClientTransactions,
+  updatePlaidItemLastSync,
+  upsertPlaidAccounts,
   upsertPlaidItem,
-} from './item.repository.js';
+  upsertPlaidTransactions,
+} from './repository.js';
 import type { ItemTransactionsSyncResult } from './types.js';
 import type { PlaidItemWithId } from '../data/types.js';
 import { BadRequestError, NotFoundError } from '../errors/http-error.js';

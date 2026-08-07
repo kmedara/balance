@@ -3,21 +3,21 @@ import { CountryCode, Products, type LinkTokenCreateRequest } from 'plaid';
 import {
   bearerSecurity,
   problemDetailsSchema,
-} from '../swagger/schemas.js';
-import { BadGatewayError } from '../errors/http-error.js';
+} from '@balance/schemas/common';
 import {
   exchangeTokenBodySchema,
   linkTokenResponseSchema,
   plaidExchangeTokenResponseSchema,
   plaidSyncResponseSchema,
   syncTransactionsBodySchema,
-} from './schemas.js';
+} from '@balance/schemas/plaid';
+import { BadGatewayError } from '../errors/http-error.js';
 import { plaidClient } from './client.js';
 import {
   linkPlaidItem,
   syncTransactionsForPlaidItemId,
   syncTransactionsForUser,
-} from './sync.service.js';
+} from './service.js';
 
 export const plaidRoutes: FastifyPluginAsyncTypebox = async (app) => {
   app.post('/link-token', {

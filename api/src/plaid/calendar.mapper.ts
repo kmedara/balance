@@ -1,4 +1,4 @@
-import { PLAID_TRANSACTION_EVENT_TYPE } from './constants.js';
+import { PLAID_TRANSACTION_EVENT_TYPE } from '@balance/schemas/constants';
 import type { PlaidTransactionEventFields } from './event-document.js';
 import type { EventWithId } from '../data/types.js';
 
