@@ -5,7 +5,6 @@ import {
   problemDetailsSchema,
 } from '../swagger/schemas.js';
 import {
-  BadGatewayError,
   ForbiddenError,
   ServiceUnavailableError,
 } from '../errors/http-error.js';
@@ -20,7 +19,6 @@ import {
   createPortalSession,
 } from './stripe.client.js';
 import {
-  billingErrorMessage,
   toSubscriptionResponse,
 } from './routes.helpers.js';
 

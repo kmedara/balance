@@ -7,9 +7,7 @@ import { txnRefPk, txnRefSk, userPk } from '../dynamo/keys.js';
 import { serializeRecord, toEventWithId } from '../dynamo/helpers.js';
 import { batchGetItems } from '../dynamo/query.js';
 import { getTableName } from '../dynamo/tables.js';
-
-/** Removed Plaid events linger this long before TTL reaps them. */
-const REMOVED_EVENT_TTL_DAYS = 90;
+import { REMOVED_EVENT_TTL_DAYS } from './constants.js';
 
 const table = (): string => getTableName();
 

@@ -1,4 +1,4 @@
-import type { CreateEventBody, PatchEventBody } from './schemas.js';
+import type { CreateEventBody } from './schemas.js';
 import type { BudgetDocumentFields } from '@balance/domain';
 import { BUDGET_EVENT_TYPE } from './constants.js';
 import { parseDateOnly } from '../data/dates.js';

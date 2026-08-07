@@ -101,5 +101,5 @@ export class PlaidTransactionCalendarItem {
   styleUrl: './default-calendar-item.scss',
 })
 export class DefaultCalendarItem {
-  event = input<CalendarEvent<any>>();
+  event = input<CalendarEvent<unknown>>();
 }

@@ -8,7 +8,7 @@ import type { CalendarEvent } from '@core/domain';
 import { ModalService } from '@modules/modal/modal.service';
 import { AddEventModal } from '@modules/modal/add-event-modal/add-event-modal';
 
-type CalendarEventWithId = CalendarEvent<any> & { id?: string };
+type CalendarEventWithId = CalendarEvent<unknown> & { id?: string };
 
 @Component({
   selector: 'app-calendar-event-item',
@@ -19,7 +19,7 @@ type CalendarEventWithId = CalendarEvent<any> & { id?: string };
 export class CalendarEventItem {
   private readonly modalService = inject(ModalService);
 
-  event = input.required<CalendarEvent<any>>();
+  event = input.required<CalendarEvent<unknown>>();
 
   eventType = computed(() => this.event()?.eventType);
 
