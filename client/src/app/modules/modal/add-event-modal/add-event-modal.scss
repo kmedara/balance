@@ -3,11 +3,56 @@
   min-width: 0;
 }
 
-:host ::ng-deep .p-inputnumber {
-  width: 100%;
-  max-width: 100%;
+.add-event-form {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
 }
 
-:host ::ng-deep .p-inputnumber .p-inputnumber-input {
+.add-event-form__loading {
+  margin: 0;
+  padding: 2rem 0;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--app-text-muted);
+}
+
+.add-event-form__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.add-event-form__field {
   width: 100%;
+}
+
+.add-event-form__error {
+  margin: 0;
+  min-height: 1.25rem;
+  font-size: 0.875rem;
+  color: #c62828;
+}
+
+.add-event-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.add-event-form__spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

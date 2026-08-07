@@ -4,12 +4,12 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Button } from 'primeng/button';
-import { InputNumber } from 'primeng/inputnumber';
-import { InputText } from 'primeng/inputtext';
-import { Select } from 'primeng/select';
-import { DatePicker } from 'primeng/datepicker';
-import { Textarea } from 'primeng/textarea';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { budgetTypes } from '@core/domain';
 import { GATEWAY_HTTP_TOKEN } from '@core/gateway.http';
 import {
@@ -21,9 +21,7 @@ import {
 } from '@modals/modal.context';
 import { ModalEvents, ModalStore } from '@modals/modal.store';
 import type { EventResponse } from '@core/domain';
-import {
-  eventResponseToFormValues,
-} from '@modals/event-form.utils';
+import { eventResponseToFormValues } from '@modals/event-form.utils';
 
 const BUDGET_FREQUENCY_OPTIONS = [
   { label: 'Monthly', value: 'MONTHLY' as const },
@@ -36,12 +34,12 @@ const BUDGET_FREQUENCY_OPTIONS = [
   selector: 'app-add-event-modal',
   imports: [
     ReactiveFormsModule,
-    InputText,
-    InputNumber,
-    Select,
-    DatePicker,
-    Textarea,
-    Button,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatDatepickerModule,
+    MatButtonModule,
+    MatIconModule,
   ],
   templateUrl: './add-event-modal.html',
   styleUrl: './add-event-modal.scss',
@@ -61,17 +59,28 @@ export class AddEventModal implements OnInit {
   readonly frequencyOptions = BUDGET_FREQUENCY_OPTIONS;
 
   readonly form = this.fb.group({
-    type: this.fb.control<'Income' | 'Expense'>('Expense', { nonNullable: true, validators: [Validators.required] }),
+    type: this.fb.control<'Income' | 'Expense'>('Expense', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
     title: this.fb.control('', { nonNullable: true, validators: [Validators.required] }),
-    amount: this.fb.control<number | null>(null, { validators: [Validators.required, Validators.min(0.01)] }),
+    amount: this.fb.control<number | null>(null, {
+      validators: [Validators.required, Validators.min(0.01)],
+    }),
     category: this.fb.control('', { nonNullable: true, validators: [Validators.required] }),
     description: this.fb.control('', { nonNullable: true }),
-    startDate: this.fb.control<Date>(new Date(), { nonNullable: true, validators: [Validators.required] }),
+    startDate: this.fb.control<Date>(new Date(), {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
     frequency: this.fb.control<'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'>('MONTHLY', {
       nonNullable: true,
       validators: [Validators.required],
     }),
-    interval: this.fb.control(1, { nonNullable: true, validators: [Validators.required, Validators.min(1)] }),
+    interval: this.fb.control(1, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(1)],
+    }),
     endDate: this.fb.control<Date | null>(null),
   });
 

@@ -1,11 +1,12 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Button } from 'primeng/button';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '@core/auth/auth.service';
 
 @Component({
   selector: 'app-login',
-  imports: [Button],
+  imports: [MatButtonModule, MatIconModule],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })

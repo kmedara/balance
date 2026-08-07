@@ -1,30 +1,34 @@
-<p-dialog
-  [visible]="visible()"
-  [modal]="true"
-  dismissableMask="true"
-  [baseZIndex]="20000"
-  maskStyleClass="modal-shell-mask"
-  [contentStyle]="{ overflowX: 'hidden', overflowY: 'auto' }"
-  (visibleChange)="onVisibleChange($event)"
->
-  <ng-template #header>
-    @if (isHeaderString()) {
-      <span class="text-xl font-semibold">{{ headerText }}</span>
-    } @else if (isHeaderComponent()) {
-      <ng-container *ngComponentOutlet="headerComponent"></ng-container>
-    }
-  </ng-template>
-  <ng-template #content></ng-template>
+@if (visible()) {
+  <div
+    class="modal-shell-backdrop"
+    (click)="onBackdropClick()"
+    (keydown.escape)="onBackdropClick()"
+  ></div>
 
-  <!--
-  Doesn't work if the content component attempts to access any injection tokens created after the shellRef view is attached
-  to the appRef view. i.e, an error would throw if defining another injector in the shell and then referenced in the content component
+  <div
+    class="modal-shell-panel"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="headerText"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="modal-shell-header">
+      @if (isHeaderString()) {
+        <h2 class="modal-shell-title">{{ headerText }}</h2>
+      } @else if (isHeaderComponent()) {
+        <ng-container *ngComponentOutlet="headerComponent"></ng-container>
+      }
+      <button
+        mat-icon-button
+        type="button"
+        class="modal-shell-close"
+        aria-label="Close"
+        (click)="onVisibleChange(false)"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </header>
 
-  *ngComponentOutlet="config.content" automatically creates the component in that spot.
-
-  #content + contentVcr.createComponent() is only needed if you want dynamic creation in code.
-
-  See the implementation in modal.service ```this.appRef.attachView(shellRef.hostView);```
-  -->
-  <!-- <ng-container *ngComponentOutlet="config.content"></ng-container> -->
-</p-dialog>
+    <div class="modal-shell-body" #contentHost></div>
+  </div>
+}

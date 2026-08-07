@@ -1,29 +1,25 @@
 <div class="calendar-shell flex flex-1 flex-col w-full min-w-0">
   <header class="calendar-toolbar">
     <div class="calendar-toolbar__nav">
-      <p-button
-        icon="pi pi-chevron-left"
+      <button
+        mat-icon-button
+        type="button"
         (click)="store.previousMonth()"
-        [rounded]="true"
-        [text]="true"
-        severity="secondary"
         aria-label="Previous month"
-      />
-      <p-button
-        label="Today"
-        (click)="store.goToToday()"
-        [outlined]="true"
-        severity="secondary"
-        size="small"
-      />
-      <p-button
-        icon="pi pi-chevron-right"
+      >
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <button mat-stroked-button type="button" (click)="store.goToToday()">
+        Today
+      </button>
+      <button
+        mat-icon-button
+        type="button"
         (click)="store.nextMonth()"
-        [rounded]="true"
-        [text]="true"
-        severity="secondary"
         aria-label="Next month"
-      />
+      >
+        <mat-icon>chevron_right</mat-icon>
+      </button>
     </div>
 
     <div class="calendar-toolbar__center">
@@ -82,43 +78,38 @@
       </div>
     }
 
-    <p-dataview
-      [value]="days()"
+    <div
       class="calendar-view flex flex-1 flex-col w-full min-w-0"
       [class.calendar-view--loading]="isLoading()"
     >
-      <ng-template #header>
-        <div class="calendar-weekdays" aria-hidden="true">
-          @for (day of weekdayNames; track day) {
-            <div class="calendar-weekdays__cell">{{ day }}</div>
-          }
-        </div>
-      </ng-template>
+      <div class="calendar-weekdays" aria-hidden="true">
+        @for (day of weekdayNames; track day) {
+          <div class="calendar-weekdays__cell">{{ day }}</div>
+        }
+      </div>
 
-      <ng-template #list let-items>
-        <div class="calendar-grid">
-          @for (item of items; track item.date) {
-            <div
-              class="day-cell"
-              [ngClass]="{
-                'day-cell--today': isToday(item.date),
-                'day-cell--muted': !item.inCurrentMonth,
-                'day-cell--weekend': isWeekend(item.date),
-              }"
-            >
-              <div class="day-cell__header">
-                <span class="day-cell__date">{{ item.date.getDate() }}</span>
-              </div>
-
-              <div class="day-events">
-                @for (event of item.events; track event.id) {
-                  <app-calendar-event-item [event]="event" />
-                }
-              </div>
+      <div class="calendar-grid">
+        @for (item of days(); track item.date) {
+          <div
+            class="day-cell"
+            [ngClass]="{
+              'day-cell--today': isToday(item.date),
+              'day-cell--muted': !item.inCurrentMonth,
+              'day-cell--weekend': isWeekend(item.date),
+            }"
+          >
+            <div class="day-cell__header">
+              <span class="day-cell__date">{{ item.date.getDate() }}</span>
             </div>
-          }
-        </div>
-      </ng-template>
-    </p-dataview>
+
+            <div class="day-events">
+              @for (event of item.events; track event.id) {
+                <app-calendar-event-item [event]="event" />
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
   </div>
 </div>

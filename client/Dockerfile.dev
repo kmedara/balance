@@ -1,6 +1,4 @@
-ARG NODE_VERSION=24.12.0-alpine
-
-FROM node:${NODE_VERSION} AS builder
+FROM node:24.12.0-bookworm-slim AS builder
 
 ENV NODE_ENV=development
 
@@ -16,22 +14,14 @@ RUN --mount=type=cache,target=/root/.npm npm ci --ignore-scripts
 COPY packages/domain packages/domain
 COPY packages/schemas packages/schemas
 COPY client client
-COPY scripts/install-native-deps.mjs scripts/install-native-deps.mjs
-COPY scripts/docker-entrypoint.sh scripts/docker-entrypoint.sh
 
 RUN npm run build -w @balance/schemas \
-    && npm run build -w @balance/domain \
-    && node scripts/install-native-deps.mjs -w balance \
-    && sed -i 's/\r$//' scripts/docker-entrypoint.sh \
-    && chmod +x scripts/docker-entrypoint.sh
+    && npm run build -w @balance/domain
 
 RUN npm install -g @angular/cli
 
-ENV NATIVE_DEPS_WORKSPACE=balance
-ENV APP_WORKDIR=/app/client
 WORKDIR /app/client
 
 EXPOSE 4200 49153
 
-ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
 CMD ["npm", "start"]

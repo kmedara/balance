@@ -1,21 +1,48 @@
-/* You can add global styles to this file, and also import other style files */
 @use './tailwind.css';
-@use 'primeicons/primeicons.css';
+@use './theme.material.scss';
+@import '@angular/cdk/overlay-prebuilt.css';
 
 :root {
-  --expense-color: var(--p-yellow-500, #ef4444);
-  --income-color: var(--p-primary-400, #22c55e);
+  /* Vibrant money accents */
+  --income-color: #12b76a;
+  --expense-color: #c45c4a;
+
+  /* App surfaces — mint-tinted and airy */
+  --app-text: var(--mat-sys-on-surface, #15202b);
+  --app-text-muted: var(--mat-sys-on-surface-variant, #4a5d6a);
+  --app-surface-0: var(--mat-sys-surface-container-lowest, #ffffff);
+  --app-surface-50: var(--mat-sys-surface, #f7fcfa);
+  --app-surface-100: var(--mat-sys-surface-container-low, #eef8f3);
+  --app-surface-200: var(--mat-sys-surface-container, #e6f4ed);
+  --app-surface-300: var(--mat-sys-surface-container-high, #dceee5);
+  --app-primary: var(--mat-sys-primary, #0f9f6e);
+  --app-primary-contrast: var(--mat-sys-on-primary, #fff);
+  --app-accent: var(--mat-sys-tertiary, #f59e0b);
+  --app-glow: color-mix(in srgb, var(--app-primary) 18%, transparent);
+  --app-glow-warm: color-mix(in srgb, var(--app-accent) 16%, transparent);
+
   --sidebar-width: 4px;
-  --bar-radius: 6px;
+  --bar-radius: 8px;
 }
+
+html,
+body {
+  color: var(--app-text);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, var(--app-glow), transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, var(--app-glow-warm), transparent 50%),
+    var(--app-surface-50);
+  background-attachment: fixed;
+}
+
 .active {
-  border-bottom: 0.3rem solid var(--p-primary-active-color);
+  border-bottom: 0.3rem solid var(--app-primary);
 }
 
 .nav-item {
-  font-weight: 200;
+  font-weight: 500;
   line-height: 1.5rem;
-  color: var(--p-primary-color);
+  color: var(--app-primary);
   cursor: pointer;
   font-size: 1rem;
   display: inline-flex;
@@ -29,4 +56,13 @@ allows pages to fill entire body with specifying w-full and h-full for each
 router-outlet ~ * {
   height: 100%;
   width: 100%;
+}
+
+.rich-tooltip-panel {
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.rich-tooltip-panel .calendar-item__tooltip {
+  background: #ffffff;
 }

@@ -1,21 +1,66 @@
-<div
-  class="calendar-event-item"
-  [class.calendar-event-item--editable]="isEditable()"
-  (click)="onClick($event)"
-  (keydown.enter)="onClick($event)"
-  (keydown.space)="onClick($event)"
-  [attr.role]="isEditable() ? 'button' : null"
-  [attr.tabindex]="isEditable() ? 0 : null"
+<app-calendar-item-shell
+  [typeClass]="typeClass()"
+  [pending]="pending()"
+  [tooltip]="tooltipTemplate"
 >
+  <span class="calendar-item__title">{{ title() }}</span>
+  @if (showAmount()) {
+    <span class="calendar-item__amount">{{ event().amount | currency: 'USD' : 'symbol' : '1.0-0' }}</span>
+  }
+</app-calendar-item-shell>
+
+<ng-template #tooltipTemplate>
   @switch (eventType()) {
-    @case ('budget') { 
-      <app-budget-calendar-item [event]="event()" />
+    @case ('budget') {
+      <div class="calendar-item__tooltip-header">
+        <span class="calendar-item__tooltip-type">{{ event().type ?? 'Budget' }}</span>
+        @if (event().amount !== undefined) {
+          <span class="calendar-item__tooltip-amount">
+            {{ event().amount | currency: 'USD' : 'symbol' : '1.0-0' }}
+          </span>
+        }
+      </div>
+      <p class="calendar-item__tooltip-title">{{ event().title }}</p>
+      @if (event().description) {
+        <p class="calendar-item__tooltip-description">{{ event().description }}</p>
+      }
+      @if (event().category) {
+        <span class="calendar-item__tooltip-category">{{ event().category }}</span>
+      }
     }
+
     @case ('plaid_transaction') {
-      <app-plaid-transaction-calendar-item [event]="event()" />
+      <div class="calendar-item__tooltip-header">
+        <span class="calendar-item__tooltip-type">{{ typeLabel() }}</span>
+        @if (event().amount !== undefined) {
+          <span class="calendar-item__tooltip-amount">
+            {{ event().amount | currency: 'USD' : 'symbol' : '1.0-0' }}
+          </span>
+        }
+      </div>
+      <p class="calendar-item__tooltip-title">{{ event().title }}</p>
+      @if (event().name && event().name !== event().title) {
+        <p class="calendar-item__tooltip-description">{{ event().name }}</p>
+      }
+      @if (event().merchantName) {
+        <p class="calendar-item__tooltip-description">{{ event().merchantName }}</p>
+      }
+      @if (event().category) {
+        <span class="calendar-item__tooltip-category">{{ event().category }}</span>
+      }
+      @if (event().pending) {
+        <span class="calendar-item__tooltip-category">Pending</span>
+      }
     }
+
     @default {
-      <app-default-calendar-item [event]="event()" />
+      <div class="calendar-item__tooltip-header">
+        <span class="calendar-item__tooltip-type">{{ event().eventType ?? 'Event' }}</span>
+      </div>
+      <p class="calendar-item__tooltip-title">{{ title() }}</p>
+      @if (event().id) {
+        <p class="calendar-item__tooltip-description">{{ event().id }}</p>
+      }
     }
   }
-</div>
+</ng-template>

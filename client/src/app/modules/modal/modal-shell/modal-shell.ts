@@ -1,17 +1,19 @@
 import {
-  AfterViewInit,
+  afterNextRender,
   Component,
   createEnvironmentInjector,
   effect,
   EnvironmentInjector,
   inject,
+  Injector,
   signal,
   Type,
   ViewChild,
   ViewContainerRef,
 } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
-import { Dialog } from 'primeng/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import {
   MODAL_CONFIG,
   MODAL_CONTEXT,
@@ -26,20 +28,22 @@ import { ModalEvents, ModalStore } from '@modals/modal.store';
 
 @Component({
   selector: 'app-modal-shell',
-  imports: [Dialog, NgComponentOutlet],
+  imports: [NgComponentOutlet, MatButtonModule, MatIconModule],
   templateUrl: './modal-shell.html',
   styleUrl: './modal-shell.scss',
   standalone: true,
 })
-export class ModalShell implements AfterViewInit {
+export class ModalShell {
   private readonly modalStore = inject(ModalStore);
   private readonly dispatcher = inject(Dispatcher);
+  private readonly injector = inject(Injector);
 
   visible = signal(true);
   private readonly pendingSubmit = signal(false);
   private suppressCloseEvent = false;
+  private contentMounted = false;
 
-  @ViewChild('content', { read: ViewContainerRef })
+  @ViewChild('contentHost', { read: ViewContainerRef })
   private contentVcr!: ViewContainerRef;
 
   readonly config = inject(MODAL_CONFIG);
@@ -51,7 +55,7 @@ export class ModalShell implements AfterViewInit {
     return typeof this.config.header === 'string' ? this.config.header : null;
   }
 
-  get headerComponent(): Type<unknown> | null{
+  get headerComponent(): Type<unknown> | null {
     return typeof this.config.header === 'function' ? this.config.header : null;
   }
 
@@ -83,10 +87,52 @@ export class ModalShell implements AfterViewInit {
         this.hide(true);
       }
     });
+
+    afterNextRender(
+      () => {
+        if (!this.contentMounted) {
+          this.mountContent();
+        }
+      },
+      { injector: this.injector },
+    );
   }
 
-  ngAfterViewInit() {
-    if (!this.contentVcr) return;
+  onBackdropClick(): void {
+    this.onVisibleChange(false);
+  }
+
+  onVisibleChange(visible: boolean): void {
+    if (visible) {
+      this.visible.set(true);
+      return;
+    }
+
+    if (this.pendingSubmit()) {
+      this.visible.set(true);
+      return;
+    }
+
+    if (!this.suppressCloseEvent) {
+      this.dispatcher.dispatch(
+        ModalEvents.closed({ resourceId: this.modalId, occurredAt: new Date() }),
+      );
+    }
+
+    this.suppressCloseEvent = false;
+    queueMicrotask(() => this.visible.set(false));
+  }
+
+  private hide(suppressCloseEvent: boolean): void {
+    if (suppressCloseEvent) {
+      this.suppressCloseEvent = true;
+    }
+    queueMicrotask(() => this.visible.set(false));
+  }
+
+  private mountContent(): void {
+    if (!this.contentVcr || this.contentMounted) return;
+    this.contentMounted = true;
 
     const context: ModalContext = {
       submit: (formPayload: CreateEventFormPayload) => {
@@ -120,33 +166,5 @@ export class ModalShell implements AfterViewInit {
     this.contentVcr.createComponent(this.config.content, {
       environmentInjector: contentEnvInjector,
     });
-  }
-
-  onVisibleChange(visible: boolean): void {
-    if (visible) {
-      this.visible.set(true);
-      return;
-    }
-
-    if (this.pendingSubmit()) {
-      this.visible.set(true);
-      return;
-    }
-
-    if (!this.suppressCloseEvent) {
-      this.dispatcher.dispatch(
-        ModalEvents.closed({ resourceId: this.modalId, occurredAt: new Date() }),
-      );
-    }
-
-    this.suppressCloseEvent = false;
-    queueMicrotask(() => this.visible.set(false));
-  }
-
-  private hide(suppressCloseEvent: boolean): void {
-    if (suppressCloseEvent) {
-      this.suppressCloseEvent = true;
-    }
-    queueMicrotask(() => this.visible.set(false));
   }
 }

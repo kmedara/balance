@@ -11,7 +11,7 @@
   justify-content: center;
   padding: 1.5rem;
   overflow: hidden;
-  background: var(--p-surface-50);
+  background: var(--app-surface-50);
 }
 
 .login-page__backdrop {
@@ -20,15 +20,15 @@
   background:
     radial-gradient(
       circle at 15% 20%,
-      color-mix(in srgb, var(--p-primary-color) 14%, transparent),
+      color-mix(in srgb, var(--app-primary) 14%, transparent),
       transparent 42%
     ),
     radial-gradient(
       circle at 85% 80%,
-      color-mix(in srgb, var(--income-color, var(--p-green-400)) 12%, transparent),
+      color-mix(in srgb, var(--income-color) 12%, transparent),
       transparent 40%
     ),
-    linear-gradient(160deg, var(--p-surface-0) 0%, var(--p-surface-100) 100%);
+    linear-gradient(160deg, var(--app-surface-0) 0%, var(--app-surface-100) 100%);
   pointer-events: none;
 }
 
@@ -40,12 +40,12 @@
   flex-direction: column;
   gap: 1.5rem;
   padding: 2rem;
-  border: 1px solid var(--p-surface-200);
+  border: 1px solid var(--app-surface-200);
   border-radius: 1rem;
-  background: color-mix(in srgb, var(--p-surface-0) 92%, transparent);
+  background: color-mix(in srgb, var(--app-surface-0) 92%, transparent);
   box-shadow:
-    0 1px 2px color-mix(in srgb, var(--p-surface-900) 6%, transparent),
-    0 16px 40px color-mix(in srgb, var(--p-surface-900) 8%, transparent);
+    0 1px 2px rgb(15 23 42 / 6%),
+    0 16px 40px rgb(15 23 42 / 8%);
   backdrop-filter: blur(8px);
 }
 
@@ -63,9 +63,14 @@
   justify-content: center;
   margin-bottom: 0.25rem;
   border-radius: 0.875rem;
-  background: color-mix(in srgb, var(--p-primary-color) 12%, var(--p-surface-0));
-  color: var(--p-primary-color);
-  font-size: 1.35rem;
+  background: color-mix(in srgb, var(--app-primary) 12%, var(--app-surface-0));
+  color: var(--app-primary);
+
+  mat-icon {
+    font-size: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+  }
 }
 
 .login-card__eyebrow {
@@ -74,7 +79,7 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--p-text-muted-color);
+  color: var(--app-text-muted);
 }
 
 .login-card__title {
@@ -83,7 +88,7 @@
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.02em;
-  color: var(--p-text-color);
+  color: var(--app-text);
 }
 
 .login-card__subtitle {
@@ -91,7 +96,7 @@
   max-width: 22rem;
   font-size: 0.9375rem;
   line-height: 1.55;
-  color: var(--p-text-muted-color);
+  color: var(--app-text-muted);
 }
 
 .login-card__features {
@@ -109,21 +114,28 @@
   gap: 0.625rem;
   padding: 0.625rem 0.75rem;
   border-radius: 0.625rem;
-  background: var(--p-surface-50);
+  background: var(--app-surface-50);
   font-size: 0.875rem;
   line-height: 1.4;
-  color: var(--p-text-color);
+  color: var(--app-text);
   transition: background-color 0.15s ease;
 }
 
 .login-card__features li:hover {
-  background: var(--p-surface-100);
+  background: var(--app-surface-100);
 }
 
-.login-card__features i {
+.login-card__features mat-icon {
   flex-shrink: 0;
-  color: var(--p-primary-color);
-  font-size: 0.95rem;
+  color: var(--app-primary);
+  font-size: 1.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.login-card__button {
+  width: 100%;
+  justify-content: center;
 }
 
 .login-card__footnote {
@@ -131,7 +143,7 @@
   font-size: 0.75rem;
   line-height: 1.5;
   text-align: center;
-  color: var(--p-text-muted-color);
+  color: var(--app-text-muted);
 }
 
 .login-card__error {
@@ -139,16 +151,7 @@
   font-size: 0.875rem;
   line-height: 1.5;
   text-align: center;
-  color: var(--p-red-500);
-}
-
-:host ::ng-deep .login-card__button {
-  width: 100%;
-}
-
-:host ::ng-deep .login-card__button .p-button {
-  width: 100%;
-  justify-content: center;
+  color: #c62828;
 }
 
 @media (min-width: 640px) {
@@ -168,7 +171,6 @@
   .login-card__logo {
     width: 3.25rem;
     height: 3.25rem;
-    font-size: 1.5rem;
   }
 
   .login-card__title {

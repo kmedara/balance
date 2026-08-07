@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
-import { Button } from 'primeng/button';
-import { Menu } from 'primeng/menu';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { ModalService } from '@modules/modal/modal.service';
 import { PlaidService } from 'src/app/modules/plaid/plaid.service';
 import { AuthService } from '@core/auth/auth.service';
@@ -9,7 +10,7 @@ import { AddEventModal } from '@modals/add-event-modal/add-event-modal';
 
 @Component({
   selector: 'app-user-actions',
-  imports: [Button, Menu],
+  imports: [MatButtonModule, MatIconModule, MatMenuModule],
   templateUrl: './user-actions.html',
   styleUrl: './user-actions.scss',
 })
@@ -18,13 +19,6 @@ export class UserActions {
   private _plaidService = inject(PlaidService);
   private _authService = inject(AuthService);
   visible = signal(false);
-
-  // ngOnInit() {
-  //   // Load Plaid script dynamically
-  //   const script = document.createElement('script');
-  //   script.src = 'https://cdn.plaid.com/link/v2/stable/link-initialize.js';
-  //   document.body.appendChild(script);
-  // }
 
   addBudget = () => {
     this._service.open(
@@ -43,17 +37,17 @@ export class UserActions {
 
   items = [
     {
-      icon: 'pi pi-building-columns',
+      icon: 'account_balance',
       label: 'Connect a bank account',
       action: this._plaidService.init,
     },
     {
-      icon: 'pi pi-sync',
+      icon: 'sync',
       label: 'Fetch Plaid transactions',
       action: this.fetchTransactions,
     },
     {
-      icon: 'pi pi-plus',
+      icon: 'add',
       label: 'Add a budget',
       action: this.addBudget,
     },
@@ -61,7 +55,7 @@ export class UserActions {
       ? []
       : [
           {
-            icon: 'pi pi-sign-out',
+            icon: 'logout',
             label: 'Sign out',
             action: this.logout,
           },

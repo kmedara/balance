@@ -1,0 +1,37 @@
+@use '@angular/material' as mat;
+
+html {
+  color-scheme: light;
+  @include mat.theme(
+    (
+      color: (
+        theme-type: light,
+        primary: mat.$green-palette,
+        tertiary: mat.$orange-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    ),
+    $overrides: (
+      // Brighter brand + softer reading colors (still high contrast).
+      primary: #0f9f6e,
+      on-primary: #ffffff,
+      primary-container: #d1fae5,
+      on-primary-container: #065f46,
+      tertiary: #f59e0b,
+      on-tertiary: #1f1300,
+      tertiary-container: #ffedd5,
+      on-tertiary-container: #7c2d12,
+      surface: #f7fcfa,
+      surface-container-lowest: #ffffff,
+      surface-container-low: #eef8f3,
+      surface-container: #e6f4ed,
+      surface-container-high: #dceee5,
+      surface-container-highest: #d0e7db,
+      on-surface: #15202b,
+      on-surface-variant: #4a5d6a,
+      outline: #8aa3b0,
+      outline-variant: #c5d6ce,
+    )
+  );
+}

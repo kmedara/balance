@@ -1,253 +1,125 @@
-<form [formGroup]="form" class="flex min-w-0 flex-col gap-4 p-5" (ngSubmit)="submit()">
+<form [formGroup]="form" class="add-event-form" (ngSubmit)="submit()">
   @if (loading()) {
-    <p class="py-8 text-center text-sm text-surface-500">Loading…</p>
+    <p class="add-event-form__loading">Loading…</p>
   } @else {
-
-  <div class="flex flex-col gap-1">
-
-    <label class="text-sm font-medium" for="budget-title">Title</label>
-
-    <input id="budget-title" pInputText formControlName="title" placeholder="e.g. Rent, Salary" />
-
-    <small class="block min-h-5 text-sm text-red-500">
-
+    <mat-form-field appearance="outline" class="add-event-form__field">
+      <mat-label>Title</mat-label>
+      <input matInput id="budget-title" formControlName="title" placeholder="e.g. Rent, Salary" />
       @if (form.controls.title.touched && form.controls.title.invalid) {
-
-        Title is required
-
+        <mat-error>Title is required</mat-error>
       }
+    </mat-form-field>
 
-    </small>
+    <div class="add-event-form__row">
+      <mat-form-field appearance="outline" class="add-event-form__field">
+        <mat-label>Type</mat-label>
+        <mat-select formControlName="type" id="budget-type">
+          @for (option of budgetTypes; track option.value) {
+            <mat-option [value]="option.value">{{ option.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
 
-  </div>
-
-
-
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-
-    <div class="flex flex-col gap-1">
-
-      <label class="text-sm font-medium" for="budget-type">Type</label>
-
-      <p-select
-
-        inputId="budget-type"
-
-        formControlName="type"
-
-        [options]="budgetTypes"
-
-        optionLabel="label"
-
-        optionValue="value"
-
-        appendTo="body"
-
-        class="w-full"
-
-      />
-
-    </div>
-
-
-
-    <div class="flex flex-col gap-1">
-
-      <label class="text-sm font-medium" for="budget-amount">Amount</label>
-
-      <p-inputNumber
-
-        inputId="budget-amount"
-
-        formControlName="amount"
-
-        mode="currency"
-
-        currency="USD"
-
-        locale="en-US"
-
-        class="w-full"
-
-      />
-
-      <small class="block min-h-5 text-sm text-red-500">
-
+      <mat-form-field appearance="outline" class="add-event-form__field">
+        <mat-label>Amount</mat-label>
+        <input
+          matInput
+          id="budget-amount"
+          type="number"
+          step="0.01"
+          min="0.01"
+          formControlName="amount"
+        />
         @if (form.controls.amount.touched && form.controls.amount.invalid) {
-
-          Enter an amount greater than zero
-
+          <mat-error>Enter an amount greater than zero</mat-error>
         }
-
-      </small>
-
+      </mat-form-field>
     </div>
 
-  </div>
-
-
-
-  <div class="flex flex-col gap-1">
-
-    <label class="text-sm font-medium" for="budget-category">Category</label>
-
-    <input id="budget-category" pInputText formControlName="category" placeholder="e.g. Rent, Food" />
-
-    <small class="block min-h-5 text-sm text-red-500">
-
+    <mat-form-field appearance="outline" class="add-event-form__field">
+      <mat-label>Category</mat-label>
+      <input matInput id="budget-category" formControlName="category" placeholder="e.g. Rent, Food" />
       @if (form.controls.category.touched && form.controls.category.invalid) {
-
-        Category is required
-
+        <mat-error>Category is required</mat-error>
       }
+    </mat-form-field>
 
-    </small>
+    <mat-form-field appearance="outline" class="add-event-form__field">
+      <mat-label>Description</mat-label>
+      <textarea
+        matInput
+        id="budget-description"
+        formControlName="description"
+        rows="2"
+        placeholder="Optional notes"
+      ></textarea>
+    </mat-form-field>
 
-  </div>
+    <div class="add-event-form__row">
+      <mat-form-field appearance="outline" class="add-event-form__field">
+        <mat-label>Start date</mat-label>
+        <input matInput [matDatepicker]="startPicker" formControlName="startDate" id="budget-start-date" />
+        <mat-datepicker-toggle matIconSuffix [for]="startPicker" />
+        <mat-datepicker #startPicker />
+      </mat-form-field>
 
-
-
-  <div class="flex flex-col gap-1">
-
-    <label class="text-sm font-medium" for="budget-description">Description</label>
-
-    <textarea
-
-      id="budget-description"
-
-      pTextarea
-
-      formControlName="description"
-
-      rows="2"
-
-      placeholder="Optional notes"
-
-    ></textarea>
-
-  </div>
-
-
-
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-
-    <div class="flex flex-col gap-1">
-
-      <label class="text-sm font-medium" for="budget-start-date">Start date</label>
-
-      <p-date-picker
-
-        inputId="budget-start-date"
-
-        formControlName="startDate"
-
-        showIcon
-
-        dateFormat="mm/dd/yy"
-
-        appendTo="body"
-
-        class="w-full"
-
-      />
-
+      <mat-form-field appearance="outline" class="add-event-form__field">
+        <mat-label>End date</mat-label>
+        <input
+          matInput
+          [matDatepicker]="endPicker"
+          formControlName="endDate"
+          id="budget-end-date"
+          placeholder="Optional"
+        />
+        <mat-datepicker-toggle matIconSuffix [for]="endPicker" />
+        <mat-datepicker #endPicker />
+      </mat-form-field>
     </div>
 
+    <div class="add-event-form__row">
+      <mat-form-field appearance="outline" class="add-event-form__field">
+        <mat-label>Frequency</mat-label>
+        <mat-select formControlName="frequency" id="budget-frequency">
+          @for (option of frequencyOptions; track option.value) {
+            <mat-option [value]="option.value">{{ option.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
 
-
-    <div class="flex flex-col gap-1">
-
-      <label class="text-sm font-medium" for="budget-end-date">End date</label>
-
-      <p-date-picker
-
-        inputId="budget-end-date"
-
-        formControlName="endDate"
-
-        showIcon
-
-        dateFormat="mm/dd/yy"
-
-        appendTo="body"
-
-        class="w-full"
-
-        placeholder="Optional"
-
-      />
-
+      <mat-form-field appearance="outline" class="add-event-form__field">
+        <mat-label>Every (periods)</mat-label>
+        <input matInput id="budget-interval" type="number" min="1" formControlName="interval" />
+      </mat-form-field>
     </div>
 
-  </div>
+    @if (errorMessage(); as message) {
+      <p class="add-event-form__error" role="alert">{{ message }}</p>
+    }
 
-
-
-  <div class="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
-
-    <div class="flex min-w-0 flex-col gap-1">
-
-      <label class="text-sm font-medium" for="budget-frequency">Frequency</label>
-
-      <p-select
-
-        inputId="budget-frequency"
-
-        formControlName="frequency"
-
-        [options]="frequencyOptions"
-
-        optionLabel="label"
-
-        optionValue="value"
-
-        appendTo="body"
-
-        class="w-full"
-
-      />
-
+    <div class="add-event-form__actions">
+      <button
+        mat-stroked-button
+        type="button"
+        (click)="cancel()"
+        [disabled]="submitting() || loading()"
+      >
+        Cancel
+      </button>
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        (click)="submit()"
+        [disabled]="submitting() || loading()"
+      >
+        @if (submitting()) {
+          <mat-icon class="add-event-form__spinner">hourglass_top</mat-icon>
+        } @else {
+          <mat-icon>check</mat-icon>
+        }
+        {{ isEdit ? 'Save changes' : 'Save ' + eventType }}
+      </button>
     </div>
-
-
-
-    <div class="flex min-w-0 flex-col gap-1">
-
-      <label class="text-sm font-medium" for="budget-interval">Every (periods)</label>
-
-      <p-inputNumber
-
-        inputId="budget-interval"
-
-        formControlName="interval"
-
-        [min]="1"
-
-        [showButtons]="true"
-
-        class="w-full"
-
-      />
-
-    </div>
-
-  </div>
-
-
-
-  @if (errorMessage(); as message) {
-    <p class="min-h-5 text-sm text-red-500" role="alert">{{ message }}</p>
-  } @else {
-    <p class="min-h-5" aria-hidden="true"></p>
-  }
-
-  <div class="flex justify-end gap-2 pt-2">
-    <p-button size="large"type="button" label="Cancel" severity="secondary" (click)="cancel()" [disabled]="submitting() || loading()" />
-
-    <p-button size="large" type="button" [label]="isEdit ? 'Save changes' : 'Save ' + eventType" icon="pi pi-check" [loading]="submitting()" (click)="submit()" />
-
-  </div>
   }
 </form>
-
-

@@ -4,7 +4,7 @@
   <main class="login-card">
     <div class="login-card__brand">
       <div class="login-card__logo" aria-hidden="true">
-        <i class="pi pi-calendar"></i>
+        <mat-icon>calendar_month</mat-icon>
       </div>
       <p class="login-card__eyebrow">Personal finance</p>
       <h1 class="login-card__title">Balance</h1>
@@ -15,26 +15,29 @@
 
     <ul class="login-card__features">
       <li>
-        <i class="pi pi-calendar-clock" aria-hidden="true"></i>
+        <mat-icon aria-hidden="true">event_repeat</mat-icon>
         <span>Recurring budgets on a month grid</span>
       </li>
       <li>
-        <i class="pi pi-chart-line" aria-hidden="true"></i>
+        <mat-icon aria-hidden="true">show_chart</mat-icon>
         <span>Income and expense at a glance</span>
       </li>
       <li>
-        <i class="pi pi-building-columns" aria-hidden="true"></i>
+        <mat-icon aria-hidden="true">account_balance</mat-icon>
         <span>Connect accounts when you are ready</span>
       </li>
     </ul>
 
-    <p-button
-      label="Sign in"
-      icon="pi pi-sign-in"
-      size="large"
-      styleClass="login-card__button"
-      (onClick)="login()"
-    />
+    <button
+      mat-flat-button
+      color="primary"
+      class="login-card__button"
+      type="button"
+      (click)="login()"
+    >
+      <mat-icon>login</mat-icon>
+      Sign in
+    </button>
 
     @if (errorMessage(); as message) {
       <p class="login-card__error" role="alert">{{ message }}</p>

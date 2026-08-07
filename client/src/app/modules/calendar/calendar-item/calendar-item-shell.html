@@ -1,0 +1,16 @@
+<div
+  [class]="itemClass()"
+  [appRichTooltip]="tooltip() ? tooltipTemplate : null"
+  [appRichTooltipClass]="tooltipPanelClasses()"
+>
+  <span class="calendar-item__accent" aria-hidden="true"></span>
+  <ng-content />
+</div>
+
+<ng-template #tooltipTemplate>
+  <div [class]="tooltipContentClass()">
+    @if (tooltip(); as tip) {
+      <ng-container [ngTemplateOutlet]="tip" />
+    }
+  </div>
+</ng-template>

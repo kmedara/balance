@@ -1,37 +1,17 @@
-<p-button rounded icon="pi pi-cog" (click)="menu.toggle($event)"></p-button>
-<p-menu #menu [model]="items" [popup]="true">
-  <ng-template #item let-item>
-    <a
-      (click)="item.action()"
-      (keyup.enter)="item.action()"
-      tabindex="0"
-      pRipple
-      class="flex items-center px-3 py-2 cursor-pointer text-nowrap"
-      [class]="item.linkClass"
-    >
-      <span [class]="item.icon"></span>
-      <span class="ms-2">{{ item.label }}</span>
-    </a>
-  </ng-template>
-</p-menu>
+<button
+  mat-icon-button
+  type="button"
+  [matMenuTriggerFor]="actionsMenu"
+  aria-label="Open actions menu"
+>
+  <mat-icon>settings</mat-icon>
+</button>
 
-
-<!-- <p-drawer
-  class="user-action-drawer"
-  [visible]="visible()"
-  dismissable
-  closeOnEscape
-  (onHide)="visible.set(false)"
-  class="w-30rem user-action-drawer"
-> -->
-<!-- @for (action of actions; track $index) {
-    <div class="user-action-button" size="large" variant="text">
-      <i [class]="action.icon"></i>
-      <span [innerHTML]="action.label"></span>
-    </div>
-  } -->
-
-<!-- @for (action of actions; track $index) {
-    <p-button icon="pi pi-building-columns" size="large" label="Connect a bank account" />
-  } -->
-<!-- </p-drawer> -->
+<mat-menu #actionsMenu="matMenu">
+  @for (item of items; track item.label) {
+    <button mat-menu-item type="button" (click)="item.action()">
+      <mat-icon>{{ item.icon }}</mat-icon>
+      <span>{{ item.label }}</span>
+    </button>
+  }
+</mat-menu>

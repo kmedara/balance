@@ -1,23 +1,28 @@
 import { CurrencyPipe, NgClass } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
-import { ButtonModule } from 'primeng/button';
-import { DataViewModule } from 'primeng/dataview';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { RouterOutlet } from '@angular/router';
 import { CalendarResponseWire } from '@core/domain';
-import { ModalService } from '@modules/modal/modal.service';
 import { CalendarEventItem } from './calendar-item/calendar-event-item';
 import { calendarStore } from './calendar.store';
 import { reviveCalendarResponse, summarizeMonth, buildEmptyMonthDays } from './calendar.utils';
-import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [NgClass, CurrencyPipe, DataViewModule, ButtonModule, CalendarEventItem, RouterOutlet],
+  imports: [
+    NgClass,
+    CurrencyPipe,
+    MatButtonModule,
+    MatIconModule,
+    CalendarEventItem,
+    RouterOutlet,
+  ],
   templateUrl: './calendar.html',
   styleUrl: './calendar.scss',
 })
 export class Calendar {
-  private readonly modalService = inject(ModalService);
   readonly store = inject(calendarStore);
 
   weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
