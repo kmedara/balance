@@ -64,7 +64,7 @@ export class RichTooltipDirective implements OnDestroy {
       'rich-tooltip-panel',
       ...(Array.isArray(extraClasses)
         ? extraClasses
-        : extraClasses.split(/\s+/).filter(Boolean)),
+        : (extraClasses as string).split(/\s+/).filter(Boolean)),
     ];
 
     this.overlayRef = this.overlay.create({
