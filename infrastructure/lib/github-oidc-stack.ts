@@ -6,13 +6,18 @@ import { grantGitHubDeployPermissions } from './github-deploy-policy';
 export type GitHubOidcStackProps = cdk.StackProps & {
   githubOrg: string;
   githubRepo: string;
-  /** Branches allowed to assume the role (push / workflow_dispatch). */
+  /** Branches allowed to assume the role (push without an environment claim). */
   githubBranches?: string[];
+  /**
+   * Tag ref patterns allowed in OIDC `sub` (e.g. `v*`).
+   * Prefer environment claims for deploy jobs; tags are defense in depth.
+   */
+  githubTags?: string[];
   /** GitHub Actions environment names allowed in OIDC trust (deploy job `environment:`). */
   githubEnvironments?: string[];
   /** @deprecated Use githubEnvironments */
   githubEnvironment?: string;
-  /** CloudFormation stack names deployed by CI (default BalanceAuthStack + BalanceApiStack). */
+  /** CloudFormation stack names deployed by CI (default includes Database/Auth/Api/Client/Dns). */
   deployStackNames?: string[];
   /** @deprecated Use deployStackNames */
   deployStackName?: string;
@@ -21,7 +26,13 @@ export type GitHubOidcStackProps = cdk.StackProps & {
 /**
  * Deploy once locally with admin credentials before enabling GitHub Actions deploys.
  *
- * npx cdk deploy BalanceGitHubOidcStack -c githubOrg=OWNER -c githubRepo=REPO
+ * Staging account example:
+ * npx cdk deploy BalanceGitHubOidcStack -c githubOrg=OWNER -c githubRepo=REPO \
+ *   -c githubEnvironments=staging -c githubBranches=main
+ *
+ * Production account example:
+ * npx cdk deploy BalanceGitHubOidcStack -c githubOrg=OWNER -c githubRepo=REPO \
+ *   -c githubEnvironments=production -c githubTags=v* -c githubBranches=main
  */
 export class GitHubOidcStack extends cdk.Stack {
   public readonly deployRole: iam.Role;
@@ -33,14 +44,14 @@ export class GitHubOidcStack extends cdk.Stack {
       ? props.githubEnvironments
       : props.githubEnvironment
         ? [props.githubEnvironment]
-        : ['development'];
-    const githubBranches = props.githubBranches?.length
-      ? props.githubBranches
-      : ['main', 'master'];
+        : ['staging', 'production'];
+    const githubBranches = props.githubBranches?.length ? props.githubBranches : ['main'];
+    const githubTags = props.githubTags?.length ? props.githubTags : ['v*'];
     const repository = `${props.githubOrg}/${props.githubRepo}`;
 
     const trustSubjects = [
       ...githubBranches.map((branch) => `repo:${repository}:ref:refs/heads/${branch}`),
+      ...githubTags.map((tag) => `repo:${repository}:ref:refs/tags/${tag}`),
       ...githubEnvironments.map(
         (environment) => `repo:${repository}:environment:${environment}`,
       ),
@@ -72,7 +83,7 @@ export class GitHubOidcStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'DeployRoleArn', {
       value: this.deployRole.roleArn,
-      description: 'Set as GitHub secret AWS_DEPLOY_ROLE_ARN (repo or environment secret)',
+      description: 'Set as GitHub environment secret AWS_DEPLOY_ROLE_ARN',
       exportName: 'BalanceGitHubDeployRoleArn',
     });
 

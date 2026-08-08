@@ -1,55 +1,41 @@
-name: Client
+name: Reusable — deploy client
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'client/**'
-      - 'packages/domain/**'
-      - 'packages/schemas/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - '.github/workflows/client.yml'
-  workflow_dispatch:
+  workflow_call:
     inputs:
-      api_base_url:
-        description: 'API base URL baked into the client (GATEWAY)'
-        required: false
+      environment:
+        description: GitHub Environment name (staging | production)
+        required: true
         type: string
-
-concurrency:
-  group: client-${{ github.ref }}
-  cancel-in-progress: true
 
 permissions:
   contents: read
+  id-token: write
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
   CDK_DEFAULT_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
-  GATEWAY: ${{ inputs.api_base_url || vars.API_BASE_URL }}
+  GATEWAY: ${{ vars.API_BASE_URL }}
 
 jobs:
   deploy:
     name: Build & deploy client
-    environment: development
+    environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Validate configuration
+        env:
+          ROLE_ARN: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
         run: |
           if [ -z "$GATEWAY" ]; then
-            echo "::error::Set repository variable API_BASE_URL (or provide api_base_url input) to the API Gateway URL."
+            echo "::error::Set environment variable API_BASE_URL for '${{ inputs.environment }}'."
             exit 1
           fi
-          if [ -z "${{ secrets.AWS_DEPLOY_ROLE_ARN }}" ]; then
-            echo "::error::Set secret AWS_DEPLOY_ROLE_ARN (deploy BalanceGitHubOidcStack first)."
+          if [ -z "$ROLE_ARN" ]; then
+            echo "::error::Set environment secret AWS_DEPLOY_ROLE_ARN for '${{ inputs.environment }}' (OIDC only)."
             exit 1
           fi
 
@@ -62,6 +48,11 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Build shared packages
+        run: |
+          npm run build -w @balance/schemas
+          npm run build -w @balance/domain
 
       - name: Build client (production)
         working-directory: client
@@ -78,7 +69,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-          role-session-name: balance-client-${{ github.run_id }}
+          role-session-name: balance-client-${{ inputs.environment }}-${{ github.run_id }}
 
       - name: Set CDK deploy target
         run: |

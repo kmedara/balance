@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: release-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  verify-tag:
+    name: Verify tag is on main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure tagged commit is reachable from main
+        run: |
+          git fetch origin main
+          if ! git merge-base --is-ancestor "${{ github.sha }}" origin/main; then
+            echo "::error::Tag ${{ github.ref_name }} does not point at a commit on main. Production deploys require tags on main."
+            exit 1
+          fi
+
+  deploy-infra:
+    name: Production — infrastructure
+    needs: verify-tag
+    uses: ./.github/workflows/reusable-deploy-infra.yml
+    with:
+      environment: production
+    secrets: inherit
+
+  deploy-client:
+    name: Production — client
+    needs: deploy-infra
+    uses: ./.github/workflows/reusable-deploy-client.yml
+    with:
+      environment: production
+    secrets: inherit

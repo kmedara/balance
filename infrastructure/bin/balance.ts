@@ -9,76 +9,27 @@ import { DnsStack } from '../lib/dns-stack';
 import { GitHubOidcStack } from '../lib/github-oidc-stack';
 import { getStackEnv } from '../lib/stack-env';
 
-const parseUrlList = (
-  contextValue: string[] | undefined,
-  envValue: string | undefined,
-  fallback: string[],
-): string[] => {
-  if (contextValue?.length) {
-    return contextValue;
-  }
-
-  if (envValue) {
-    try {
-      const parsed = JSON.parse(envValue) as unknown;
-      if (Array.isArray(parsed) && parsed.every((entry) => typeof entry === 'string')) {
-        return parsed;
-      }
-    } catch {
-      return envValue.split(',').map((entry) => entry.trim()).filter(Boolean);
-    }
-  }
-
-  return fallback;
-};
+/**
+ * Config sources — one source per concern (no env ↔ context fallbacks).
+ *
+ * | Concern                    | Source                                      |
+ * |----------------------------|---------------------------------------------|
+ * | Cognito OAuth URLs         | CDK context (`cdk.json` / `-c`)             |
+ * | Domain / CORS / DNS        | Env vars                                    |
+ * | GitHub OIDC                | CDK context                                 |
+ * | API Lambda secrets / IDs   | Env vars (`pickApiLambdaEnvironment`)       |
+ * | Client CSP / DNS labels    | CDK context                                 |
+ */
 
 const app = new cdk.App();
-
-const callbackUrls = parseUrlList(
-  app.node.tryGetContext('callbackUrls') as string[] | undefined,
-  process.env.COGNITO_CALLBACK_URLS,
-  ['http://localhost:3000/auth/callback'],
-);
-
-const logoutUrls = parseUrlList(
-  app.node.tryGetContext('logoutUrls') as string[] | undefined,
-  process.env.COGNITO_LOGOUT_URLS,
-  ['http://localhost:4200/', 'http://localhost:4200/login'],
-);
-
 const stackEnv = getStackEnv();
 
-const githubOrg = app.node.tryGetContext('githubOrg') as string | undefined;
-const githubRepo = app.node.tryGetContext('githubRepo') as string | undefined;
+// ---------------------------------------------------------------------------
+// Cognito OAuth URLs — CDK context
+// ---------------------------------------------------------------------------
 
-if (githubOrg && githubRepo) {
-  const githubBranches = (app.node.tryGetContext('githubBranches') as string | undefined)
-    ?.split(',')
-    .map((branch) => branch.trim());
-
-  const githubEnvironments = (
-    app.node.tryGetContext('githubEnvironments') as string | undefined
-  )
-    ?.split(',')
-    .map((environment) => environment.trim())
-    .filter(Boolean);
-
-  const legacyGithubEnvironment = app.node.tryGetContext('githubEnvironment') as
-    | string
-    | undefined;
-
-  new GitHubOidcStack(app, 'BalanceGitHubOidcStack', {
-    env: stackEnv,
-    githubOrg,
-    githubRepo,
-    githubBranches,
-    githubEnvironments: githubEnvironments?.length
-      ? githubEnvironments
-      : legacyGithubEnvironment
-        ? [legacyGithubEnvironment]
-        : ['development'],
-  });
-}
+const callbackUrls = app.node.getContext('callbackUrls') as string[];
+const logoutUrls = app.node.getContext('logoutUrls') as string[];
 
 new AuthStack(app, 'BalanceAuthStack', {
   env: stackEnv,
@@ -86,23 +37,15 @@ new AuthStack(app, 'BalanceAuthStack', {
   logoutUrls,
 });
 
-const rootDomainName =
-  process.env.ROOT_DOMAIN_NAME ??
-  (app.node.tryGetContext('rootDomainName') as string | undefined);
+// ---------------------------------------------------------------------------
+// Domain / CORS / DNS — env vars
+// ---------------------------------------------------------------------------
 
-const apiSubdomain = (app.node.tryGetContext('apiSubdomain') as string | undefined) ?? 'api';
-const appSubdomain = (app.node.tryGetContext('appSubdomain') as string | undefined) ?? 'app';
-const hostedZoneId =
-  process.env.HOSTED_ZONE_ID ?? (app.node.tryGetContext('hostedZoneId') as string | undefined);
-
-const explicitCorsOrigin =
-  process.env.CLIENT_ORIGIN ??
-  process.env.CORS_ORIGIN ??
-  (app.node.tryGetContext('corsOrigin') as string | undefined);
-
-const corsOrigin =
-  explicitCorsOrigin ??
-  (rootDomainName ? `https://${appSubdomain}.${rootDomainName}` : 'http://localhost:4200');
+const rootDomainName = process.env.ROOT_DOMAIN_NAME;
+const hostedZoneId = process.env.HOSTED_ZONE_ID;
+const corsOrigin = process.env.CLIENT_ORIGIN;
+const clientDomainName = process.env.CLIENT_DOMAIN_NAME;
+const clientCertificateArn = process.env.CLIENT_CERTIFICATE_ARN;
 
 const database = new DatabaseStack(app, 'BalanceDatabaseStack', {
   env: stackEnv,
@@ -118,6 +61,9 @@ const api = new ApiStack(app, 'BalanceApiStack', {
   },
 });
 
+// Optional DNS label overrides + client CSP — CDK context
+const apiSubdomain = app.node.tryGetContext('apiSubdomain') as string | undefined;
+const appSubdomain = app.node.tryGetContext('appSubdomain') as string | undefined;
 const contentSecurityPolicy = app.node.tryGetContext('clientCsp') as string | undefined;
 
 if (rootDomainName) {
@@ -138,18 +84,45 @@ if (rootDomainName) {
     contentSecurityPolicy,
   });
 } else {
-  const clientDomainName =
-    process.env.CLIENT_DOMAIN_NAME ??
-    (app.node.tryGetContext('clientDomainName') as string | undefined);
-
-  const clientCertificateArn =
-    process.env.CLIENT_CERTIFICATE_ARN ??
-    (app.node.tryGetContext('clientCertificateArn') as string | undefined);
-
   new ClientStack(app, 'BalanceClientStack', {
     env: stackEnv,
     domainName: clientDomainName,
     certificateArn: clientCertificateArn,
     contentSecurityPolicy,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// GitHub OIDC — CDK context (optional stack)
+// ---------------------------------------------------------------------------
+
+const githubOrg = app.node.tryGetContext('githubOrg') as string | undefined;
+const githubRepo = app.node.tryGetContext('githubRepo') as string | undefined;
+
+if (githubOrg && githubRepo) {
+  const githubBranches = (app.node.tryGetContext('githubBranches') as string | undefined)
+    ?.split(',')
+    .map((branch) => branch.trim())
+    .filter(Boolean);
+
+  const githubEnvironments = (
+    app.node.tryGetContext('githubEnvironments') as string | undefined
+  )
+    ?.split(',')
+    .map((environment) => environment.trim())
+    .filter(Boolean);
+
+  const githubTags = (app.node.tryGetContext('githubTags') as string | undefined)
+    ?.split(',')
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+
+  new GitHubOidcStack(app, 'BalanceGitHubOidcStack', {
+    env: stackEnv,
+    githubOrg,
+    githubRepo,
+    githubBranches,
+    githubEnvironments,
+    githubTags,
   });
 }

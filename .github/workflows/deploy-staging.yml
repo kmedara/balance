@@ -1,0 +1,30 @@
+name: Deploy staging
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy-infra:
+    name: Staging — infrastructure
+    uses: ./.github/workflows/reusable-deploy-infra.yml
+    with:
+      environment: staging
+    secrets: inherit
+
+  deploy-client:
+    name: Staging — client
+    needs: deploy-infra
+    uses: ./.github/workflows/reusable-deploy-client.yml
+    with:
+      environment: staging
+    secrets: inherit
