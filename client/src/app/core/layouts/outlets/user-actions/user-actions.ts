@@ -1,13 +1,21 @@
-import { BUDGET_EVENT_TYPE } from '@core/domain';
-import { Component, inject, signal } from '@angular/core';
+import { BUDGET_EVENT_TYPE } from '@balance/schemas/client';
+import { Component, computed, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { ModalService } from '@modules/modal/modal.service';
+import { billingStore } from '@modules/billing/billing.store';
 import { PlaidService } from 'src/app/modules/plaid/plaid.service';
 import { AuthService } from '@core/auth/auth.service';
 import { environment } from 'src/environments/environment';
 import { AddEventModal } from '@modals/add-event-modal/add-event-modal';
+
+type ActionItem = {
+  icon: string;
+  label: string;
+  action: () => void;
+  paidOnly?: boolean;
+};
 
 @Component({
   selector: 'app-user-actions',
@@ -18,8 +26,8 @@ import { AddEventModal } from '@modals/add-event-modal/add-event-modal';
 export class UserActions {
   private _service = inject(ModalService);
   private _plaidService = inject(PlaidService);
+  private _billing = inject(billingStore);
   private _authService = inject(AuthService);
-  visible = signal(false);
 
   addBudget = () => {
     this._service.open(
@@ -29,23 +37,25 @@ export class UserActions {
   };
 
   fetchTransactions = () => {
-    this._plaidService.fetchTransactions();
+    void this._plaidService.fetchTransactions();
   };
 
   logout = () => {
     this._authService.logout();
   };
 
-  items = [
+  private readonly allItems: ActionItem[] = [
     {
       icon: 'account_balance',
       label: 'Connect a bank account',
-      action: this._plaidService.init,
+      action: () => void this._plaidService.init(),
+      paidOnly: true,
     },
     {
       icon: 'sync',
       label: 'Fetch Plaid transactions',
       action: this.fetchTransactions,
+      paidOnly: true,
     },
     {
       icon: 'add',
@@ -62,4 +72,10 @@ export class UserActions {
           },
         ]),
   ];
+
+  readonly items = computed(() =>
+    this.allItems.filter(
+      (item) => !item.paidOnly || environment.authDisabled || this._billing.isPaid(),
+    ),
+  );
 }

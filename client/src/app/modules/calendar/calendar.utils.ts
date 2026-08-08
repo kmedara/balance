@@ -1,4 +1,13 @@
-import type { CalendarDay, CalendarDayWire, CalendarResponse, CalendarResponseWire } from '@core/domain';
+import type { CalendarDayWire, CalendarResponseWire } from '@balance/schemas/client';
+
+/** Calendar day after JSON date strings are revived to local midnight. */
+export type CalendarDay = Omit<CalendarDayWire, 'date'> & { date: Date };
+
+/** Calendar month grid with revived local dates. */
+export type CalendarResponse = Omit<CalendarResponseWire, 'days' | 'weeks'> & {
+  days: CalendarDay[];
+  weeks: CalendarDay[][];
+};
 
 export type MonthSummary = {
   income: number;

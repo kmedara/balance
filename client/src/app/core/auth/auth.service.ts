@@ -1,12 +1,14 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import type { AuthUser } from '@core/domain';
+import type { AuthUser } from '@balance/schemas/client';
 import { GATEWAY_HTTP_TOKEN } from '@core/gateway.http';
+import { billingStore } from '@modules/billing/billing.store';
 import { environment } from 'src/environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(GATEWAY_HTTP_TOKEN);
+  private readonly billing = inject(billingStore);
   private readonly ready = signal(false);
 
   readonly isAuthenticated = signal(false);
@@ -42,6 +44,8 @@ export class AuthService {
   }
 
   logout(): void {
+    this.billing.clearCachedSubscription();
+
     if (environment.authDisabled) {
       this.clearUser();
       return;

@@ -10,6 +10,7 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { provideGatewayHttpClient } from '@core/gateway.http';
+import { provideClientCache } from '@core/cache/provide-client-cache';
 import { AuthService } from '@core/auth/auth.service';
 
 export const appConfig: ApplicationConfig = {
@@ -21,6 +22,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     provideNativeDateAdapter(),
     provideGatewayHttpClient(),
+    provideClientCache(),
     {
       provide: APP_INITIALIZER,
       multi: true,

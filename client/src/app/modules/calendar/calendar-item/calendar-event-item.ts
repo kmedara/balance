@@ -1,7 +1,10 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, computed, input } from '@angular/core';
-import type { CalendarEventWire } from '@core/domain';
-import { BUDGET_EVENT_TYPE, PLAID_TRANSACTION_EVENT_TYPE } from '@core/domain';
+import {
+  BUDGET_EVENT_TYPE,
+  PLAID_TRANSACTION_EVENT_TYPE,
+  type CalendarEventWire,
+} from '@balance/schemas/client';
 import {
   CalendarItemShell,
   type CalendarItemTypeClass,

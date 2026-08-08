@@ -3,7 +3,7 @@ import { Component, computed, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterOutlet } from '@angular/router';
-import { CalendarResponseWire } from '@core/domain';
+import type { CalendarResponseWire } from '@balance/schemas/client';
 import { CalendarEventItem } from './calendar-item/calendar-event-item';
 import { calendarStore } from './calendar.store';
 import { reviveCalendarResponse, summarizeMonth, buildEmptyMonthDays } from './calendar.utils';

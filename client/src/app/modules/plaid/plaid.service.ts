@@ -4,11 +4,11 @@ import type {
   PlaidExchangeTokenResponse,
   PlaidSyncResponse,
   PlaidTransaction,
-} from '@core/domain';
+} from '@balance/schemas/client';
 import { inject, Injectable, signal } from '@angular/core';
 import { GATEWAY_HTTP_TOKEN } from '@core/gateway.http';
-
-export type { PlaidTransaction };
+import { billingStore } from '@modules/billing/billing.store';
+import { environment } from 'src/environments/environment';
 
 type PlaidLinkHandler = { open: () => void };
 
@@ -30,13 +30,44 @@ const getPlaidGlobal = (): PlaidGlobal | undefined =>
 })
 export class PlaidService {
   private http = inject(GATEWAY_HTTP_TOKEN);
+  private billing = inject(billingStore);
   readonly error = signal<PlaidError | null>(null);
   readonly linkedItems = signal<string[]>([]);
   readonly transactions = signal<PlaidTransaction[]>([]);
   readonly isFetchingTransactions = signal(false);
   private handler?: PlaidLinkHandler;
 
+  private async assertPaidAccess(): Promise<boolean> {
+    if (environment.authDisabled) {
+      return true;
+    }
+
+    try {
+      await this.billing.ensureLoaded();
+      if (this.billing.isPaid()) {
+        return true;
+      }
+      this.error.set({
+        error_type: 'INVALID_REQUEST',
+        error_code: 'ENTITLEMENT_REQUIRED',
+        error_message: 'A paid subscription is required to link banks with Plaid',
+      });
+      return false;
+    } catch {
+      this.error.set({
+        error_type: 'API_ERROR',
+        error_code: 'ENTITLEMENT_CHECK_FAILED',
+        error_message: 'Unable to verify subscription for Plaid access',
+      });
+      return false;
+    }
+  }
+
   init = async () => {
+    if (!(await this.assertPaidAccess())) {
+      return;
+    }
+
     const plaid = getPlaidGlobal();
     if (!plaid) {
       throw new Error('Plaid Link script not loaded');
@@ -69,7 +100,11 @@ export class PlaidService {
     });
   };
 
-  fetchTransactions = (itemId?: string) => {
+  fetchTransactions = async (itemId?: string) => {
+    if (!(await this.assertPaidAccess())) {
+      return;
+    }
+
     this.isFetchingTransactions.set(true);
     this.error.set(null);
 
