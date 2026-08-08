@@ -9,3 +9,6 @@ packages/domain/lib
 node_modules
 packages/domain/lib/*
 packages/schemas/lib/*
+*/coverage
+coverage
+api/html
