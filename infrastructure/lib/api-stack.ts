@@ -9,7 +9,7 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 
 export type ApiStackProps = cdk.StackProps & {
-  /** Allowed browser origin for CORS (also set CLIENT_ORIGIN / CORS_ORIGIN on the Lambda). */
+  /** Allowed browser origin for CORS / redirects (sets Lambda `CLIENT_ORIGIN`). */
   corsOrigin?: string;
   /** Lambda environment variables (secrets should move to Secrets Manager in production). */
   environment?: Record<string, string>;
@@ -34,7 +34,6 @@ export class ApiStack extends cdk.Stack {
     const environment: Record<string, string> = {
       NODE_ENV: 'production',
       CLIENT_ORIGIN: corsOrigin,
-      CORS_ORIGIN: corsOrigin,
       ...props.database?.environment,
       ...props.environment,
     };

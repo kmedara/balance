@@ -35,7 +35,6 @@ type StripeEnvStrings = EnvString<{
   STRIPE_PRICE_PLUS_ANNUAL: string;
   STRIPE_PRICE_PRO_MONTHLY: string;
   STRIPE_PRICE_PRO_ANNUAL: string;
-  CLIENT_ORIGIN: string[];
   STRIPE_TRIAL_PERIOD_DAYS: string;
 }>;
 
@@ -57,8 +56,8 @@ type DynamoDBEnvStrings = EnvString<{
   BALANCE_TABLE: string;
 }>;
 
-type CorsEnvStrings = EnvString<{
-  CORS_ORIGIN: string[];
+type ClientOriginEnvStrings = EnvString<{
+  CLIENT_ORIGIN: string;
 }>;
 
 type SessionSecretEnvStrings = EnvString<{
@@ -82,7 +81,7 @@ declare global {
         CognitoEnvStrings,
         AuthEnvStrings,
         DynamoDBEnvStrings,
-        CorsEnvStrings,
+        ClientOriginEnvStrings,
         SessionSecretEnvStrings,
         ApiPublicEnvStrings,
         SeedDropEnvStrings {}

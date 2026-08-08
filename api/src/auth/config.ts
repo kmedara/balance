@@ -1,7 +1,46 @@
-import { ServiceUnavailableError } from '@src/errors/http-error.js';
+import { ServiceUnavailableError } from '../errors/http-error.js';
 import { createHash } from 'node:crypto';
 
 const trimTrailingSlash = (value: string): string => value.replace(/\/+$/, '');
+
+/** True when `value` is exactly an http(s) origin (scheme + host[+port], no path). */
+export const isHttpOrigin = (value: string): boolean => {
+  if (!value || value === '*') return false;
+  try {
+    const url = new URL(value);
+    return (
+      (url.protocol === 'http:' || url.protocol === 'https:') &&
+      url.origin === value &&
+      url.username === '' &&
+      url.password === ''
+    );
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Parses `CLIENT_ORIGIN` into a fail-closed allowlist.
+ * Comma-separated origins are supported; prefer one origin per environment.
+ */
+export const parseClientOrigins = (raw: string | undefined): string[] => {
+  const origins = (raw ?? '')
+    .split(',')
+    .map((entry) => trimTrailingSlash(entry.trim()))
+    .filter(Boolean);
+
+  if (origins.length === 0) {
+    throw new Error('CLIENT_ORIGIN is required');
+  }
+
+  for (const origin of origins) {
+    if (!isHttpOrigin(origin)) {
+      throw new Error(`CLIENT_ORIGIN entry is not a valid http(s) origin: ${origin}`);
+    }
+  }
+
+  return origins;
+};
 
 export const isAuthDisabled = (): boolean => process.env.AUTH_DISABLED === 'true';
 
@@ -42,15 +81,15 @@ export const getAuthCallbackUrl = (): string =>
   process.env.AUTH_CALLBACK_URL ?? 'http://localhost:3000/auth/callback';
 
 export const sanitizeReturnTo = (returnTo: string | undefined): string => {
-  
-    const url = new URL(returnTo ?? '');
+  const url = new URL(returnTo ?? '');
 
-    // Accept the target only if its origin is in the allowlist, so a
-    // post-login redirect can land back on whichever client initiated sign-in.
-    if (!getClientOrigins().includes(url.origin))
-      throw new Error('Invalid returnTo');
+  // Accept the target only if its origin is in the allowlist, so a
+  // post-login redirect can land back on whichever client initiated sign-in.
+  if (!getClientOrigins().includes(url.origin)) {
+    throw new Error('Invalid returnTo');
+  }
 
-    return url.toString();  
+  return url.toString();
 };
 
 // Non-throwing variant of sanitizeReturnTo: returns a valid allowlisted target
@@ -65,11 +104,11 @@ export const resolveReturnTo = (returnTo: string | undefined): string => {
 };
 
 export const getClientOrigins = (): string[] => {
-  const origins = process.env?.CLIENT_ORIGIN?.split(',')?.map(trimTrailingSlash);
-  if (!origins || origins.length === 0) {
-    throw new ServiceUnavailableError('Configuration error');
+  try {
+    return parseClientOrigins(process.env.CLIENT_ORIGIN);
+  } catch {
+    throw new ServiceUnavailableError('CLIENT_ORIGIN is missing or invalid');
   }
-  return origins;
 };
 
 // First entry of the allowlist; the default target when no specific client
@@ -77,7 +116,7 @@ export const getClientOrigins = (): string[] => {
 export const getPrimaryClientOrigin = (): string => {
   const [primary] = getClientOrigins();
   if (!primary) {
-    throw new ServiceUnavailableError('Configuration error');
+    throw new ServiceUnavailableError('CLIENT_ORIGIN is missing or invalid');
   }
   return primary;
 };

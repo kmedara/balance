@@ -161,7 +161,7 @@ export class ClientStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'ClientUrl', {
       value: clientUrl,
       exportName: 'BalanceClientUrl',
-      description: 'Set Lambda CLIENT_ORIGIN / CORS_ORIGIN to this value',
+      description: 'Set Lambda CLIENT_ORIGIN to this value',
     });
   }
 }

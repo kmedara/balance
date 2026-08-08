@@ -104,7 +104,7 @@ export class DnsStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'AppDomainName', {
       value: this.appDomainName,
       exportName: 'BalanceAppDomainName',
-      description: 'Client URL — set Lambda CLIENT_ORIGIN / CORS_ORIGIN to https://<this>',
+      description: 'Client URL — set Lambda CLIENT_ORIGIN to https://<this>',
     });
 
     new cdk.CfnOutput(this, 'NameServers', {
