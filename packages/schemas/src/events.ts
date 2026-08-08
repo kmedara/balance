@@ -61,6 +61,10 @@ export const createEventResponseSchema = Type.Object(
   {
     id: Type.String({ description: '24-character hex entity id' }),
     eventType: Type.String(),
+    updatedAt: Type.String({
+      format: 'date-time',
+      description: 'Last write time; send as `updatedAt` on PATCH for optimistic concurrency',
+    }),
     rrule: Type.Optional(Type.String()),
     dtstart: Type.String({ format: 'date-time' }),
     title: Type.Optional(Type.String()),
@@ -80,6 +84,10 @@ export const eventIdParamSchema = Type.Object({
 
 export const patchEventBodySchema = Type.Object(
   {
+    updatedAt: Type.String({
+      format: 'date-time',
+      description: 'Expected updatedAt from GET; 409 if the event changed',
+    }),
     dtstart: Type.Optional(
       Type.String({ format: 'date', description: 'Series start date (YYYY-MM-DD)' }),
     ),
