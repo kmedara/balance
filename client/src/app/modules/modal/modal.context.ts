@@ -2,7 +2,7 @@ import { InjectionToken, Type } from '@angular/core';
 import type { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { BUDGET_EVENT_TYPE } from '@core/domain';
+import { BUDGET_EVENT_TYPE } from '@balance/schemas/client';
 import { calendarStore } from '@modules/calendar/calendar.store';
 import { toEventWriteRequest } from './event-form.utils';
 
@@ -34,6 +34,8 @@ export type CreateEventFormPayload = {
   frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
   interval: number;
   endDate?: Date | null;
+  /** Optimistic concurrency token from GET; required for updateEvent. */
+  updatedAt?: string;
 };
 
 export type ModalSubmitPayload = ModalData & CreateEventFormPayload;
@@ -72,10 +74,16 @@ export const modalSubmitHandlers: Record<ModalAction, ModalSubmitHandler> = {
     if (!payload.eventId) {
       throw new Error('Missing event id');
     }
+    if (!payload.updatedAt) {
+      throw new Error('Missing event updatedAt');
+    }
 
-    return deps.gateway.patch(`/events/${payload.eventId}`, toEventWriteRequest(payload)).pipe(
-      tap(() => deps.calendar.reloadCalendar()),
-    );
+    return deps.gateway
+      .patch(`/events/${payload.eventId}`, {
+        ...toEventWriteRequest(payload),
+        updatedAt: payload.updatedAt,
+      })
+      .pipe(tap(() => deps.calendar.reloadCalendar()));
   },
 };
 

@@ -10,7 +10,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { budgetTypes } from '@core/domain';
+import { budgetTypes, type EventResponse } from '@balance/schemas/client';
 import { GATEWAY_HTTP_TOKEN } from '@core/gateway.http';
 import {
   MODAL_CONTEXT,
@@ -20,7 +20,6 @@ import {
   ModalData,
 } from '@modals/modal.context';
 import { ModalEvents, ModalStore } from '@modals/modal.store';
-import type { EventResponse } from '@core/domain';
 import { eventResponseToFormValues } from '@modals/event-form.utils';
 
 const BUDGET_FREQUENCY_OPTIONS = [
@@ -82,6 +81,7 @@ export class AddEventModal implements OnInit {
       validators: [Validators.required, Validators.min(1)],
     }),
     endDate: this.fb.control<Date | null>(null),
+    updatedAt: this.fb.control<string | null>(null),
   });
 
   readonly loading = signal(false);
@@ -125,7 +125,11 @@ export class AddEventModal implements OnInit {
 
     this.submitting.set(true);
     this.errorMessage.set('');
-    this.modalContext.submit(this.form.getRawValue());
+    const raw = this.form.getRawValue();
+    this.modalContext.submit({
+      ...raw,
+      updatedAt: raw.updatedAt ?? undefined,
+    });
   }
 
   cancel(): void {

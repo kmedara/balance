@@ -11,6 +11,21 @@ import {
 } from './modal.context';
 import { GATEWAY_HTTP_TOKEN } from '@core/gateway.http';
 
+const submitErrorMessage = (err: unknown): string => {
+  if (err && typeof err === 'object' && 'error' in err) {
+    const body = (err as { error?: { detail?: string } }).error;
+    if (typeof body?.detail === 'string' && body.detail.trim()) {
+      return body.detail;
+    }
+  }
+  return err instanceof Error ? err.message : 'Submit failed';
+};
+
+const httpStatus = (err: unknown): number | undefined =>
+  err && typeof err === 'object' && 'status' in err && typeof (err as { status: unknown }).status === 'number'
+    ? (err as { status: number }).status
+    : undefined;
+
 export const ModalEvents = eventGroup({
   source: 'Modal',
   events: {
@@ -70,9 +85,15 @@ export const ModalStore = signalStore(
               );
             }),
             catchError((err: unknown) => {
-              const error = err instanceof Error ? err.message : 'Submit failed';
+              if (httpStatus(err) === 409) {
+                deps.calendar.reloadCalendar();
+              }
               dispatcher.dispatch(
-                ModalEvents.submitFailed({ resourceId, occurredAt: new Date(), error }),
+                ModalEvents.submitFailed({
+                  resourceId,
+                  occurredAt: new Date(),
+                  error: submitErrorMessage(err),
+                }),
               );
               return EMPTY;
             }),

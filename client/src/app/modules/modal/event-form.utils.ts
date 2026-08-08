@@ -1,4 +1,4 @@
-import type { EventResponse } from '@core/domain';
+import type { EventResponse } from '@balance/schemas/client';
 import { RRule } from 'rrule';
 import { parseCalendarDate } from '@modules/calendar/calendar.utils';
 import type { CreateEventFormPayload } from './modal.context';
@@ -58,5 +58,6 @@ export const eventResponseToFormValues = (event: EventResponse): CreateEventForm
     frequency,
     interval,
     endDate,
+    updatedAt: event.updatedAt,
   };
 };
