@@ -19,7 +19,7 @@ Shared **persistence models**, guards, and client-safe helpers for Balance. Wire
 import type { EventDocument, BudgetDocument } from '@balance/domain';
 import { expandOccurrenceDates } from '@balance/domain';
 
-// Angular client (prefer @core/domain wrapper)
+// Angular client
 import type { CalendarEvent } from '@balance/domain/client';
 import { isBudget } from '@balance/domain/client';
 ```
@@ -38,4 +38,4 @@ npm run build -w @balance/domain
 
 - [`@balance/schemas`](../schemas/) — TypeBox wire schemas
 - [API README](../../api/README.md) — DynamoDB entities and event expansion
-- [Client README](../../client/README.md) — `@core/domain` re-exports
+- [Client README](../../client/README.md) — imports `@balance/domain/client` directly

@@ -48,7 +48,7 @@ Set these in [`.env.local.secrets`](../.env.local.secrets) for Docker/local dev.
 |----------|----------|-------------|
 | `DYNAMODB_ENDPOINT` | Local only | e.g. `http://localhost:8000` — omit in Lambda (uses AWS endpoint) |
 | `BALANCE_TABLE` | Yes | DynamoDB table name (default `balance`) |
-| `CORS_ORIGIN` / `CLIENT_ORIGIN` | Yes | Allowed browser origin(s) for CORS and auth redirects |
+| `CLIENT_ORIGIN` | Yes | First-party PWA origin allowlist for CORS, auth redirects, and Stripe return URLs. Prefer **one origin per environment** (e.g. local `http://localhost:4200`, prod `https://app.example.com`). Comma-separated list allowed only if multiple first-party origins share the same API. Must be exact `http(s)` origins — no paths, no `*`. |
 | `API_PUBLIC_URL` | Production | Public API base URL (e.g. API Gateway URL) |
 
 ### Authentication
@@ -97,6 +97,13 @@ Local webhook forwarding:
 stripe listen --forward-to localhost:3000/billing/webhooks/stripe
 ```
 
+## First-party API (AUTH-9)
+
+The HTTP API is a **BFF for the Balance PWA only** — not a public or third-party developer API.
+
+- **Browser traffic:** CORS and post-login redirects are restricted to `CLIENT_ORIGIN`. Credentialed calls from other origins are rejected by the browser.
+- **Webhooks (exception):** Stripe (and later Plaid) webhook routes are **server-to-server**. They are not browser CORS clients. Access is gated by **signature verification** (e.g. `Stripe-Signature`), not by Cognito session cookies or the origin allowlist. That does not make the API a public product API.
+
 ## NPM scripts
 
 Run from repo root with `-w node`, or from `api/` directly:
@@ -110,8 +117,17 @@ Run from repo root with `-w node`, or from `api/` directly:
 | `npm run db:create-tables` | Create DynamoDB Local tables |
 | `npm run db:seed` | Seed categories and budget events |
 | `npm run db:seed:reset` | Drop user events and re-seed |
+| `npm run test` | Vitest unit tests with coverage (once) |
+| `npm run test:watch` | Vitest in watch mode (no coverage by default) |
 
-Seed data: [`__data__/seed.data.ts`](__data__/seed.data.ts).
+### Testing
+
+```bash
+npm run test -w node          # from repo root (prints coverage + writes coverage/)
+npm run test:watch -w node    # watch mode
+```
+
+Co-located `*.test.ts` files under `src/` (e.g. billing entitlements). HTML report: `api/coverage/index.html`. Seed data: [`__data__/seed.data.ts`](__data__/seed.data.ts).
 
 ## Database
 
@@ -163,9 +179,9 @@ There is **no** generic paged `GET /events` list. Use the calendar endpoint for 
 | `PATCH` | `/events/:id` | Update budget event |
 | `DELETE` | `/events/:id` | Hard-delete budget event (HP1); Plaid txns rejected |
 | `GET` | `/categories` | Category display names from config item |
-| `POST` | `/plaid/link-token` | Create Plaid Link token |
-| `POST` | `/plaid/exchange-token` | Exchange public token; persist item |
-| `POST` | `/plaid/transactions/sync` | Sync transactions → dated events |
+| `POST` | `/plaid/link-token` | Create Plaid Link token (**paid**: plus+; 403 if free) |
+| `POST` | `/plaid/exchange-token` | Exchange public token; persist item (**paid**) |
+| `POST` | `/plaid/transactions/sync` | Sync transactions → dated events (**paid**) |
 | `GET` | `/billing/subscription` | Current subscription |
 | `POST` | `/billing/checkout` | Stripe Checkout session |
 | `POST` | `/billing/portal` | Stripe Customer Portal |
@@ -179,11 +195,12 @@ Full request/response schemas: http://localhost:3000/docs
 ## Testing
 
 ```bash
+npm run test -w node
 npm run lint -w node
 npm run build -w node
 ```
 
-There is no API unit/integration test suite yet. Manual checks:
+Unit tests use Vitest (`src/**/*.test.ts`). Manual checks:
 
 1. Seed the database (`npm run db:seed -w node`) with auth disabled
 2. Hit `GET /events/calendar`, `POST /events`, `GET|PATCH|DELETE /events/:id` in Swagger UI
@@ -197,12 +214,12 @@ Production runs on **AWS Lambda** (Node 22, ARM64) behind **API Gateway HTTP API
 **From [`infrastructure/`](../infrastructure/):**
 
 ```bash
-npm run deploy:ci    # BalanceAuthStack + BalanceApiStack, writes cdk-outputs.json
+npm run deploy:ci    # BalanceDatabaseStack + Auth + Api, writes cdk-outputs.json
 ```
 
 Lambda environment variables are picked from your shell/`process.env` at deploy time via [`pickApiLambdaEnvironment`](../infrastructure/lib/api-env.ts). Export secrets before deploying, or configure them in the GitHub Actions environment.
 
-**GitHub Actions:** [`.github/workflows/infrastructure.yml`](../.github/workflows/infrastructure.yml) deploys on push to `master` when `api/src/**` or infrastructure files change.
+**GitHub Actions:** push to `main` deploys **staging**; tag `v*` on `main` deploys **production** ([`deploy-staging.yml`](../.github/workflows/deploy-staging.yml) / [`release.yml`](../.github/workflows/release.yml)). PRs run [`ci.yml`](../.github/workflows/ci.yml) only.
 
 After deploy, set:
 

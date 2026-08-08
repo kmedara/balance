@@ -53,17 +53,17 @@ Related artifacts: [cost-estimate.md](./cost-estimate.md) · [regional-DR.md](./
 
 | Code / topic | Chosen | Alternatives | Why |
 |--------------|--------|--------------|-----|
-| Account model | **Single AWS account** CDK footprint | Multi-account org | Solo + cost; multi-account deferred until team/revenue |
-| **E1** (env) | **Local + one AWS prod** | **E2** dedicated cloud staging | Avoid duplicate env cost; DAST/game day use local/ephemeral + safe prod ruleset |
-| Deploy trigger | Merge to `main` → **version tag** → CI deploy | Deploy every push to main | Explicit releases |
-| CI auth **G1** | **GitHub OIDC → IAM role** | Long-lived AWS keys | No standing deploy secrets |
+| Account model | **Two AWS accounts** (staging + production) under the org | Single account only | Staging for pre-prod; prod for live |
+| **E1** (env) | **Local + AWS staging + AWS production** | Dedicated third “QA” account | No always-on duplicate of full product beyond staging/prod |
+| Deploy trigger | Merge to `main` → **staging**; **`v*` tag on main** → **production** | Deploy every push to prod | Explicit prod releases; continuous staging |
+| CI auth **G1** | **GitHub OIDC → IAM role** (per account; no long-lived keys) | Long-lived AWS keys | No standing deploy secrets |
 | Hosting | PWA **S3 + CloudFront** (OAC); API **Lambda + HTTP API**; realtime **API Gateway WebSocket** (**A-full**) | Amplify/Vercel; always-on containers | Same CDK family; scale-to-zero; cheapest at low traffic |
 | API audience | **First-party PWA only** (+ signed vendor webhooks) | Public REST for third parties / API keys | Product is the site; `gateway.` is not a developer platform |
 | Region | `us-east-1` only | Multi-region | Cost; SCCs for EU data transfers |
 | DNS **D3** | `app.` + `gateway.` ready in CDK; domain TBD | Buy domain day one | Infra ready; purchase before public cutover |
 | **DNS-8** | **IPv4 only** (IPv6 deferred) | Dual-stack now | Defer complexity |
 
-**Tension resolved:** “DAST on staging and prod” → with **E1**, targets are **local/ephemeral + prod (safe ruleset)**.
+**Tension resolved:** DAST targets **local/ephemeral + staging + prod (safe ruleset on prod)**.
 
 ---
 
@@ -153,7 +153,7 @@ Related artifacts: [cost-estimate.md](./cost-estimate.md) · [regional-DR.md](./
 | AWS Config / SCPs | Not in v1 (**C0**) | Multi-account or auditor demand |
 | X-Ray | Not required | Latency debugging pain |
 | PITR enabled | Off (supported) | After launch if RPO must shrink |
-| Cloud staging stack | Not in v1 (**E1**) | If safe prod DAST becomes insufficient |
+| Cloud staging account | In use (merge to `main`) | — |
 | Redis | Not for FX | If FX/rate limits force it |
 | Native apps / investments / public end-user or third-party API | Out of v1 | Product decision later |
 | Domain purchase | Open | Before public hostname cutover |
@@ -169,7 +169,7 @@ Quick lookup of workshop codes → outcome.
 | **T2** | Trial at paid gate |
 | **C1** (card) | Card required for trial |
 | **E1** (trial) | Auto-convert after 7 days |
-| **E1** (env) | Local + one AWS account |
+| **E1** (env) | Local + AWS staging + AWS production |
 | **S1** (Stripe) | Checkout + Customer Portal |
 | **S1** (DR) | Cold backup-restore |
 | **HP1** | Hard purge deletes (no soft-delete) |

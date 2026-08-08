@@ -8,7 +8,7 @@ Angular 21 single-page app for the Balance calendar. Talks to the API over HTTP 
 - **PrimeNG** + **Tailwind CSS** for UI
 - **NgRx Signals** for calendar state
 - **Vitest** for unit tests
-- **Shared types:** [`@core/domain`](src/app/core/domain.ts) re-exports `@balance/schemas/client` + `@balance/domain/client`
+- **Shared types:** import from `@balance/schemas/client` and `@balance/domain/client` directly
 
 ## Local setup
 
@@ -77,22 +77,31 @@ Run from repo root with `-w balance`, or from `client/`:
 | `npm run build` | Production build → `dist/balance/` |
 | `npm run watch` | Dev build in watch mode |
 | `npm run lint` | ESLint (Angular + TypeScript) |
-| `npm run test` | Vitest unit tests |
+| `npm run test` | Vitest via Angular unit-test builder with coverage (`--watch=false`) |
+| `npm run test:watch` | Vitest in watch mode |
 | `npm run serve:ssr:angular` | Run SSR server from build output |
+
+### Testing
+
+```bash
+npm run test -w balance          # from repo root (prints coverage + writes coverage/)
+npm run test:watch -w balance    # watch mode
+```
+
+Uses Angular’s `@angular/build:unit-test` runner (Vitest + jsdom). Specs are co-located as `*.spec.ts`. HTML report: `client/coverage/index.html`.
 
 ## Shared types
 
-Import wire types and helpers from `@core/domain`, not directly from the workspace packages:
+Import wire types and constants from `@balance/schemas/client`, and domain helpers from `@balance/domain/client`:
 
 ```typescript
-import type { CalendarEvent, Budget, CreateEventBody } from '@core/domain';
-import { isBudget, budgetTypes } from '@core/domain';
+import type { CreateEventBody, CalendarResponseWire } from '@balance/schemas/client';
+import { budgetTypes, BUDGET_EVENT_TYPE } from '@balance/schemas/client';
+import { isBudget } from '@balance/domain/client';
 ```
 
-[`@core/domain`](src/app/core/domain.ts) re-exports:
-
-- **Wire types / constants** from `@balance/schemas/client` (TypeBox-derived shapes for HTTP)
-- **Client-safe helpers** from `@balance/domain/client` (avoids pulling rrule into the Angular bundle)
+- **`@balance/schemas/client`** — TypeBox-derived wire shapes and constants (use `import type` where possible)
+- **`@balance/domain/client`** — client-safe helpers (avoids pulling rrule into the Angular bundle)
 
 After editing shared packages:
 
@@ -137,22 +146,22 @@ Production hosting is **S3 + CloudFront**, provisioned by CDK (`BalanceClientSta
 
 ### CI workflow
 
-[`.github/workflows/client.yml`](../.github/workflows/client.yml):
+Client deploys run as part of the shared release pipelines (not a standalone client-only workflow):
 
-| Trigger | Action |
-|---------|--------|
-| Push to `master` (client/domain changes) | Build production client, deploy stack, sync to S3, invalidate CloudFront |
-| Manual `workflow_dispatch` | Same, with optional `api_base_url` input |
+| Trigger | Workflow | Environment |
+|---------|----------|-------------|
+| Push to `main` | [`deploy-staging.yml`](../.github/workflows/deploy-staging.yml) | `staging` |
+| Tag `v*` on `main` | [`release.yml`](../.github/workflows/release.yml) | `production` |
 
-**Required GitHub configuration:**
+**Required GitHub configuration (per environment):**
 
 | Type | Name | Description |
 |------|------|-------------|
-| Secret | `AWS_DEPLOY_ROLE_ARN` | OIDC deploy role from `BalanceGitHubOidcStack` |
-| Variable | `API_BASE_URL` | Production API URL baked into `GATEWAY` |
+| Secret | `AWS_DEPLOY_ROLE_ARN` | OIDC deploy role from that account’s `BalanceGitHubOidcStack` |
+| Variable | `API_BASE_URL` | API URL baked into `GATEWAY` |
 | Variable | `AWS_REGION` | Deploy region (default `us-east-1`) |
 
-Environment: **`development`** (must match OIDC trust policy).
+See [`infrastructure/README.md`](../infrastructure/README.md#deployment) for OIDC setup.
 
 ### Manual deploy
 

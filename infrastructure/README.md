@@ -47,7 +47,7 @@ npx cdk bootstrap
 npm run deploy
 ```
 
-This runs `cdk deploy BalanceAuthStack BalanceApiStack` (database is a dependency of the API stack).
+This runs `cdk deploy BalanceDatabaseStack BalanceAuthStack BalanceApiStack`.
 
 ### Region and account
 
@@ -58,6 +58,18 @@ This runs `cdk deploy BalanceAuthStack BalanceApiStack` (database is a dependenc
 
 During `cdk synth`, account may show as `undefined` — that is normal.
 
+### Config sources
+
+Each concern has **one** source — no env ↔ context fallbacks. See the table at the top of [`bin/balance.ts`](bin/balance.ts).
+
+| Concern | Source | Keys |
+|---------|--------|------|
+| Cognito OAuth URLs | CDK context | `callbackUrls`, `logoutUrls` |
+| Domain / CORS / DNS | Env vars | `ROOT_DOMAIN_NAME`, `HOSTED_ZONE_ID`, `CLIENT_ORIGIN`, `CLIENT_DOMAIN_NAME`, `CLIENT_CERTIFICATE_ARN` |
+| GitHub OIDC | CDK context | `githubOrg`, `githubRepo`, `githubBranches`, `githubEnvironments` |
+| API Lambda secrets / IDs | Env vars | see [`lib/api-env.ts`](lib/api-env.ts) |
+| Client CSP / DNS labels | CDK context | `clientCsp`, `apiSubdomain`, `appSubdomain` |
+
 ### OAuth URLs
 
 Defaults in [`cdk.json`](cdk.json):
@@ -65,7 +77,7 @@ Defaults in [`cdk.json`](cdk.json):
 ```json
 {
   "callbackUrls": ["http://localhost:3000/auth/callback"],
-  "logoutUrls": ["http://localhost:4200/"]
+  "logoutUrls": ["http://localhost:4200/", "http://localhost:4200/login"]
 }
 ```
 
@@ -74,20 +86,12 @@ Defaults in [`cdk.json`](cdk.json):
 | **Callback** | API route `GET /auth/callback` |
 | **Logout** | Client page after sign-out (e.g. `/login`) |
 
-Override at deploy time:
+Override at deploy time with CDK context:
 
 ```bash
 npx cdk deploy BalanceAuthStack \
   -c callbackUrls='["https://api.example.com/auth/callback"]' \
   -c logoutUrls='["https://app.example.com/login"]'
-```
-
-Or set env vars before deploy:
-
-```bash
-export COGNITO_CALLBACK_URLS='["https://api.example.com/auth/callback"]'
-export COGNITO_LOGOUT_URLS='["https://app.example.com/login"]'
-npm run deploy
 ```
 
 ### Wire Cognito outputs to the app
@@ -110,7 +114,7 @@ Restart local services (`./deploy.sh`).
 
 ### Custom domain (optional)
 
-Set `ROOT_DOMAIN_NAME` (env or CDK context) to synthesize `BalanceDnsStack` and attach custom domains to API and client stacks. Subdomains default to `api` and `app`.
+Set env var `ROOT_DOMAIN_NAME` to synthesize `BalanceDnsStack` and attach custom domains to API and client stacks. Optional: `HOSTED_ZONE_ID`, `CLIENT_ORIGIN`. Subdomain labels default to `api` / `app` in the DNS stack (override with `-c apiSubdomain` / `-c appSubdomain`).
 
 ### API Lambda environment
 
@@ -134,79 +138,92 @@ Run from `infrastructure/` (or `npm run <script> -w balance-infrastructure`):
 | `npm run build` | Compile TypeScript |
 | `npm run synth` | Synthesize CloudFormation templates |
 | `npm run diff` | Diff auth + API stacks against deployed |
-| `npm run deploy` | Deploy `BalanceAuthStack` + `BalanceApiStack` |
-| `npm run deploy:ci` | Deploy + write `cdk-outputs.json` |
+| `npm run deploy` | Deploy Database + Auth + API |
+| `npm run deploy:ci` | Same + write `cdk-outputs.json` |
 | `npm run deploy:database` | Deploy `BalanceDatabaseStack` only |
 | `npm run deploy:api` | Deploy `BalanceApiStack` only |
 | `npm run deploy:client` | Deploy `BalanceClientStack` + `cdk-outputs.client.json` |
 | `npm run deploy:oidc` | Deploy `BalanceGitHubOidcStack` |
 
+Runbook for operators: [docs/deployment](../docs/deployment/README.md).
+
 ## Deployment
 
-### What each pipeline deploys
+### Pipeline overview
 
-| Workflow | Stacks / artifacts |
-|----------|-------------------|
-| [`infrastructure.yml`](../.github/workflows/infrastructure.yml) | `BalanceAuthStack`, `BalanceApiStack` (+ database via dependency) |
-| [`client.yml`](../.github/workflows/client.yml) | `BalanceClientStack`, then uploads `client/dist/balance/browser` to S3 |
+| Workflow | Trigger | Target | What it does |
+|----------|---------|--------|--------------|
+| [`ci.yml`](../.github/workflows/ci.yml) | PR → `main` | — | Build, CDK synth, **npm audit** (high+), **Semgrep** (blocking). Never deploys. |
+| [`deploy-staging.yml`](../.github/workflows/deploy-staging.yml) | Push → `main` | GitHub env **`staging`** | Database + Auth + API, then client (OIDC) |
+| [`release.yml`](../.github/workflows/release.yml) | Tag `v*` on `main` | GitHub env **`production`** | Same order after verifying the tag is on `main` |
 
-### GitHub Actions — infrastructure
+Reusable units (not triggered directly):
 
-[`.github/workflows/infrastructure.yml`](../.github/workflows/infrastructure.yml):
+- [`reusable-deploy-infra.yml`](../.github/workflows/reusable-deploy-infra.yml) — `BalanceDatabaseStack`, `BalanceAuthStack`, `BalanceApiStack`
+- [`reusable-deploy-client.yml`](../.github/workflows/reusable-deploy-client.yml) — `BalanceClientStack` + S3 sync + CloudFront invalidation
 
-| Event | Behavior |
-|-------|----------|
-| PR (infra/api/domain changes) | `npm ci`, build, `cdk synth` |
-| Push to `master` | Validate, then deploy to **`development`** environment |
-| Manual dispatch | Deploy with optional callback/logout URL overrides |
+Default branch is **`main`**. There is **no** `workflow_dispatch` prod deploy and **no** long-lived AWS access-key fallback (OIDC only).
 
-### GitHub Actions — client
+### One-time OIDC setup (per AWS account)
 
-[`.github/workflows/client.yml`](../.github/workflows/client.yml) builds the Angular app with `GATEWAY=$API_BASE_URL`, deploys `BalanceClientStack`, syncs to S3, and invalidates CloudFront.
-
-### One-time OIDC setup
-
-Deploy the GitHub OIDC stack with admin credentials:
+Deploy the GitHub OIDC stack with admin credentials in **each** account:
 
 ```bash
+# Staging account
 cd infrastructure
 npx cdk bootstrap
 npm run deploy:oidc -- \
   -c githubOrg=YOUR_GITHUB_USER \
   -c githubRepo=balance \
-  -c githubBranches=master \
-  -c githubEnvironments=development
+  -c githubBranches=main \
+  -c githubEnvironments=staging
+
+# Production account
+npm run deploy:oidc -- \
+  -c githubOrg=YOUR_GITHUB_USER \
+  -c githubRepo=balance \
+  -c githubBranches=main \
+  -c githubTags=v* \
+  -c githubEnvironments=production
 ```
 
-Copy output **`DeployRoleArn`** → GitHub secret `AWS_DEPLOY_ROLE_ARN`.
+Copy each account’s **`DeployRoleArn`** into the matching GitHub **environment** secret `AWS_DEPLOY_ROLE_ARN`.
 
 `BalanceGitHubOidcStack` is only synthesized when CDK context includes `githubOrg` and `githubRepo`.
 
 ### GitHub configuration
 
-Create a **`development`** environment (Settings → Environments) if using protection rules.
+Create environments **`staging`** and **`production`** (Settings → Environments). Prefer protection rules on `production` (required reviewers / wait timer).
+
+Configure **per environment** (not only repo-level):
 
 | Type | Name | Example |
 |------|------|---------|
-| Secret | `AWS_DEPLOY_ROLE_ARN` | `arn:aws:iam::123456789012:role/balance-github-cdk-deploy` |
+| Secret | `AWS_DEPLOY_ROLE_ARN` | Role ARN from that account’s OIDC stack |
 | Variable | `AWS_REGION` | `us-east-1` |
-| Variable | `API_BASE_URL` | `https://xxxx.execute-api.us-east-1.amazonaws.com` (client builds) |
-| Variable | `COGNITO_CALLBACK_URLS` | `["https://api.example.com/auth/callback"]` |
-| Variable | `COGNITO_LOGOUT_URLS` | `["https://app.example.com/login"]` |
+| Variable | `API_BASE_URL` | Staging or prod API URL (client `GATEWAY`) |
+| Variable | `COGNITO_CALLBACK_URLS` | `["https://api…/auth/callback"]` |
+| Variable | `COGNITO_LOGOUT_URLS` | `["https://app…/login"]` |
 
-The deploy job uses `environment: development`, so the OIDC trust policy must include `repo:OWNER/REPO:environment:development`.
-
-**Fallback (not recommended):** repository secrets `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY` when `AWS_DEPLOY_ROLE_ARN` is unset.
+OIDC `sub` for deploy jobs is `repo:OWNER/REPO:environment:<name>` — trust must include `staging` / `production` accordingly.
 
 ### After deploy
 
-Download artifact **`cdk-outputs`** or read job logs for:
+Download artifact **`cdk-outputs-<environment>`** or read job logs for:
 
 - Cognito pool/client IDs → API Lambda env
 - **`ApiUrl`** → `AUTH_CALLBACK_URL`, `API_BASE_URL`, client `GATEWAY`
 - Client **`BucketName`** / **`DistributionId`** → S3 sync target
 
 Update Cognito callback URLs in AWS to match the deployed API URL.
+
+### Branch rename checklist
+
+If the repo still uses `master`:
+
+1. Rename default branch to `main` in GitHub
+2. Update local remotes: `git fetch origin && git checkout main`
+3. Redeploy OIDC stacks with `githubBranches=main`
 
 ## Testing
 
@@ -220,15 +237,15 @@ npm run synth -w balance-infrastructure
 npm run lint -w balance-infrastructure
 ```
 
-PRs to `master` run synth automatically. Full deploy runs only on push to `master` (not on PRs).
+PRs to `main` run [`ci.yml`](../.github/workflows/ci.yml) (build, synth, audit, Semgrep). Staging deploys on push to `main`; production on `v*` tags only.
 
 ## Troubleshooting
 
 ### Credentials could not be loaded (CI)
 
-1. Set `AWS_DEPLOY_ROLE_ARN` (deploy OIDC stack first).
+1. Set environment secret `AWS_DEPLOY_ROLE_ARN` (deploy OIDC stack in that AWS account first).
 2. Match secret scope: environment vs repository — an empty environment secret overrides the repo secret.
-3. Confirm the role exists in the same AWS account as the deploy target.
+3. Confirm the role exists in the **same AWS account** as the deploy target (staging role ≠ prod role).
 
 ### `Not authorized to perform sts:AssumeRoleWithWebIdentity`
 
@@ -236,8 +253,10 @@ The IAM role trust policy `sub` claim does not match what GitHub sends.
 
 | GitHub sends | When |
 |--------------|------|
-| `repo:OWNER/REPO:environment:development` | Job has `environment: development` |
-| `repo:OWNER/REPO:ref:refs/heads/master` | Push without environment |
+| `repo:OWNER/REPO:environment:staging` | Job has `environment: staging` |
+| `repo:OWNER/REPO:environment:production` | Job has `environment: production` |
+| `repo:OWNER/REPO:ref:refs/heads/main` | Push without environment |
+| `repo:OWNER/REPO:ref:refs/tags/v*` | Tag push (defense in depth) |
 
 **Fix:** match `githubOrg` / `githubRepo` exactly, redeploy the OIDC stack, verify `AWS_DEPLOY_ROLE_ARN`.
 

@@ -114,7 +114,7 @@ Ads are **monetization**, not a fixed AWS-like bill—budget time for policy/com
 |------|----------|-------|
 | Domain + DNS setup | low | |
 | GuardDuty + IAM Access Analyzer | Low–mid when **on** | CDK flag; **off to start**; **on before public launch** |
-| **SAST** (Semgrep) + **DAST** (ZAP/Nuclei) + SCA (npm audit + Trivy/OSV) | **Time** (CI minutes) | SAST/SCA on every PR **to `main`**; DAST weekly + pre-launch; local/ephemeral **and** prod (safe ruleset on prod; no cloud staging — E1) |
+| **SAST** (Semgrep) + **DAST** (ZAP/Nuclei) + SCA (npm audit + Trivy/OSV) | **Time** (CI minutes) | SAST/SCA on every PR **to `main`**; DAST weekly + pre-launch; local/ephemeral, staging, and prod (safe ruleset on prod) |
 | External **pen test** | **$2k–15k+** one-time | **Deferred** until later (e.g. pre–Type II / when revenue allows) |
 | **SOC 2 Type I** | **$5k–25k+** first year typical (audit + tools) | Still targeted before public launch; confirm auditor accepts no pre-launch external pen test |
 | Privacy/ToS legal review | **$500–5k+** | Strongly recommended for US/CA/EU + Plaid/Stripe |

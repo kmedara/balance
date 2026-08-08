@@ -21,7 +21,7 @@ Shared **TypeBox** schemas and HTTP wire types for the Balance API and client. T
 // API routes
 import { createEventBodySchema, type CreateEventBody } from '@balance/schemas/events';
 
-// Angular client (prefer @core/domain wrapper)
+// Angular client
 import type { CalendarEventWire } from '@balance/schemas/client';
 ```
 
@@ -39,4 +39,4 @@ npm run build -w @balance/schemas
 
 - [`@balance/domain`](../domain/) — persistence models and runtime helpers
 - [API README](../../api/README.md) — route schemas wired into Fastify/Swagger
-- [Client README](../../client/README.md) — `@core/domain` re-exports
+- [Client README](../../client/README.md) — imports `@balance/schemas/client` directly

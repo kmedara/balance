@@ -27,7 +27,7 @@ Decision rationale and tradeoffs: [decisions-and-tradeoffs.md](./decisions-and-t
 - [x] Cloud and account model
   - **CX-4** (`accepted`): The workload MUST run on AWS in a **single-account CDK-managed** footprint for v1. Multi-account AWS Organizations MUST NOT be required for v1 (deferred until revenue/team warrants it). Client and API infra MUST be expressible in **one CDK app/stack family** (not a separate Amplify/Vercel host).
 - [x] Environments and promotion
-  - **CX-5** (`accepted`): Environments MUST be **local development** + **one AWS account (production)** (**E1**)—no separate cloud staging account/stack required for v1. Production deploys MUST be driven by **version tags** on releases from **`main`** (PRs merge to `main`, then a version tag triggers CI → build → S3 sync → CloudFront invalidation / API deploy as applicable).
+  - **CX-5** (`accepted`): Environments MUST be **local development** + **AWS staging** + **AWS production** (separate accounts under the org). Production deploys MUST be driven by **version tags** (`v*`) on commits reachable from **`main`**. Merges to **`main`** MUST deploy to **staging**. PRs MUST run CI only (no deploy).
 - [x] Ownership
   - **CX-6** (`accepted`): The sole developer SHALL build, deploy, operate, and support the workload.
 - [x] Hard constraints
@@ -134,7 +134,7 @@ Decision rationale and tradeoffs: [decisions-and-tradeoffs.md](./decisions-and-t
     - **DAST:** **OWASP ZAP** and/or **Nuclei**.
     - **SCA:** **npm audit** plus **Trivy** or **OSV-Scanner**.
     - **Cadence (C1, refined):** SAST and SCA on **every pull request targeting `main`**; DAST **weekly** and **before public launch**.
-    - **DAST targets:** **local/ephemeral test targets and production**, with a **strict safe ruleset** on production (non-destructive checks only). No dedicated cloud staging environment in v1 (**E1**).
+    - **DAST targets:** **local/ephemeral**, **staging**, and **production**, with a **strict safe ruleset** on production (non-destructive checks only).
     - Findings MUST be triaged; launch-blocking severities MUST be remediated or explicitly risk-accepted by the sole developer with a recorded rationale.
 - [x] Mandated AWS security services
   - **SEC-10** (`accepted`): CDK MUST support **IAM Access Analyzer** and **GuardDuty** with an **enable/disable flag** (same pattern as PITR). They MAY be **off to start** (dev/early). They MUST be **turned on before public launch** (**S3** posture). AWS Config / Security Hub MUST NOT be required for v1 unless later added.
@@ -315,7 +315,7 @@ See also: [cost-estimate.md](./cost-estimate.md) for traffic scenarios and non-A
 - [x] Least privilege via roles/policies
   - **AUTH-3** (`accepted`): Access MUST be granted via least-privilege hybrid RBAC/ABAC; standing unrestricted admin for end users MUST NOT be allowed.
 - [x] Environment separation
-  - **AUTH-4** (`accepted`): Identity and data planes MUST be separated as **local dev** vs **single AWS production account** (**E1**). No dedicated cloud staging account for v1.
+  - **AUTH-4** (`accepted`): Identity and data planes MUST be separated as **local dev** vs **AWS staging** vs **AWS production** (separate accounts). Controls are applied per account; no additional cloud QA account is required for v1.
 - [x] Access revoke and audit
   - **AUTH-5** (`accepted`): User **revoke-all sessions** MUST take effect **immediately** (session epoch). Account deletion MUST hard-purge per **HP1**. Compact audit events (login, logout-all, entitlement changes, household invite/accept/revoke) MUST be retained **≥ 30 days**. Verbose app logs remain **7 days**.
 - [x] Temporary credentials (CI/CD, contractors)

@@ -156,7 +156,7 @@ npm run build:domain    # after editing packages/domain/src
 
 Docker Compose watch syncs `packages/domain` into the containers. Schema changes need a rebuild (`npm run build:schemas`) — they are not live-synced.
 
-Client code should import from `@core/domain`, which re-exports `@balance/schemas/client` and `@balance/domain/client`.
+Client code imports `@balance/schemas/client` and `@balance/domain/client` directly (no app-level re-export shim).
 
 See [`packages/schemas/README.md`](packages/schemas/README.md) and [`packages/domain/README.md`](packages/domain/README.md) for package details.
 
@@ -170,8 +170,11 @@ See [`packages/schemas/README.md`](packages/schemas/README.md) and [`packages/do
 
 **CI workflows:**
 
-- [`.github/workflows/infrastructure.yml`](.github/workflows/infrastructure.yml) — validates and deploys `BalanceAuthStack`, `BalanceApiStack`, and related stacks on push to `master`
-- [`.github/workflows/client.yml`](.github/workflows/client.yml) — builds the client and syncs to S3 on push to `master`
+- [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — PR checks (build, CDK synth, npm audit, Semgrep); never deploys
+- [`.github/workflows/deploy-staging.yml`](.github/workflows/deploy-staging.yml) — push to `main` → staging account
+- [`.github/workflows/release.yml`](.github/workflows/release.yml) — tag `v*` on `main` → production account
+
+**Runbook:** [docs/deployment](docs/deployment/README.md)
 
 ## Testing and lint
 
