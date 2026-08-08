@@ -92,7 +92,8 @@ export const eventRoutes: FastifyPluginAsyncTypebox = async (app) => {
     schema: {
       tags: ['Events'],
       summary: 'Update event by id',
-      description: 'Updates a budget event. Plaid events cannot be updated.',
+      description:
+        'Updates a budget event. Requires `updatedAt` from GET for optimistic concurrency; returns 409 on conflict. Plaid events cannot be updated.',
       security: bearerSecurity,
       params: eventIdParamSchema,
       body: patchEventBodySchema,
@@ -101,6 +102,7 @@ export const eventRoutes: FastifyPluginAsyncTypebox = async (app) => {
         400: problemDetailsSchema,
         403: problemDetailsSchema,
         404: problemDetailsSchema,
+        409: problemDetailsSchema,
       },
     },
     handler: async (request) => {

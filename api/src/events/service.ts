@@ -19,17 +19,20 @@ import type { CreateEventBody, PatchEventBody } from '@balance/schemas/events';
 export const isRemovedEvent = (event: EventWithId): boolean =>
   'removed' in event && Boolean((event as { removed?: boolean }).removed);
 
-const formatEventDtstart = (value: EventWithId['dtstart']): string => {
+const formatEventTimestamp = (value: Date | string | undefined, field: string): string => {
   if (value instanceof Date) {
     return value.toISOString();
   }
 
-  if (value !== undefined) {
-    return String(value);
+  if (typeof value === 'string' && value.trim()) {
+    return value;
   }
 
-  throw new Error('Event missing dtstart');
+  throw new Error(`Event missing ${field}`);
 };
+
+const formatEventDtstart = (value: EventWithId['dtstart']): string =>
+  formatEventTimestamp(value, 'dtstart');
 
 export const toCreateEventResponse = (event: EventWithId) => ({
   ...Object.fromEntries(
@@ -40,6 +43,7 @@ export const toCreateEventResponse = (event: EventWithId) => ({
   ),
   id: event.id,
   eventType: event.eventType,
+  updatedAt: formatEventTimestamp(event.updatedAt, 'updatedAt'),
   rrule: event.rrule,
   dtstart: formatEventDtstart(event.dtstart),
 });
@@ -248,7 +252,11 @@ export const updateEventForUser = async (
     }
   }
 
-  return await updateEventById(eventId, { userId }, { set, unset });
+  return await updateEventById(eventId, { userId }, {
+    set,
+    unset,
+    expectedUpdatedAt: patch.updatedAt,
+  });
 };
 
 export const deleteEventForUser = async (userId: string, eventId: string): Promise<void> => {

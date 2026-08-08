@@ -19,7 +19,8 @@ import { matchesEventFilter, toEventWithId } from '../dynamo/helpers.js';
 import { batchGetItems, queryAll } from '../dynamo/query.js';
 import { getTableName } from '../dynamo/tables.js';
 import { PLAID_TRANSACTION_EVENT_TYPE } from '@balance/schemas/constants';
-import { NotFoundError } from '../errors/http-error.js';
+import { ConditionalCheckFailedException } from '@aws-sdk/client-dynamodb';
+import { ConflictError, NotFoundError } from '../errors/http-error.js';
 
 const table = (): string => getTableName();
 
@@ -33,6 +34,8 @@ export type EventQueryFilter = {
 export type EventDocumentUpdate = {
   set: Record<string, unknown>;
   unset?: string[];
+  /** ISO `updatedAt` from GET; must match the stored value. */
+  expectedUpdatedAt: string;
 };
 
 /**
@@ -213,7 +216,10 @@ export const updateEventById = async (
   const setParts: string[] = [];
   const removeParts: string[] = [];
   const names: Record<string, string> = {};
-  const values: Record<string, unknown> = { ':userId': filter.userId };
+  const values: Record<string, unknown> = {
+    ':userId': filter.userId,
+    ':expectedUpdatedAt': update.expectedUpdatedAt,
+  };
 
   setEntries.forEach(([field, value], index) => {
     const nameKey = `#f${index}`;
@@ -240,17 +246,25 @@ export const updateEventById = async (
     .filter(Boolean)
     .join(' ');
 
-  const result = await getDocClient().send(
-    new UpdateCommand({
-      TableName: table(),
-      Key: { PK: raw.PK, SK: raw.SK },
-      UpdateExpression: updateExpression,
-      ExpressionAttributeNames: names,
-      ExpressionAttributeValues: values,
-      ConditionExpression: 'userId = :userId',
-      ReturnValues: 'ALL_NEW',
-    }),
-  );
+  let result;
+  try {
+    result = await getDocClient().send(
+      new UpdateCommand({
+        TableName: table(),
+        Key: { PK: raw.PK, SK: raw.SK },
+        UpdateExpression: updateExpression,
+        ExpressionAttributeNames: Object.keys(names).length > 0 ? names : undefined,
+        ExpressionAttributeValues: values,
+        ConditionExpression: 'userId = :userId AND updatedAt = :expectedUpdatedAt',
+        ReturnValues: 'ALL_NEW',
+      }),
+    );
+  } catch (err) {
+    if (err instanceof ConditionalCheckFailedException) {
+      throw new ConflictError('Event was modified; refresh and retry');
+    }
+    throw err;
+  }
 
   if (!result.Attributes) throw new NotFoundError('Event not found');
 
