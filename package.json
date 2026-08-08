@@ -11,9 +11,14 @@
     "build": "npm run build -w @balance/schemas && npm run build -w @balance/domain && npm run build -w node && npm run build -w balance",
     "build:domain": "npm run build -w @balance/domain",
     "build:schemas": "npm run build -w @balance/schemas",
-    "lint": "npm run lint --workspaces --if-present"
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test -w node && npm run test -w balance",
+    "local-dynamo": "npx dynamodb-admin --dynamo-endpoint http://localhost:8000"
   },
   "engines": {
     "node": ">=22"
+  },
+  "devDependencies": {
+    "@microsoft/tsdoc": "^0.16.0"
   }
 }

@@ -12,7 +12,9 @@
     "dev": "tsx watch --clear-screen=false src/index.ts",
     "db:seed": "tsx scripts/seed.ts",
     "db:seed:reset": "tsx scripts/seed.ts --reset",
-    "db:create-tables": "tsx scripts/create-tables.ts"
+    "db:create-tables": "tsx scripts/create-tables.ts",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -48,6 +50,8 @@
     "jiti": "^2.7.0",
     "tsx": "^4.22.4",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.62.1"
+    "typescript-eslint": "^8.62.1",
+    "vitest": "^4.0.18",
+    "@vitest/coverage-v8": "^4.0.18"
   }
 }
