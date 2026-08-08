@@ -5,7 +5,7 @@ import type {
   StoredPlaidItemDocument,
 } from '../data/types.js';
 import type { PlaidSyncStateDocument } from '../plaid/types.js';
-import type { UserDocument, UserSubscription } from '../profile/repository.js';
+import type { UserDocument, UserSubscription } from '../data/user.js';
 import { toDate } from '../data/dates.js';
 import { PLAID_TRANSACTION_EVENT_TYPE } from '@balance/schemas/constants';
 import {

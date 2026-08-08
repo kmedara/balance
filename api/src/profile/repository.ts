@@ -1,37 +1,11 @@
 import { GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import type { AuthUser } from '@balance/schemas/auth';
+import { DEFAULT_SUBSCRIPTION, type UserDocument } from '../data/user.js';
 import { getDocClient } from '../dynamo/client.js';
 import { buildProfileItem, toUserDocument } from '../dynamo/entities.js';
 import { profileSk, userPk } from '../dynamo/keys.js';
 import { serializeRecord } from '../dynamo/helpers.js';
 import { getTableName } from '../dynamo/tables.js';
-
-export type SubscriptionTier = 'free' | 'plus' | 'pro';
-
-export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'canceled' | 'none';
-
-export type UserSubscription = {
-  tier: SubscriptionTier;
-  status: SubscriptionStatus;
-  stripeSubscriptionId?: string;
-  currentPeriodEnd?: Date;
-  trialEnd?: Date;
-};
-
-export const DEFAULT_SUBSCRIPTION: UserSubscription = {
-  tier: 'free',
-  status: 'none',
-};
-
-export type UserDocument = {
-  cognitoSub: string;
-  email?: string;
-  displayName?: string;
-  stripeCustomerId?: string;
-  subscription: UserSubscription;
-  createdAt: Date;
-  updatedAt: Date;
-};
 
 export type ProfileWriteFields = {
   email?: string;

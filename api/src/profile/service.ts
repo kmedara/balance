@@ -6,12 +6,11 @@ import type {
 } from '@balance/schemas/auth';
 import { ConflictError, NotFoundError } from '../errors/http-error.js';
 import { updateCognitoEmail } from '../auth/cognito.js';
+import { DEFAULT_SUBSCRIPTION, type UserDocument } from '../data/user.js';
 import {
-  DEFAULT_SUBSCRIPTION,
   findUserByCognitoSub,
   insertUserProfile,
   updateUserProfileFields,
-  type UserDocument,
 } from './repository.js';
 
 export const toProfileResponse = (user: UserDocument): ProfileResponse => ({
