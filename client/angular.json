@@ -91,18 +91,19 @@
           "builder": "@angular/build:extract-i18n"
         },
         "test": {
-          "builder": "@angular/build:karma",
+          "builder": "@angular/build:unit-test",
           "options": {
             "tsConfig": "tsconfig.spec.json",
-            "inlineStyleLanguage": "scss",
-            "assets": [
-              {
-                "glob": "**/*",
-                "input": "public"
-              }
-            ],
-            "styles": [
-              "src/styles.scss"
+            "coverage": true,
+            "coverageReporters": ["text", "text-summary", "html", "lcov"],
+            "coverageInclude": ["src/app/**/*.ts"],
+            "coverageExclude": [
+              "src/**/*.spec.ts",
+              "src/**/*.test.ts",
+              "src/environments/**",
+              "src/main.ts",
+              "src/main.server.ts",
+              "src/server.ts"
             ]
           }
         }

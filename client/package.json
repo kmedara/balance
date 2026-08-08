@@ -10,7 +10,8 @@
     "watch": "ng build --watch --configuration development",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "vitest",
+    "test": "ng test --watch=false",
+    "test:watch": "ng test",
     "serve:ssr:angular": "node dist/angular/server/server.mjs"
   },
   "prettier": {
@@ -70,6 +71,7 @@
     "source-map-explorer": "^2.5.3",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.62.1",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "@vitest/coverage-v8": "^4.0.18"
   }
 }
