@@ -1,4 +1,4 @@
-import type { SubscriptionTier } from '../profile/repository.js';
+import type { SubscriptionTier } from '../data/user.js';
 import type { StripeEnv } from './types.js';
 import { env } from 'process';
 
@@ -34,7 +34,6 @@ export const getStripeEnv = (): StripeEnv => ({
   STRIPE_PRICE_PLUS_ANNUAL: readOptional('STRIPE_PRICE_PLUS_ANNUAL'),
   STRIPE_PRICE_PRO_MONTHLY: readOptional('STRIPE_PRICE_PRO_MONTHLY'),
   STRIPE_PRICE_PRO_ANNUAL: readOptional('STRIPE_PRICE_PRO_ANNUAL'),
-  CLIENT_ORIGIN: readOptional('CLIENT_ORIGIN') ?? 'http://localhost:4200',
   STRIPE_TRIAL_PERIOD_DAYS: readOptional('STRIPE_TRIAL_PERIOD_DAYS')
     ? Number(readOptional('STRIPE_TRIAL_PERIOD_DAYS'))
     : undefined,

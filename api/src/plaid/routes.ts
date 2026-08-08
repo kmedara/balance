@@ -11,6 +11,9 @@ import {
   plaidSyncResponseSchema,
   syncTransactionsBodySchema,
 } from '@balance/schemas/plaid';
+import type { FastifyRequest } from 'fastify';
+import { isAuthDisabled } from '../auth/config.js';
+import { requireEntitlement } from '../billing/service.js';
 import { BadGatewayError } from '../errors/http-error.js';
 import { plaidClient } from './client.js';
 import {
@@ -19,11 +22,22 @@ import {
   syncTransactionsForUser,
 } from './service.js';
 
+/** Paid gate: Plaid requires plus or higher (skipped when AUTH_DISABLED for local). */
+const requirePaidPlaid = async (request: FastifyRequest) => {
+  if (isAuthDisabled()) return;
+  await requireEntitlement(request, 'plus');
+};
+
 export const plaidRoutes: FastifyPluginAsyncTypebox = async (app) => {
+  app.addHook('preHandler', async (request) => {
+    await requirePaidPlaid(request);
+  });
+
   app.post('/link-token', {
     schema: {
       tags: ['Plaid'],
       summary: 'Create a Plaid Link token',
+      description: 'Requires plus or higher subscription (skipped when AUTH_DISABLED).',
       security: bearerSecurity,
       response: {
         200: linkTokenResponseSchema,
@@ -50,6 +64,7 @@ export const plaidRoutes: FastifyPluginAsyncTypebox = async (app) => {
     schema: {
       tags: ['Plaid'],
       summary: 'Exchange a public token for a linked item',
+      description: 'Requires plus or higher subscription (skipped when AUTH_DISABLED).',
       security: bearerSecurity,
       body: exchangeTokenBodySchema,
       response: {
@@ -88,7 +103,7 @@ export const plaidRoutes: FastifyPluginAsyncTypebox = async (app) => {
       tags: ['Plaid'],
       summary: 'Sync Plaid transactions into events',
       description:
-        'Pulls transactions from Plaid and upserts them as plaid_transaction events.',
+        'Pulls transactions from Plaid and upserts them as plaid_transaction events. Requires plus or higher (skipped when AUTH_DISABLED).',
       security: bearerSecurity,
       body: syncTransactionsBodySchema,
       response: {

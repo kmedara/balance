@@ -1,41 +1,39 @@
 import type Stripe from 'stripe';
 import type { FastifyRequest } from 'fastify';
+import type { AuthUser } from '@balance/schemas/auth';
+import type {
+  CheckoutBody,
+  CheckoutResponse,
+  SubscriptionResponse,
+} from '@balance/schemas/billing';
 import {
   DEFAULT_SUBSCRIPTION,
-  findUserByCognitoSub,
   type SubscriptionStatus,
   type SubscriptionTier,
   type UserSubscription,
-} from '../profile/repository.js';
-import { ForbiddenError } from '../errors/http-error.js';
+} from '../data/user.js';
+import { getPrimaryClientOrigin } from '../auth/config.js';
+import { ForbiddenError, ServiceUnavailableError } from '../errors/http-error.js';
+import { findUserByCognitoSub } from '../profile/repository.js';
 import {
   findUserByStripeCustomerId,
   updateSubscriptionByStripeCustomerId,
   updateUserSubscription,
   setStripeCustomerId,
 } from './repository.js';
-import { TIER_RANK, priceIdToTier } from './utils.js';
-import { retrieveSubscription } from './stripe.client.js';
+import { hasEntitlement } from './entitlements.js';
+import { isStripeConfigured, priceIdToTier } from './utils.js';
+import {
+  createCheckoutSession,
+  createPortalSession,
+  retrieveSubscription,
+} from './stripe.client.js';
 
-const PAID_STATUSES = new Set<UserSubscription['status']>(['active', 'trialing']);
-
-export const isPaidSubscription = (subscription: UserSubscription): boolean =>
-  PAID_STATUSES.has(subscription.status) && subscription.tier !== 'free';
-
-export const hasEntitlement = (
-  subscription: UserSubscription,
-  minimumTier: SubscriptionTier,
-): boolean => {
-  if (!isPaidSubscription(subscription) && minimumTier !== 'free') {
-    return false;
-  }
-
-  return TIER_RANK[subscription.tier] >= TIER_RANK[minimumTier];
-};
+export { hasEntitlement, isPaidSubscription } from './entitlements.js';
 
 export const requireEntitlement = async (
   request: FastifyRequest,
-  minimumTier: SubscriptionTier,
+  minimumTier: Parameters<typeof hasEntitlement>[1],
 ): Promise<UserSubscription> => {
   const user = await findUserByCognitoSub(request.user.userId);
 
@@ -55,12 +53,67 @@ export const toSubscriptionResponse = (subscription: {
   status: SubscriptionStatus;
   currentPeriodEnd?: Date;
   trialEnd?: Date;
-}) => ({
+}): SubscriptionResponse => ({
   tier: subscription.tier,
   status: subscription.status,
   currentPeriodEnd: subscription.currentPeriodEnd?.toISOString() ?? null,
   trialEnd: subscription.trialEnd?.toISOString() ?? null,
 });
+
+export const getSubscriptionForUser = async (userId: string): Promise<SubscriptionResponse> => {
+  const user = await findUserByCognitoSub(userId);
+
+  if (!user) {
+    throw new ForbiddenError('User not found');
+  }
+
+  return toSubscriptionResponse(user.subscription);
+};
+
+export const startCheckoutForUser = async (
+  authUser: AuthUser,
+  body: CheckoutBody,
+): Promise<CheckoutResponse> => {
+  if (!isStripeConfigured()) {
+    throw new ServiceUnavailableError('Stripe is not configured (STRIPE_SECRET_KEY)');
+  }
+
+  const user = await findUserByCognitoSub(authUser.userId);
+
+  if (!user) {
+    throw new ForbiddenError('User not found');
+  }
+
+  const clientOrigin = getPrimaryClientOrigin();
+
+  return createCheckoutSession({
+    cognitoSub: authUser.userId,
+    email: authUser.email ?? user.email,
+    stripeCustomerId: user.stripeCustomerId,
+    priceId: body.priceId.trim(),
+    successUrl: `${clientOrigin}/settings/billing?checkout=success`,
+    cancelUrl: `${clientOrigin}/settings/billing?checkout=canceled`,
+  });
+};
+
+export const startPortalForUser = async (userId: string): Promise<CheckoutResponse> => {
+  if (!isStripeConfigured()) {
+    throw new ServiceUnavailableError('Stripe is not configured (STRIPE_SECRET_KEY)');
+  }
+
+  const user = await findUserByCognitoSub(userId);
+
+  if (!user?.stripeCustomerId) {
+    throw new ForbiddenError('No billing account linked');
+  }
+
+  const clientOrigin = getPrimaryClientOrigin();
+
+  return createPortalSession({
+    stripeCustomerId: user.stripeCustomerId,
+    returnUrl: `${clientOrigin}/settings/billing`,
+  });
+};
 
 export const billingErrorMessage = (err: unknown): { status: 502 | 503; message: string } => {
   const message = err instanceof Error ? err.message : 'Billing request failed';

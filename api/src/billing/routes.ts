@@ -11,19 +11,18 @@ import {
   publicRouteSecurity,
   problemDetailsSchema,
 } from '@balance/schemas/common';
-import { findUserByCognitoSub } from '../profile/repository.js';
 import {
   BadRequestError,
-  ForbiddenError,
   ServiceUnavailableError,
 } from '../errors/http-error.js';
-import { getStripeEnv, isStripeConfigured } from './utils.js';
+import { isStripeConfigured } from './utils.js';
+import { constructWebhookEvent } from './stripe.client.js';
 import {
-  createCheckoutSession,
-  createPortalSession,
-  constructWebhookEvent,
-} from './stripe.client.js';
-import { handleStripeWebhookEvent, toSubscriptionResponse } from './service.js';
+  getSubscriptionForUser,
+  handleStripeWebhookEvent,
+  startCheckoutForUser,
+  startPortalForUser,
+} from './service.js';
 import type { StripeWebhookRequest } from './types.js';
 
 export const billingRoutes: FastifyPluginAsyncTypebox = async (app) => {
@@ -37,15 +36,7 @@ export const billingRoutes: FastifyPluginAsyncTypebox = async (app) => {
         403: problemDetailsSchema,
       },
     },
-    handler: async (request) => {
-      const user = await findUserByCognitoSub(request.user.userId);
-
-      if (!user) {
-        throw new ForbiddenError('User not found');
-      }
-
-      return toSubscriptionResponse(user.subscription);
-    },
+    handler: async (request) => getSubscriptionForUser(request.user.userId),
   });
 
   app.post('/checkout', {
@@ -62,29 +53,7 @@ export const billingRoutes: FastifyPluginAsyncTypebox = async (app) => {
         503: problemDetailsSchema,
       },
     },
-    handler: async (request) => {
-      if (!isStripeConfigured()) {
-        throw new ServiceUnavailableError('Stripe is not configured (STRIPE_SECRET_KEY)');
-      }
-
-      const user = await findUserByCognitoSub(request.user.userId);
-
-      if (!user) {
-        throw new ForbiddenError('User not found');
-      }
-
-      const priceId = request.body.priceId.trim();
-      const { CLIENT_ORIGIN } = getStripeEnv();
-
-      return await createCheckoutSession({
-        cognitoSub: request.user.userId,
-        email: request.user.email ?? user.email,
-        stripeCustomerId: user.stripeCustomerId,
-        priceId,
-        successUrl: `${CLIENT_ORIGIN}/settings/billing?checkout=success`,
-        cancelUrl: `${CLIENT_ORIGIN}/settings/billing?checkout=canceled`,
-      });
-    },
+    handler: async (request) => startCheckoutForUser(request.user, request.body),
   });
 
   app.post('/portal', {
@@ -99,24 +68,7 @@ export const billingRoutes: FastifyPluginAsyncTypebox = async (app) => {
         503: problemDetailsSchema,
       },
     },
-    handler: async (request) => {
-      if (!isStripeConfigured()) {
-        throw new ServiceUnavailableError('Stripe is not configured (STRIPE_SECRET_KEY)');
-      }
-
-      const user = await findUserByCognitoSub(request.user.userId);
-
-      if (!user?.stripeCustomerId) {
-        throw new ForbiddenError('No billing account linked');
-      }
-
-      const { CLIENT_ORIGIN } = getStripeEnv();
-
-      return await createPortalSession({
-        stripeCustomerId: user.stripeCustomerId,
-        returnUrl: `${CLIENT_ORIGIN}/settings/billing`,
-      });
-    },
+    handler: async (request) => startPortalForUser(request.user.userId),
   });
 };
 
