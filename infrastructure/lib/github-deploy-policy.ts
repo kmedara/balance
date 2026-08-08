@@ -1,11 +1,8 @@
 import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
-import {
-  buildCoreDeployStatements,
-  type DeployPolicyContext,
-} from './github-deploy-statements.js';
-import { buildStorageDeployStatements } from './github-deploy-storage-statements.js';
+import { buildCoreDeployStatements, type DeployPolicyContext } from './github-deploy-statements';
+import { buildStorageDeployStatements } from './github-deploy-storage-statements';
 
 export type GitHubDeployPolicyProps = {
   /** CloudFormation stacks deployed by CI. */

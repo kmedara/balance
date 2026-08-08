@@ -20,7 +20,8 @@ Entry point: [`bin/balance.ts`](bin/balance.ts).
 ## Prerequisites
 
 - **Node.js 22+**
-- **AWS CLI** with deploy permissions (CloudFormation, Cognito, DynamoDB, Lambda, IAM, S3, CloudFront)
+- **AWS CLI v2** with deploy permissions (CloudFormation, Cognito, DynamoDB, Lambda, IAM, S3, CloudFront)
+- **SSO profile** (or other credentials) active in the shell before any `cdk` command — see [AWS SSO (CLI)](#aws-sso-cli)
 - **CDK bootstrap** in the target account/region (once)
 
 All npm commands assume a root install:
@@ -43,11 +44,64 @@ Deploy auth + API + database (typical first deploy):
 
 ```bash
 cd infrastructure
-npx cdk bootstrap
+# credentials must already be active — see AWS SSO (CLI) below
+npx cdk bootstrap aws://$CDK_DEFAULT_ACCOUNT/$CDK_DEFAULT_REGION
 npm run deploy
 ```
 
 This runs `cdk deploy BalanceDatabaseStack BalanceAuthStack BalanceApiStack`.
+
+### AWS SSO (CLI)
+
+Local `cdk bootstrap` / `cdk deploy` need a live credential chain. If `AWS_PROFILE` is unset or the SSO session expired, CDK fails with **`NoCredentials`** / *Unable to resolve AWS account* even when an account ID appears in the error.
+
+**Example profile** in `~/.aws/config` (names vary):
+
+```ini
+[profile da:dev]
+sso_session = balance
+sso_account_id = 668568917345
+sso_role_name = DeveloperAccess
+
+[sso-session balance]
+sso_start_url = https://d-xxxxxxxxxxxx.awsapps.com/start
+sso_region = us-east-2
+sso_registration_scopes = sso:account:access
+```
+
+`sso_region` is where IAM Identity Center lives; **deploy region** can still be `us-east-1`.
+
+**Before every CDK session:**
+
+```bash
+aws sso login --profile da:dev
+export AWS_PROFILE=da:dev
+export AWS_REGION=us-east-1
+export CDK_DEFAULT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+export CDK_DEFAULT_REGION=us-east-1
+
+aws sts get-caller-identity   # must succeed in this same shell
+```
+
+PowerShell:
+
+```powershell
+aws sso login --profile da:dev
+$env:AWS_PROFILE = "da:dev"
+$env:AWS_REGION = "us-east-1"
+$env:CDK_DEFAULT_ACCOUNT = (aws sts get-caller-identity --query Account --output text)
+$env:CDK_DEFAULT_REGION = "us-east-1"
+aws sts get-caller-identity
+```
+
+Then:
+
+```bash
+cd infrastructure
+npx cdk bootstrap "aws://${CDK_DEFAULT_ACCOUNT}/${CDK_DEFAULT_REGION}"
+```
+
+Do not run CDK in a different terminal than the one where `AWS_PROFILE` / SSO login was set.
 
 ### Region and account
 
@@ -166,12 +220,12 @@ Default branch is **`main`**. There is **no** `workflow_dispatch` prod deploy an
 
 ### One-time OIDC setup (per AWS account)
 
-Deploy the GitHub OIDC stack with admin credentials in **each** account:
+Use admin/deploy SSO credentials for that account ([AWS SSO (CLI)](#aws-sso-cli)), then:
 
 ```bash
 # Staging account
 cd infrastructure
-npx cdk bootstrap
+npx cdk bootstrap "aws://${CDK_DEFAULT_ACCOUNT}/${CDK_DEFAULT_REGION}"
 npm run deploy:oidc -- \
   -c githubOrg=YOUR_GITHUB_USER \
   -c githubRepo=balance \
@@ -241,6 +295,14 @@ npm run lint -w balance-infrastructure
 PRs to `main` run [`ci.yml`](../.github/workflows/ci.yml) (build, synth, audit, Semgrep). Staging deploys on push to `main`; production on `v*` tags only.
 
 ## Troubleshooting
+
+### `NoCredentials` / unable to resolve AWS account (local CDK)
+
+The shell has no usable credentials (`AWS_PROFILE` unset or SSO session expired).
+
+1. Follow [AWS SSO (CLI)](#aws-sso-cli): `aws sso login`, export `AWS_PROFILE` / `CDK_DEFAULT_*`.
+2. Confirm `aws sts get-caller-identity` in the **same** terminal.
+3. Re-run `npx cdk bootstrap` / deploy.
 
 ### Credentials could not be loaded (CI)
 
