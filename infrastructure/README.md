@@ -201,9 +201,10 @@ Configure **per environment** (not only repo-level):
 |------|------|---------|
 | Secret | `AWS_DEPLOY_ROLE_ARN` | Role ARN from that account’s OIDC stack |
 | Variable | `AWS_REGION` | `us-east-1` |
-| Variable | `API_BASE_URL` | Staging or prod API URL (client `GATEWAY`) |
 | Variable | `COGNITO_CALLBACK_URLS` | `["https://api…/auth/callback"]` |
 | Variable | `COGNITO_LOGOUT_URLS` | `["https://app…/login"]` |
+
+Client `GATEWAY` comes from CDK **`ApiUrl`** via the infra workflow output `api_base_url` (not a GitHub Actions variable).
 
 OIDC `sub` for deploy jobs is `repo:OWNER/REPO:environment:<name>` — trust must include `staging` / `production` accordingly.
 
@@ -212,7 +213,7 @@ OIDC `sub` for deploy jobs is `repo:OWNER/REPO:environment:<name>` — trust mus
 Download artifact **`cdk-outputs-<environment>`** or read job logs for:
 
 - Cognito pool/client IDs → API Lambda env
-- **`ApiUrl`** → `AUTH_CALLBACK_URL`, `API_BASE_URL`, client `GATEWAY`
+- **`ApiUrl`** → `AUTH_CALLBACK_URL` / `API_PUBLIC_URL`; also passed to the client job as `GATEWAY`
 - Client **`BucketName`** / **`DistributionId`** → S3 sync target
 
 Update Cognito callback URLs in AWS to match the deployed API URL.

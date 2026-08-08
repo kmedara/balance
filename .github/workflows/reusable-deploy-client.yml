@@ -7,6 +7,10 @@ on:
         description: GitHub Environment name (staging | production)
         required: true
         type: string
+      api_base_url:
+        description: Public API base URL baked into the client as GATEWAY (from infra ApiUrl)
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -15,7 +19,7 @@ permissions:
 env:
   AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
   CDK_DEFAULT_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
-  GATEWAY: ${{ vars.API_BASE_URL }}
+  GATEWAY: ${{ inputs.api_base_url }}
 
 jobs:
   deploy:
@@ -31,13 +35,14 @@ jobs:
           ROLE_ARN: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
         run: |
           if [ -z "$GATEWAY" ]; then
-            echo "::error::Set environment variable API_BASE_URL for '${{ inputs.environment }}'."
+            echo "::error::api_base_url input is empty (expected BalanceApiStack.ApiUrl from infra deploy)."
             exit 1
           fi
           if [ -z "$ROLE_ARN" ]; then
             echo "::error::Set environment secret AWS_DEPLOY_ROLE_ARN for '${{ inputs.environment }}' (OIDC only)."
             exit 1
           fi
+          echo "Building client with GATEWAY=$GATEWAY"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

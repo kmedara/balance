@@ -74,9 +74,10 @@ Configure **per environment** (staging values ≠ production values):
 |------|------|---------|
 | Secret | `AWS_DEPLOY_ROLE_ARN` | OIDC role ARN from that account |
 | Variable | `AWS_REGION` | e.g. `us-east-1` |
-| Variable | `API_BASE_URL` | API base URL baked into the client as `GATEWAY` |
 | Variable | `COGNITO_CALLBACK_URLS` | Passed to CDK as `callbackUrls` |
 | Variable | `COGNITO_LOGOUT_URLS` | Passed to CDK as `logoutUrls` |
+
+Client `GATEWAY` is set automatically from CDK output **`BalanceApiStack.ApiUrl`** after the infra job (no GitHub `API_BASE_URL` variable required for staging/release pipelines).
 
 API Lambda secrets (Plaid, Stripe, Cognito IDs, `SESSION_SECRET`, `CLIENT_ORIGIN`, etc.) must be present in the deploy environment that runs CDK — see [`api-env.ts`](../../infrastructure/lib/api-env.ts) and [api README](../../api/README.md#environment-variables).
 
@@ -114,7 +115,7 @@ After the workflow succeeds:
 - [ ] `/ping` on the staging API returns OK  
 - [ ] Sign-in / session cookie works against staging Cognito  
 - [ ] Calendar loads; create or edit a budget event if the change touches events  
-- [ ] Client is talking to the staging API (`API_BASE_URL` / `GATEWAY`)  
+- [ ] Client is talking to the staging API (GATEWAY from CDK `ApiUrl`)  
 - [ ] Cognito callback / logout URLs match the staging API and app origins  
 
 Download artifact `cdk-outputs-staging` from the workflow run if Cognito or API URLs changed.
@@ -160,7 +161,7 @@ Same checks as staging, against production URLs. Prefer a short checklist:
 - [ ] One write path touched by the release (if any)  
 - [ ] Billing / Plaid only if those paths changed  
 
-Update GitHub variable `API_BASE_URL` for **production** if the API URL changed, then redeploy client (next tag or a follow-up tag) so the SPA points at the new gateway.
+If the API URL changed, the next full pipeline (infra → client) rebuilds the SPA with the new `ApiUrl` automatically.
 
 ---
 
@@ -170,8 +171,9 @@ After the first deploy or a domain cutover:
 
 1. Set Lambda / env: `AUTH_CALLBACK_URL`, `API_PUBLIC_URL`, `CLIENT_ORIGIN` for that environment  
 2. Align Cognito app client callback and logout URLs with the live API and PWA  
-3. Set GitHub `API_BASE_URL` for that environment to the public API URL  
-4. Confirm Stripe / Plaid webhook endpoints point at the correct environment’s API  
+3. Confirm Stripe / Plaid webhook endpoints point at the correct environment’s API  
+
+Client `GATEWAY` is refreshed automatically on the next infra→client pipeline from CDK `ApiUrl`.
 
 Details: [api README — Deployment](../../api/README.md#deployment), [infrastructure README — After deploy](../../infrastructure/README.md#after-deploy).
 
@@ -199,7 +201,7 @@ Prefer **forward fix** + new tag over rewriting history or moving tags.
 | `Not authorized to perform sts:AssumeRoleWithWebIdentity` | OIDC `sub` mismatch | Trust must allow `repo:OWNER/REPO:environment:staging` or `…:production`; redeploy OIDC with matching `githubEnvironments` |
 | Staging role used against prod (or reverse) | Wrong account’s ARN in the environment | Each GitHub Environment secret must be the **same account** as the deploy target |
 | Tag release fails “not on main” | Tag pointed at a commit not reachable from `main` | Tag a commit that is on `main` |
-| Client talks to wrong API | Stale `API_BASE_URL` | Fix the environment variable; run a client deploy (staging: push to `main`; prod: new tag) |
+| Client talks to wrong API | Stale SPA build or wrong env | Re-run full deploy (staging: push to `main`; prod: new `v*` tag) so client rebuilds with current `ApiUrl` |
 | Cognito redirect errors | Callback / logout URL drift | Align Cognito console URLs with `COGNITO_*` vars and live origins |
 | PR blocked on audit / Semgrep | New finding or dependency advisory | Fix or upgrade before merge; do not bypass required checks |
 

@@ -17,6 +17,10 @@ on:
         required: false
         type: string
         default: ''
+    outputs:
+      api_base_url:
+        description: Public API base URL from BalanceApiStack (client GATEWAY)
+        value: ${{ jobs.deploy.outputs.api_base_url }}
 
 permissions:
   contents: read
@@ -31,6 +35,8 @@ jobs:
     name: Deploy Database + Auth + API
     environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
+    outputs:
+      api_base_url: ${{ steps.api_url.outputs.api_base_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -94,6 +100,19 @@ jobs:
             CONTEXT_ARGS+=(-c "logoutUrls=${LOGOUT_URLS}")
           fi
           npm run deploy:ci -- "${CONTEXT_ARGS[@]}"
+
+      - name: Resolve API URL
+        id: api_url
+        working-directory: infrastructure
+        run: |
+          API_URL=$(node -p "require('./cdk-outputs.json').BalanceApiStack.ApiUrl")
+          API_URL="${API_URL%/}"
+          if [ -z "$API_URL" ] || [ "$API_URL" = "undefined" ]; then
+            echo "::error::BalanceApiStack.ApiUrl missing from cdk-outputs.json"
+            exit 1
+          fi
+          echo "api_base_url=$API_URL" >> "$GITHUB_OUTPUT"
+          echo "Client GATEWAY will be $API_URL"
 
       - name: Upload stack outputs
         uses: actions/upload-artifact@v4

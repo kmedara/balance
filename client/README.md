@@ -158,8 +158,9 @@ Client deploys run as part of the shared release pipelines (not a standalone cli
 | Type | Name | Description |
 |------|------|-------------|
 | Secret | `AWS_DEPLOY_ROLE_ARN` | OIDC deploy role from that account’s `BalanceGitHubOidcStack` |
-| Variable | `API_BASE_URL` | API URL baked into `GATEWAY` |
 | Variable | `AWS_REGION` | Deploy region (default `us-east-1`) |
+
+`GATEWAY` is passed from the infra job as CDK **`ApiUrl`** (`api_base_url` workflow output).
 
 See [`infrastructure/README.md`](../infrastructure/README.md#deployment) for OIDC setup.
 

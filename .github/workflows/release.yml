@@ -45,4 +45,5 @@ jobs:
     uses: ./.github/workflows/reusable-deploy-client.yml
     with:
       environment: production
+      api_base_url: ${{ needs.deploy-infra.outputs.api_base_url }}
     secrets: inherit
