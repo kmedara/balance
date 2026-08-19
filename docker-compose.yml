@@ -10,8 +10,8 @@ services:
       context: .
       dockerfile: client/Dockerfile.dev
     ports:
-      - "4200:4200"
-      - "49153:49153"
+      - '4200:4200'
+      - '49153:49153'
     develop:
       watch:
         - action: sync
@@ -21,6 +21,7 @@ services:
           path: ./packages/domain
           target: /app/packages/domain
   node:
+    replicas: 2
     networks:
       - balance
     depends_on:
@@ -34,7 +35,7 @@ services:
       context: .
       dockerfile: api/Dockerfile.dev
     ports:
-      - "3000:3000"
+      - '3000:3000'
     develop:
       watch:
         - action: sync
@@ -53,8 +54,8 @@ services:
     user: root
     working_dir: /home/dynamodblocal
     ports:
-      - "8000:8000"
-    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-dbPath", "./data"]
+      - '8000:8000'
+    command: ['-jar', 'DynamoDBLocal.jar', '-sharedDb', '-dbPath', './data']
     volumes:
       - dynamodb-data:/home/dynamodblocal/data
 
