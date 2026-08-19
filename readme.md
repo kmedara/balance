@@ -1,13 +1,15 @@
 # Balance
 
-Personal finance calendar — budgets, Plaid transactions, and subscriptions in one view. The repo is an **npm workspaces monorepo**: Angular client, Fastify API, shared domain types, and AWS CDK infrastructure.
+Personal finance calendar — budgets, Plaid transactions, and subscriptions in one view. The repo is an **npm
+workspaces monorepo**: Angular client, Fastify Application Programming Interface (API), shared domain types, and
+Amazon Web Services (AWS) Cloud Development Kit (CDK) infrastructure.
 
 ## Repository layout
 
 | Path | Package | Purpose |
 |------|---------|---------|
-| [`client/`](client/) | `balance` | Angular 21 SPA |
-| [`api/`](api/) | `node` | Fastify API (local dev + Lambda) |
+| [`client/`](client/) | `balance` | Angular 21 Single-Page Application (SPA) |
+| [`api/`](api/) | `node` | Fastify API (local dev + AWS Lambda) |
 | [`packages/schemas/`](packages/schemas/) | `@balance/schemas` | Shared TypeBox schemas and wire types |
 | [`packages/domain/`](packages/domain/) | `@balance/domain` | Persistence models and runtime utilities |
 | [`infrastructure/`](infrastructure/) | `balance-infrastructure` | AWS CDK stacks |
@@ -17,7 +19,7 @@ Personal finance calendar — budgets, Plaid transactions, and subscriptions in 
 - **Node.js 22+**
 - **Docker** (recommended for local dev — API, client, and DynamoDB Local)
 - **Plaid** sandbox credentials
-- **AWS CLI** (for CDK deploys only)
+- **AWS Command Line Interface (CLI)** (for CDK deploys only)
 
 ## Quick start (Docker)
 
@@ -45,11 +47,13 @@ npm run db:create-tables -w node
 npm run db:seed -w node
 ```
 
-After that, normal restarts (`./deploy.sh` or `docker compose up`) keep your data — no re-seed required.
+After that, normal restarts (`./deploy.sh` or `docker compose up`) keep local data — no re-seed required.
 
 ### DynamoDB persistence
 
-DynamoDB Local stores data in a named Docker volume (`dynamodb-data`). Table definitions and items survive `docker compose down` / `up`. Cognito users keep profiles and events created via the API; seed data belongs to the dev user id (`aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa`), not your Cognito account.
+Amazon DynamoDB Local stores data in a named Docker volume (`dynamodb-data`). Table definitions and items survive
+`docker compose down` / `up`. Amazon Cognito users keep profiles and events created via the API; seed data belongs to
+the dev user id (`aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa`), not a signed-in Cognito account.
 
 | Scenario | Command |
 |----------|---------|
@@ -108,15 +112,15 @@ Docker Compose passes it to the API and client containers. `deploy.sh` also `sou
 |----------|-------------|
 | `GATEWAY` | API base URL the client calls (e.g. `http://localhost:3000`) |
 | `PLAID_*` | Plaid client id, secret, env, host, products, country codes, client name, redirect URI |
-| `ACCESS_TOKEN_ENCRYPTION_*` | AES-GCM settings for encrypted Plaid access tokens |
+| `ACCESS_TOKEN_ENCRYPTION_*` | Advanced Encryption Standard Galois/Counter Mode (AES-GCM) settings for encrypted Plaid access tokens |
 
 `deploy.sh` also requires Cognito vars when `AUTH_DISABLED` is not `true` — see [Authentication](#authentication).
 
 ### Authentication
 
-Local dev usually sets `AUTH_DISABLED=true`, which bypasses Cognito and uses the seed user.
+Local development usually sets `AUTH_DISABLED=true`, which bypasses Cognito and uses the seed user.
 
-For real Cognito auth locally:
+For Cognito authentication locally:
 
 | Variable | Description |
 |----------|-------------|
@@ -130,7 +134,8 @@ For real Cognito auth locally:
 | `CLIENT_ORIGIN` | Angular origin — `http://localhost:4200` |
 | `SESSION_SECRET` | 32+ random characters for session cookies |
 
-Sign-in starts at `GET /auth/login` on the API. The Angular app has no Cognito config — the API is the BFF and sets HttpOnly session cookies.
+Sign-in starts at `GET /auth/login` on the API. The Angular app has no Cognito config — the API is the Backend for
+Frontend (BFF) and sets HttpOnly session cookies.
 
 See [`infrastructure/README.md`](infrastructure/README.md) for Cognito stack setup.
 
@@ -165,10 +170,10 @@ See [`packages/schemas/README.md`](packages/schemas/README.md) and [`packages/do
 | Component | How | Docs |
 |-----------|-----|------|
 | Cognito + API + DynamoDB | GitHub Actions → CDK | [`infrastructure/README.md`](infrastructure/README.md) |
-| Angular client | GitHub Actions → S3 + CloudFront | [`client/README.md`](client/README.md#deployment) |
+| Angular client | GitHub Actions → Amazon Simple Storage Service (S3) + Amazon CloudFront | [`client/README.md`](client/README.md#deployment) |
 | API details | Lambda env vars, Swagger, seeding | [`api/README.md`](api/README.md) |
 
-**CI workflows:**
+**Continuous Integration (CI) workflows:**
 
 - [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — PR checks (build, CDK synth, npm audit, Semgrep); never deploys
 - [`.github/workflows/deploy-staging.yml`](.github/workflows/deploy-staging.yml) — push to `main` → staging account

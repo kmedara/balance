@@ -1,27 +1,33 @@
 # Balance Infrastructure
 
-AWS CDK app for the Balance platform. Provisions Cognito auth, DynamoDB, the API (Lambda + HTTP API), static client hosting (S3 + CloudFront), optional custom DNS, and a GitHub Actions OIDC deploy role.
+Amazon Web Services (AWS) Cloud Development Kit (CDK) app for the Balance platform. Provisions Amazon Cognito
+authentication, Amazon DynamoDB, the Application Programming Interface (API) (AWS Lambda + HTTP API), static client
+hosting (Amazon Simple Storage Service (S3) + Amazon CloudFront), optional custom Domain Name System (DNS), and a
+GitHub Actions OpenID Connect (OIDC) deploy role.
 
-The Angular client does **not** talk to Cognito directly. OAuth callback URLs must point at the **API** (`/auth/callback`), not the frontend.
+The Angular client does **not** talk to Cognito directly. Open Authorization (OAuth) callback URLs must point at the
+**API** (`/auth/callback`), not the frontend.
 
 ## Stacks
 
 | Stack | Purpose |
 |-------|---------|
 | `BalanceAuthStack` | Cognito user pool, public OAuth client, hosted UI domain |
-| `BalanceDatabaseStack` | Single-table DynamoDB (`balance`) with GSIs |
+| `BalanceDatabaseStack` | Single-table DynamoDB (`balance`) with Global Secondary Indexes (GSIs) |
 | `BalanceApiStack` | Lambda (Fastify) + HTTP API Gateway |
 | `BalanceClientStack` | Private S3 bucket + CloudFront distribution |
-| `BalanceDnsStack` | Route 53 + ACM certificates (when `ROOT_DOMAIN_NAME` is set) |
-| `BalanceGitHubOidcStack` | IAM OIDC provider + GitHub deploy role (optional, context-gated) |
+| `BalanceDnsStack` | Amazon Route 53 + AWS Certificate Manager (ACM) certificates (when `ROOT_DOMAIN_NAME` is set) |
+| `BalanceGitHubOidcStack` | Identity and Access Management (IAM) OIDC provider + GitHub deploy role (optional, context-gated) |
 
 Entry point: [`bin/balance.ts`](bin/balance.ts).
 
 ## Prerequisites
 
 - **Node.js 22+**
-- **AWS CLI v2** with deploy permissions (CloudFormation, Cognito, DynamoDB, Lambda, IAM, S3, CloudFront)
-- **SSO profile** (or other credentials) active in the shell before any `cdk` command — see [AWS SSO (CLI)](#aws-sso-cli)
+- **AWS Command Line Interface (CLI) v2** with deploy permissions (AWS CloudFormation, Cognito, DynamoDB, Lambda, IAM,
+  S3, CloudFront)
+- **Single Sign-On (SSO) profile** (or other credentials) active in the shell before any `cdk` command — see
+  [AWS SSO (CLI)](#aws-sso-cli)
 - **CDK bootstrap** in the target account/region (once)
 
 All npm commands assume a root install:
@@ -119,10 +125,10 @@ Each concern has **one** source — no env ↔ context fallbacks. See the table 
 | Concern | Source | Keys |
 |---------|--------|------|
 | Cognito OAuth URLs | CDK context | `callbackUrls`, `logoutUrls` |
-| Domain / CORS / DNS | Env vars | `ROOT_DOMAIN_NAME`, `HOSTED_ZONE_ID`, `CLIENT_ORIGIN`, `CLIENT_DOMAIN_NAME`, `CLIENT_CERTIFICATE_ARN` |
+| Domain / Cross-Origin Resource Sharing (CORS) / DNS | Env vars | `ROOT_DOMAIN_NAME`, `HOSTED_ZONE_ID`, `CLIENT_ORIGIN`, `CLIENT_DOMAIN_NAME`, `CLIENT_CERTIFICATE_ARN` |
 | GitHub OIDC | CDK context | `githubOrg`, `githubRepo`, `githubBranches`, `githubEnvironments` |
 | API Lambda secrets / IDs | Env vars | see [`lib/api-env.ts`](lib/api-env.ts) |
-| Client CSP / DNS labels | CDK context | `clientCsp`, `apiSubdomain`, `appSubdomain` |
+| Client Content Security Policy (CSP) / DNS labels | CDK context | `clientCsp`, `apiSubdomain`, `appSubdomain` |
 
 ### OAuth URLs
 
@@ -172,7 +178,8 @@ Set env var `ROOT_DOMAIN_NAME` to synthesize `BalanceDnsStack` and attach custom
 
 ### API Lambda environment
 
-At deploy time, [`pickApiLambdaEnvironment`](lib/api-env.ts) copies configured env vars from your shell into the Lambda. Export Plaid, Stripe, Cognito, and session secrets before `cdk deploy`:
+At deploy time, [`pickApiLambdaEnvironment`](lib/api-env.ts) copies configured env vars from the deploy shell into the
+Lambda. Export Plaid, Stripe, Cognito, and session secrets before `cdk deploy`:
 
 ```bash
 export PLAID_CLIENT_ID=...
@@ -207,7 +214,7 @@ Runbook for operators: [docs/deployment](../docs/deployment/README.md).
 
 | Workflow | Trigger | Target | What it does |
 |----------|---------|--------|--------------|
-| [`ci.yml`](../.github/workflows/ci.yml) | PR → `main` | — | Build, CDK synth, **npm audit** (high+), **Semgrep** (blocking). Never deploys. |
+| [`ci.yml`](../.github/workflows/ci.yml) | Pull Request (PR) → `main` | — | Build, CDK synth, **npm audit** (high+), **Semgrep** (blocking). Never deploys. |
 | [`deploy-staging.yml`](../.github/workflows/deploy-staging.yml) | Push → `main` | GitHub env **`staging`** | Database + Auth + API, then client (OIDC) |
 | [`release.yml`](../.github/workflows/release.yml) | Tag `v*` on `main` | GitHub env **`production`** | Same order after verifying the tag is on `main` |
 

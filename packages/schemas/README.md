@@ -1,6 +1,7 @@
 # `@balance/schemas`
 
-Shared **TypeBox** schemas and HTTP wire types for the Balance API and client. This package is the source of truth for request/response shapes — not persistence models.
+Shared **TypeBox** schemas and HTTP wire types for the Balance Application Programming Interface (API) and client.
+This package is the source of truth for request/response shapes — not persistence models.
 
 ## What lives here
 
@@ -38,5 +39,5 @@ npm run build -w @balance/schemas
 ## Related
 
 - [`@balance/domain`](../domain/) — persistence models and runtime helpers
-- [API README](../../api/README.md) — route schemas wired into Fastify/Swagger
+- [API README](../../api/README.md) — route schemas wired into Fastify / OpenAPI (Swagger)
 - [Client README](../../client/README.md) — imports `@balance/schemas/client` directly

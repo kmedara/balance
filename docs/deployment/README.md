@@ -1,8 +1,10 @@
 # Deployment
 
-Runbook for shipping Balance to **staging** and **production**. Day-to-day flow: PR → merge to `main` (staging) → tag `v`\* (production).
+Runbook for shipping Balance to **staging** and **production**. Day-to-day flow: Pull Request (PR) → merge to `main`
+(staging) → tag `v`\* (production).
 
-Related detail: [infrastructure README](../../infrastructure/README.md#deployment) · workflows under `[.github/workflows/](../../.github/workflows/)`.
+Related detail: [infrastructure README](../../infrastructure/README.md#deployment) · workflows under
+[`.github/workflows/`](../../.github/workflows/).
 
 ---
 
@@ -14,12 +16,13 @@ Related detail: [infrastructure README](../../infrastructure/README.md#deploymen
 | **Staging**    | Staging account    | `staging`          | Push / merge to `main`                         |
 | **Production** | Production account | `production`       | Tag `v`\* on a commit reachable from `main`    |
 
-Default branch is `main`. Deploys use **GitHub OIDC only** — no long-lived AWS access keys, no manual `workflow_dispatch` to prod.
+Default branch is `main`. Deploys use **GitHub OpenID Connect (OIDC) only** — no long-lived Amazon Web Services (AWS)
+access keys, no manual `workflow_dispatch` to production.
 
 Release order (same in staging and production):
 
 1. **Database** → **Auth** → **API** (`[reusable-deploy-infra.yml](../../.github/workflows/reusable-deploy-infra.yml)`)
-2. **Client** (CDK stack + S3 sync + CloudFront invalidation) (`[reusable-deploy-client.yml](../../.github/workflows/reusable-deploy-client.yml)`)
+2. **Client** (AWS Cloud Development Kit (CDK) stack + Amazon Simple Storage Service (S3) sync + Amazon CloudFront invalidation) (`[reusable-deploy-client.yml](../../.github/workflows/reusable-deploy-client.yml)`)
 
 ---
 

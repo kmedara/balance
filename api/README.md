@@ -1,13 +1,15 @@
 # Balance API
 
-Fastify 5 API for the Balance app. Handles authentication (Cognito BFF + session cookies), calendar events, Plaid linking, Stripe billing, and DynamoDB persistence. Runs locally with `tsx` and in AWS as a Lambda behind API Gateway HTTP API.
+Fastify 5 Application Programming Interface (API) for the Balance app. Handles authentication (Amazon Cognito Backend
+for Frontend (BFF) + session cookies), calendar events, Plaid linking, Stripe billing, and Amazon DynamoDB persistence.
+Runs locally with `tsx` and on Amazon Web Services (AWS) as a Lambda function behind Amazon API Gateway HTTP API.
 
 ## Stack
 
 - **Runtime:** Node.js 22, TypeScript, ESM
 - **Framework:** Fastify + TypeBox validation + Swagger UI at `/docs`
-- **Database:** DynamoDB (single-table design; local dev uses DynamoDB Local)
-- **Auth:** Cognito OAuth via API routes; `AUTH_DISABLED=true` for local bypass
+- **Database:** DynamoDB (single-table design; local development uses DynamoDB Local)
+- **Auth:** Cognito Open Authorization (OAuth) via API routes; `AUTH_DISABLED=true` for local bypass
 - **Integrations:** Plaid, Stripe
 - **Shared packages:** [`@balance/schemas`](../packages/schemas) (wire types), [`@balance/domain`](../packages/domain) (persistence models)
 
@@ -48,7 +50,7 @@ Set these in [`.env.local.secrets`](../.env.local.secrets) for Docker/local dev.
 |----------|----------|-------------|
 | `DYNAMODB_ENDPOINT` | Local only | e.g. `http://localhost:8000` — omit in Lambda (uses AWS endpoint) |
 | `BALANCE_TABLE` | Yes | DynamoDB table name (default `balance`) |
-| `CLIENT_ORIGIN` | Yes | First-party PWA origin allowlist for CORS, auth redirects, and Stripe return URLs. Prefer **one origin per environment** (e.g. local `http://localhost:4200`, prod `https://app.example.com`). Comma-separated list allowed only if multiple first-party origins share the same API. Must be exact `http(s)` origins — no paths, no `*`. |
+| `CLIENT_ORIGIN` | Yes | First-party Progressive Web App (PWA) origin allowlist for Cross-Origin Resource Sharing (CORS), auth redirects, and Stripe return URLs. Prefer **one origin per environment** (e.g. local `http://localhost:4200`, prod `https://app.example.com`). Comma-separated list allowed only if multiple first-party origins share the same API. Must be exact `http(s)` origins — no paths, no `*`. |
 | `API_PUBLIC_URL` | Production | Public API base URL (e.g. API Gateway URL) |
 
 ### Authentication
@@ -76,10 +78,10 @@ Set these in [`.env.local.secrets`](../.env.local.secrets) for Docker/local dev.
 | `PLAID_COUNTRY_CODES` | e.g. `US` |
 | `PLAID_CLIENT_NAME` | Display name in Link |
 | `PLAID_REDIRECT_URI` | OAuth redirect (typically the client origin) |
-| `ACCESS_TOKEN_ENCRYPTION_KEY` | Base64 AES key |
+| `ACCESS_TOKEN_ENCRYPTION_KEY` | Base64 Advanced Encryption Standard (AES) key |
 | `ACCESS_TOKEN_ENCRYPTION_ALGORITHM` | e.g. `aes-256-gcm` |
 | `ACCESS_TOKEN_ENCRYPTION_KEY_VERSION` | Key version string |
-| `ACCESS_TOKEN_ENCRYPTION_IV_LENGTH` | IV length (e.g. `12`) |
+| `ACCESS_TOKEN_ENCRYPTION_IV_LENGTH` | Initialization Vector (IV) length (e.g. `12`) |
 
 ### Stripe
 
@@ -131,11 +133,13 @@ Co-located `*.test.ts` files under `src/` (e.g. billing entitlements). HTML repo
 
 ## Database
 
-Single-table DynamoDB design. Key layout and GSIs: [`src/dynamo/keys.ts`](src/dynamo/keys.ts).
+Single-table DynamoDB design. Key layout and Global Secondary Indexes (GSIs): [`src/dynamo/keys.ts`](src/dynamo/keys.ts).
 
 ### DynamoDB persistence (local)
 
-DynamoDB Local uses file storage in a named Docker volume (`dynamodb-data`), not in-memory mode. Data survives container restarts. Cognito users retain profiles and events created via `upsertUserFromAuth`; seed data belongs to the dev user id (`aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa`), not your Cognito account.
+DynamoDB Local uses file storage in a named Docker volume (`dynamodb-data`), not in-memory mode. Data survives
+container restarts. Cognito users retain profiles and events created via `upsertUserFromAuth`; seed data belongs to the
+dev user id (`aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa`), not a signed-in Cognito account.
 
 | Scenario | Command |
 |----------|---------|
@@ -209,7 +213,8 @@ Unit tests use Vitest (`src/**/*.test.ts`). Manual checks:
 
 ## Deployment
 
-Production runs on **AWS Lambda** (Node 22, ARM64) behind **API Gateway HTTP API**, deployed by CDK as `BalanceApiStack`.
+Production runs on **AWS Lambda** (Node 22, ARM64) behind **API Gateway HTTP API**, deployed by AWS Cloud Development
+Kit (CDK) as `BalanceApiStack`.
 
 **From [`infrastructure/`](../infrastructure/):**
 
@@ -217,7 +222,9 @@ Production runs on **AWS Lambda** (Node 22, ARM64) behind **API Gateway HTTP API
 npm run deploy:ci    # BalanceDatabaseStack + Auth + Api, writes cdk-outputs.json
 ```
 
-Lambda environment variables are picked from your shell/`process.env` at deploy time via [`pickApiLambdaEnvironment`](../infrastructure/lib/api-env.ts). Export secrets before deploying, or configure them in the GitHub Actions environment.
+Lambda environment variables are picked from the deploy shell / `process.env` at deploy time via
+[`pickApiLambdaEnvironment`](../infrastructure/lib/api-env.ts). Export secrets before deploying, or configure them in
+the GitHub Actions environment.
 
 **GitHub Actions:** push to `main` deploys **staging**; tag `v*` on `main` deploys **production** ([`deploy-staging.yml`](../.github/workflows/deploy-staging.yml) / [`release.yml`](../.github/workflows/release.yml)). PRs run [`ci.yml`](../.github/workflows/ci.yml) only.
 

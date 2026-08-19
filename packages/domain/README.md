@@ -37,5 +37,5 @@ npm run build -w @balance/domain
 ## Related
 
 - [`@balance/schemas`](../schemas/) — TypeBox wire schemas
-- [API README](../../api/README.md) — DynamoDB entities and event expansion
+- [API README](../../api/README.md) — Amazon DynamoDB entities and event expansion
 - [Client README](../../client/README.md) — imports `@balance/domain/client` directly

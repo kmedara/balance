@@ -1,9 +1,13 @@
 # Balance — STRIDE threat model (v1)
 
-Living threat model for the architecture in [requirements.md](./requirements.md).  
-**TM2:** full STRIDE pass for v1; update when major features ship.
+Living threat model for the architecture in [requirements.md](./requirements.md).
+**TM2:** full Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege
+(STRIDE) pass for v1; update when major features ship.
 
-**System (v1):** TypeScript PWA (S3/CloudFront) → BFF (Lambda + API Gateway HTTP + WebSocket) → DynamoDB; Cognito (Google/Apple + custom magic link); Plaid; Stripe; SES; Frankfurter FX; Google ads (free tier only).
+**System (v1):** TypeScript Progressive Web App (PWA) (Amazon Simple Storage Service (S3) / Amazon CloudFront) →
+Backend for Frontend (BFF) (AWS Lambda + Amazon API Gateway HTTP + WebSocket) → Amazon DynamoDB; Amazon Cognito
+(Google/Apple + custom magic link); Plaid; Stripe; Amazon Simple Email Service (SES); Frankfurter Foreign Exchange
+(FX); Google ads (free tier only).
 
 **Trust boundaries:** Browser ↔ CloudFront/API; API ↔ Cognito/DynamoDB/SSM; API ↔ Plaid/Stripe/SES/Frankfurter; Webhooks → API.
 
@@ -13,11 +17,11 @@ Living threat model for the architecture in [requirements.md](./requirements.md)
 
 | Category | Priority threats (v1) | Main mitigations |
 |----------|----------------------|------------------|
-| **S** Spoofing | Stolen session; forged webhooks; fake OAuth | HttpOnly secure cookie + session epoch; verify Plaid/Stripe signatures; Cognito OAuth/PKCE |
-| **T** Tampering | IDOR on events/household; entitlement bypass | AuthZ on every query (user/household); server-side entitlement checks; hybrid RBAC/ABAC |
+| **S** Spoofing | Stolen session; forged webhooks; fake Open Authorization (OAuth) | HttpOnly secure cookie + session epoch; verify Plaid/Stripe signatures; Cognito OAuth / Proof Key for Code Exchange (PKCE) |
+| **T** Tampering | Insecure Direct Object Reference (IDOR) on events/household; entitlement bypass | AuthZ on every query (user/household); server-side entitlement checks; hybrid Role-Based Access Control (RBAC) / Attribute-Based Access Control (ABAC) |
 | **R** Repudiation | “I didn’t change that” / billing disputes | Audit-relevant logs (auth, entitlement, admin-like actions); Stripe as billing SoR |
-| **I** Info disclosure | Cross-user data; Plaid tokens; logs with secrets | Partition by user; encrypt tokens; 7d log retention; no txn payloads in analytics |
-| **D** DoS | API flood; webhook flood; expensive calendar expand | API GW throttling; idempotent webhooks; bound expand window; L1 errors under load |
+| **I** Info disclosure | Cross-user data; Plaid tokens; logs with secrets | Partition by user; encrypt tokens; 7d log retention; no transaction payloads in analytics |
+| **D** DoS | API flood; webhook flood; expensive calendar expand | API Gateway throttling; idempotent webhooks; bound expand window; L1 errors under load |
 | **E** Elevation | Free→paid feature without pay; household privilege climb | Entitlements from Stripe; Owner/Editor/Viewer checks; paid-only Plaid |
 
 ---
@@ -26,7 +30,7 @@ Living threat model for the architecture in [requirements.md](./requirements.md)
 
 | ID | Threat | Impact | Mitigations | Status |
 |----|--------|--------|-------------|--------|
-| S1 | Attacker steals BFF session cookie (XSS/malware) | Full account access | HttpOnly Secure cookie; CSP; no tokens in JS; revoke-all + session epoch; MFA optional | Required |
+| S1 | Attacker steals BFF session cookie (Cross-Site Scripting (XSS)/malware) | Full account access | HttpOnly Secure cookie; Content Security Policy (CSP); no tokens in JS; revoke-all + session epoch; Multi-Factor Authentication (MFA) optional | Required |
 | S2 | Magic-link token replay / leak via Referer | Account takeover | One-time links; short TTL; HTTPS only; don’t log full tokens | Required |
 | S3 | Forged Plaid/Stripe webhooks | False sync/billing state | Signature verification; reject invalid; idempotency keys | Required |
 | S4 | OAuth redirect / mix-up | Login as wrong user | Cognito + registered redirect URIs; state/PKCE | Required |
@@ -52,7 +56,7 @@ Living threat model for the architecture in [requirements.md](./requirements.md)
 |----|--------|--------|-------------|--------|
 | R1 | User denies subscription change | Support/chargeback | Stripe Customer Portal + webhooks as source of truth; log entitlement changes | Required |
 | R2 | User denies household invite/accept | Access disputes | Log invite send/accept/revoke with actor ids | Required |
-| R3 | Operator denies production change | SOC 2 gap | Git + CI for deploys; no unsigned console changes as norm | Required |
+| R3 | Operator denies production change | System and Organization Controls 2 (SOC 2) gap | Git + CI for deploys; no unsigned console changes as norm | Required |
 
 ---
 
@@ -60,12 +64,12 @@ Living threat model for the architecture in [requirements.md](./requirements.md)
 
 | ID | Threat | Impact | Mitigations | Status |
 |----|--------|--------|-------------|--------|
-| I1 | Cross-tenant DynamoDB read | Severe PII/financial leak | Strict key design + authZ tests; SAST/DAST | Required |
+| I1 | Cross-tenant DynamoDB read | Severe Personally Identifiable Information (PII)/financial leak | Strict key design + authZ tests; Static Application Security Testing (SAST) / Dynamic Application Security Testing (DAST) | Required |
 | I2 | Plaid access token in logs/errors | Bank link compromise | Never log tokens; SSM secrets; encrypt at rest | Required |
-| I3 | Session secret / Stripe key in repo | Full compromise | SSM SecureString; gitignore; SCA | Required |
+| I3 | Session secret / Stripe key in repo | Full compromise | AWS Systems Manager (SSM) SecureString; gitignore; Software Composition Analysis (SCA) | Required |
 | I4 | Verbose errors leak stack/PII | Recon / privacy | Problem Details without internals in prod | Required |
-| I5 | Analytics/ads exfiltrate finance data | GDPR/CCPA risk | First-party funnel only; no amounts/memos; CMP for ads | Required |
-| I6 | CloudFront/S3 listing or open bucket | Asset/source leak | Private bucket + OAC | Required |
+| I5 | Analytics/ads exfiltrate finance data | General Data Protection Regulation (GDPR) / California Consumer Privacy Act (CCPA) risk | First-party funnel only; no amounts/memos; Consent Management Platform (CMP) for ads | Required |
+| I6 | CloudFront/S3 listing or open bucket | Asset/source leak | Private bucket + Origin Access Control (OAC) | Required |
 
 ---
 
@@ -73,7 +77,7 @@ Living threat model for the architecture in [requirements.md](./requirements.md)
 
 | ID | Threat | Impact | Mitigations | Status |
 |----|--------|--------|-------------|--------|
-| D1 | Unauthenticated flood on API/login | Outage | API GW throttling; Cognito rate limits; WAF later optional | Required (throttle) |
+| D1 | Unauthenticated flood on API/login | Outage | API Gateway throttling; Cognito rate limits; Web Application Firewall (WAF) later optional | Required (throttle) |
 | D2 | Webhook storm | Lambda cost / lag | Verify + idempotent short-circuit; alarm on volume | Required |
 | D3 | Pathological calendar expand (huge rrule range) | CPU/timeout | Bound query window (e.g. month); validate rrule | Required |
 | D4 | Attachment upload abuse (paid) | S3 cost | Size/type limits; authZ; quotas per user | Required |
@@ -84,10 +88,10 @@ Living threat model for the architecture in [requirements.md](./requirements.md)
 
 | ID | Threat | Impact | Mitigations | Status |
 |----|--------|--------|-------------|--------|
-| E1 | Call Plaid link as free user | Unpaid bank access / your Plaid bill | Server block free from Plaid; trial/paid entitlement | Required |
+| E1 | Call Plaid link as free user | Unpaid bank access / Plaid Item cost | Server block free from Plaid; trial/paid entitlement | Required |
 | E2 | Skip trial card / forge trial | Paid features free | Stripe trial with card (C1); webhook-driven entitlements | Required |
 | E3 | Abuse one-trial-per-account via new accounts | Cost abuse | Monitor; device/email heuristics later; accept residual risk | Partial |
-| E4 | CI role too broad | Infra takeover | GitHub OIDC least privilege; no long-lived AWS keys | Required |
+| E4 | Continuous Integration (CI) role too broad | Infra takeover | GitHub OpenID Connect (OIDC) least privilege; no long-lived AWS keys | Required |
 | E5 | GuardDuty/Analyzer off forever | Missed detections | Flag supported; **on before public launch** | Required |
 
 ---

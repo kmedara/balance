@@ -1,10 +1,12 @@
 # Balance Client
 
-Angular 21 single-page app for the Balance calendar. Talks to the API over HTTP with credentials (session cookies). No direct Cognito or Plaid server configuration — auth and Link token creation happen on the API.
+Angular 21 Single-Page Application (SPA) for the Balance calendar. Talks to the Application Programming Interface
+(API) over HTTP with credentials (session cookies). No direct Amazon Cognito or Plaid server configuration —
+authentication and Link token creation happen on the API.
 
 ## Stack
 
-- **Angular 21** with standalone components, signals, and SSR
+- **Angular 21** with standalone components, signals, and Server-Side Rendering (SSR)
 - **PrimeNG** + **Tailwind CSS** for UI
 - **NgRx Signals** for calendar state
 - **Vitest** for unit tests
@@ -142,7 +144,9 @@ Output: `client/dist/balance/browser/` (static assets) and `client/dist/balance/
 
 ## Deployment
 
-Production hosting is **S3 + CloudFront**, provisioned by CDK (`BalanceClientStack`). The built SPA is uploaded by GitHub Actions — the CDK stack does not embed build artifacts.
+Production hosting is **Amazon Simple Storage Service (S3) + Amazon CloudFront**, provisioned by Amazon Web Services
+(AWS) Cloud Development Kit (CDK) (`BalanceClientStack`). The built SPA is uploaded by GitHub Actions — the CDK stack
+does not embed build artifacts.
 
 ### CI workflow
 
@@ -157,7 +161,7 @@ Client deploys run as part of the shared release pipelines (not a standalone cli
 
 | Type | Name | Description |
 |------|------|-------------|
-| Secret | `AWS_DEPLOY_ROLE_ARN` | OIDC deploy role from that account’s `BalanceGitHubOidcStack` |
+| Secret | `AWS_DEPLOY_ROLE_ARN` | OpenID Connect (OIDC) deploy role from that account’s `BalanceGitHubOidcStack` |
 | Variable | `AWS_REGION` | Deploy region (default `us-east-1`) |
 
 `GATEWAY` is passed from the infra job as CDK **`ApiUrl`** (`api_base_url` workflow output).
