@@ -1,10 +1,7 @@
 # Product and Security Requirements
 
-Required SHALL/MUST statements for **Balance v1**. Describes **what the product must do** and **what security, privacy, and operations must guarantee**.
-
-Architecture choices (why Amazon DynamoDB, Lambda, S3, and the rest):
-[sa-requirements-decisions.md](./sa-requirements-decisions.md). Compact tables:
-[decisions-and-tradeoffs.md](./decisions-and-tradeoffs.md).
+Required SHALL/MUST statements for **Balance v1**. Describes **what the product must do** and **what security, privacy,
+and operations must guarantee**.
 
 All IDs below are `accepted` except explicitly deferred items (see capture log).
 
@@ -68,8 +65,7 @@ All IDs below are `accepted` except explicitly deferred items (see capture log).
     from Plaid link. When Plaid or Stripe is unavailable, the product MUST show an error only.
 - [x] Requirements-complete definition
   - **CX-9** (`accepted`): All checklist IDs in this file are `accepted` (except explicitly deferred items such as
-    DNS-8 IPv6). Architecture choices are recorded in [sa-requirements-decisions.md](./sa-requirements-decisions.md).
-    Implementation planning MAY proceed.
+    DNS-8 IPv6). Implementation planning MAY proceed.
   - **CX-10** (`accepted`): Billing trial MUST: start at first paid-feature gate; require card; auto-convert to paid
     after 7 days per consented ToS; allow **at most one trial per account**.
 
@@ -168,8 +164,8 @@ All IDs below are `accepted` except explicitly deferred items (see capture log).
     sole operator is acceptable for v1.
 - [x] Threat models or known risks
   - **SEC-5** (`accepted`): A **Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of
-    privilege (STRIDE) threat model** MUST exist for v1 (see [threat-model-stride.md](./threat-model-stride.md)). Design
-    and reviews MUST address the threats listed there; the model MUST be updated when major features ship.
+    privilege (STRIDE) threat model** MUST exist for v1. Design and reviews MUST address the threats in that model; the
+    model MUST be updated when major features ship.
 - [x] Centralized vs decentralized security controls
   - **SEC-6** (`accepted`): Security controls MUST live in the **single production AWS account** for v1 — not a
     multi-account organization policy model (**C1**).
@@ -307,8 +303,7 @@ All IDs below are `accepted` except explicitly deferred items (see capture log).
     pledged uptime SLA.
 - [x] Critical failure scenarios
   - **RES-6** (`accepted`): The product MUST have a documented recovery path for: in-region service impairment (rely on
-    AWS), database loss/corruption (backup restore), and full **regional** impairment (see
-    [regional-DR.md](./regional-DR.md)).
+    AWS), database loss/corruption (backup restore), and full **regional** impairment.
 - [x] Automatic vs manual failover
   - **RES-7** (`accepted`): In-region failover MUST be **automatic** (managed AWS). Regional disaster recovery MUST be
     **manual**, declared and executed by the sole developer.
@@ -320,7 +315,7 @@ All IDs below are `accepted` except explicitly deferred items (see capture log).
 - [x] Recovery Time Objective (RTO) and Recovery Point Objective (RPO)
   - **DR-1** (`accepted`): **Recovery Point Objective (RPO)** — how much data may be lost — MUST be up to ~**7 days**
     for v1 (weekly backup, retain 1; PITR off). **RTO** MUST be ≤ **12 hours** for regional recovery when the sole
-    developer is available. See [regional-DR.md](./regional-DR.md).
+    developer is available.
 - [x] DR strategy
   - **DR-2** (`accepted`): Disaster recovery MUST be **restore from backup with nothing running in a second region
     (cold / S1)** — no small always-on spare or half-running spare required for v1.
@@ -338,7 +333,7 @@ All IDs below are `accepted` except explicitly deferred items (see capture log).
 - [x] Third parties in DR
   - **DR-7** (`accepted`): DR planning MUST document login, Plaid, Stripe, email, Frankfurter, and Google ads; when they
     are down the app MUST show an error, offer manual sync, or show a dated currency rate as applicable. Regional AWS
-    loss is covered in [regional-DR.md](./regional-DR.md).
+    loss MUST follow the same cold restore path as DR-2.
 - [x] Declaration and authority
   - **DR-8** (`accepted`): The sole developer SHALL declare a disaster and SHALL authorize regional recovery actions.
 
@@ -432,9 +427,6 @@ All IDs below are `accepted` except explicitly deferred items (see capture log).
 | `Service`            | `api` / `client` / `data` / `auth` | See which layer costs                              |
 | `Owner`              | `solo` or handle                   | SOC 2 / accountability                             |
 | `DataClassification` | `sensitive`                        | Marks stores that hold finance or personal data    |
-
-See also: [cost-estimate.md](./cost-estimate.md) for traffic scenarios and non-AWS fees, and
-[aws-pricing-cost-report.md](./aws-pricing-cost-report.md) for OnDemand Price List midpoints.
 
 ---
 
@@ -602,7 +594,8 @@ Templates + lawyer review recommended; this document is not legal advice.
 ## 14. Capacity Management
 
 - [x] Expected volume
-  - **CAP-1** (`accepted`): Launch volume is **unknown**; plan using cost-estimate scenarios S0–S1 until measured.
+  - **CAP-1** (`accepted`): Launch volume is **unknown**; plan using low early traffic (on the order of tens to a few
+    hundred Monthly Active Users) until measured.
 - [x] Forecasting and growth planning
   - **CAP-2** (`accepted`): Usage/cost MUST be reviewed **weekly** by the sole developer (alongside cost review).
 - [x] Quotas and limits
@@ -755,4 +748,4 @@ Templates + lawyer review recommended; this document is not legal advice.
 | All checklist IDs | accepted | sole developer | —             | Full promotion complete                                            |
 | DNS-8 IPv6        | deferred | sole developer | later         | IPv4 only for v1; IPv6 optional later                              |
 | Domain purchase   | open     | sole developer | before launch | `app.` / `gateway.` ready in infra (D3)                            |
-| Decision log      | accepted | sole developer | —             | See [sa-requirements-decisions.md](./sa-requirements-decisions.md) |
+| Decision log      | accepted | sole developer | —             | Architecture choices accepted with this checklist                  |
