@@ -38,7 +38,7 @@
     "@angular/platform-browser": "^21.1.2",
     "@angular/platform-server": "^21.1.2",
     "@angular/router": "^21.1.2",
-    "@angular/ssr": "^21.1.2",
+    "@angular/ssr": "^21.2.23",
     "@balance/domain": "*",
     "@balance/schemas": "*",
     "@ngrx/operators": "^21.1.1",
